@@ -1,0 +1,116 @@
+body {
+    background-color: rgb(18, 18, 18);
+    color: whitesmoke;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.center {
+    display: grid;
+    place-items: center;
+    margin: 0rem;
+}
+
+.app-grid {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 10px;
+}
+
+.app-div {
+    display: grid;
+    justify-items: center;
+    width: 100%;
+    grid-template-columns: 1fr auto;
+    padding-top: 5px;
+    transition: 0.2s;
+    border-radius: 10px;
+}
+
+.app-div:hover {
+    background-color: rgba(229, 226, 226, 0.27);
+    cursor: pointer;
+}
+
+.app-img {
+    width: 150px;
+    height: 225px;
+    grid-column: span 2;
+    align-self: center;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.app-img:hover {
+    filter: brightness(0.85);
+}
+
+.bottom-holder {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 150px;
+}
+
+.bottom-holder > p {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1; /* number of lines to show */
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+}
+
+.bottom-holder > button {
+    cursor: pointer;
+    background: none;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 1.25em;
+    transition: 0.1s;
+}
+
+.bottom-holder > button:hover {
+    background-color: rgba(182, 182, 182, 0.633);
+}
+
+.search-box {
+    display: flex;
+    flex-direction: row;
+    height: 25px;
+}
+
+.search-box > input {
+    color: black;
+    flex-grow: 0;
+    border-top-left-radius: 9999px;
+    border-bottom-left-radius: 9999px;
+    width: 33.3333333%;
+    padding-left: 8px;
+    padding-right: 8px;
+    border: none;
+}
+
+.search-box > button {
+    padding-left: 8px;
+    padding-right: 8px;
+    background-color: white;
+    border-color: white;
+    color: rgb(55 65 81);
+    border-top-right-radius: 9999px;
+    border-bottom-right-radius: 9999px;
+    border: none;
+}
+
+.search-box > button:hover {
+    color: rgb(156 163 175);
+}
+
+.search-box > input:focus {
+    border: 1px gray;
+}
+
+.search-box > input:active {
+    border: 1px gray;
+}
