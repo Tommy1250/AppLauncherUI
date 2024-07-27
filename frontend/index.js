@@ -1,10 +1,9 @@
 const getWindowsShortcutProperties = require("get-windows-shortcut-properties");
-const { ipcRenderer, shell } = require("electron");
+const { ipcRenderer } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { queueBanner } = require("./functions/steamGrid");
-const { spawn } = require("child_process");
-const parseArgsStringToArgv = require("./functions/parseArgs");
+const launchApp = require("./functions/launchApp");
 
 let shortcutsFile = "";
 let savePath = "";
@@ -62,31 +61,7 @@ function makeAppGrid() {
         appImg.onclick = () => {
             console.log(`running game ${key}`);
 
-            if (saveFile[key].type === "url") {
-                shell.openExternal(saveFile[key].location);
-            } else if (saveFile[key].type === "exe") {
-                if (saveFile[key].args) {
-                    const child = spawn(
-                        `${saveFile[key].location}`,
-                        parseArgsStringToArgv(saveFile[key].args),
-                        {
-                            detached: true,
-                            stdio: "ignore",
-                            cwd: `${path.parse(saveFile[key].location).dir}`,
-                        }
-                    );
-
-                    child.unref();
-                } else {
-                    const child = spawn(`${saveFile[key].location}`, {
-                        detached: true,
-                        stdio: "ignore",
-                        cwd: `${path.parse(saveFile[key].location).dir}`
-                    });
-
-                    child.unref();
-                }
-            }
+            launchApp(saveFile[key]);
         };
 
         // appDiv.onclick = () => {
@@ -95,21 +70,12 @@ function makeAppGrid() {
 
         optionsButton.onclick = () => {
             console.log(`options click on ${key}`)
-            /* 
-                options menu items:
-                1. Start
-                2. configure game
-                    1. change name
-                    2. change shortcut path
-                    3. add/change arguments
-                    4. change banner (searching for a banner on steamgrid)
-                3. open file location (if any)
-                4. remove
-            */
+            ipcRenderer.send("contextMenu", key);
         }
 
         appDiv.oncontextmenu = () => {
-            console.log(`right click on ${key}`)
+            console.log(`right click on ${key}`);
+            ipcRenderer.send("contextMenu", key);
         }
 
         appName.innerText = key;
@@ -126,6 +92,13 @@ function makeAppGrid() {
         appGrid.appendChild(appDiv);
     }
 }
+
+function updateSaveFile() {
+    saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
+    makeAppGrid();
+}
+
+ipcRenderer.on("updateSave", () => updateSaveFile());
 
 ipcRenderer.on("refresh", () => makeAppGrid());
 
