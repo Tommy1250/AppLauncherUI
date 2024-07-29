@@ -1,6 +1,7 @@
 const { ipcRenderer } = require("electron");
 const fs = require("fs");
 const https =  require("https");
+const path = require("path");
 
 async function downloadImage(imageUrl, shortcutName, savePath){
     const file = fs.createWriteStream(path.join(savePath, `${shortcutName}.png`));

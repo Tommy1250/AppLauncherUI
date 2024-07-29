@@ -45,6 +45,7 @@ body {
     padding-top: 5px;
     transition: 0.2s;
     border-radius: 10px;
+    height: fit-content;
 }
 
 .app-div:hover {

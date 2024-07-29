@@ -30,6 +30,8 @@ if (!fs.existsSync(savePath)) {
     fs.mkdirSync(savePath);
 }
 
+const iconpath = path.join(__dirname, "icon.ico");
+
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1280,
@@ -45,8 +47,9 @@ function createWindow() {
         mainWindow.webContents.openDevTools();
     }
 
-    mainWindow.loadFile(path.join("frontend", "index.html"));
+    mainWindow.loadFile(path.join(__dirname, "frontend", "index.html"));
     mainWindow.setTitle("App launcher");
+    mainWindow.setIcon(iconpath);
 
     mainWindow.webContents.send("savePath", savePath);
     mainWindow.menuBarVisible = false;
@@ -67,8 +70,6 @@ ipcMain.on("refresh", () => {
 });
 
 let tray = null;
-
-const iconpath = path.join("icon.ico");
 
 if (!gotTheLock) {
     app.quit();
@@ -151,9 +152,10 @@ ipcMain.on("contextMenu", (ev, gameName) => {
                         editWindow.webContents.openDevTools();
                     }
 
-                    editWindow.loadFile(path.join("frontend", "edit.html"));
+                    editWindow.loadFile(path.join(__dirname, "frontend", "edit.html"));
                     editWindow.setTitle("Edit shortcut");
                     editWindow.menuBarVisible = false;
+                    editWindow.setIcon(iconpath);
 
                     ipcMain.on("appName", () =>
                         editWindow.webContents.send("appname", gameName)
