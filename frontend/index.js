@@ -9,7 +9,7 @@ let shortcutsFile = "";
 let savePath = "";
 let imagesPath = "";
 /**
- * @type {{appname: {type: "url" | "exe", location: string, args?: string}}}
+ * @type {{appname: {type: "url" | "exe", location: string, args?: string, gridName: string}}}
  */
 let saveFile = {};
 
@@ -78,7 +78,7 @@ function makeAppGrid() {
             ipcRenderer.send("contextMenu", key);
         }
 
-        appName.innerText = key;
+        appName.innerText = saveFile[key].gridName;
         optionsButton.className = "fa-solid fa-ellipsis";
 
         bottomHolder.appendChild(appName);
@@ -180,12 +180,14 @@ function editSaveObj(fileName, location, type, args = null) {
         saveFile[fileName] = {
             type: type,
             location: `${location}`,
+            gridName: fileName
         };
     } else {
         saveFile[fileName] = {
             type: type,
             location: `${location}`,
             args: `${args}`,
+            gridName: fileName
         };
     }
 }

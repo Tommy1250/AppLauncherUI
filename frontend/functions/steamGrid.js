@@ -65,4 +65,4 @@ async function queueBanner(gameName, savePath) {
     return `${gameName}.png`;
 }
 
-module.exports = { getBanner, queueBanner };
+module.exports = { queueBanner };

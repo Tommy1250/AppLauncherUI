@@ -1,0 +1,94 @@
+body {
+    background-color: rgb(18, 18, 18);
+    color: whitesmoke;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.center {
+    display: grid;
+    place-items: center;
+    margin: 0rem;
+}
+
+.container-edit {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px;
+}
+
+.appImage {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.appImage > button {
+    background-color: rgb(157, 157, 157);
+    border: none;
+    border-radius: 5px;
+    color: rgb(29, 29, 29);
+    padding-top: 4px;
+    padding-bottom: 4px;
+    transition: 0.1s;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.appImage > button:hover {
+    background-color: rgb(184, 184, 184);
+    color: rgb(29, 29, 29);
+}
+
+.appImage > button:active {
+    background-color: rgb(132, 132, 132);
+    color: rgb(215, 215, 215);
+}
+
+.app-img {
+    width: 150px;
+    height: 225px;
+    align-self: center;
+    transition: 0.2s;
+}
+
+.appInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.appInfo > div {
+    display: grid;
+    grid-column: 1fr;
+    gap: 1px;
+}
+
+.appInfo > div > input {
+    border: 1px rgb(216, 216, 216) solid;
+    border-radius: 3px;
+    background-color: rgb(68, 68, 68);
+    color: whitesmoke;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.appInfo > div > select {
+    border: 1px rgb(216, 216, 216) solid;
+    border-radius: 3px;
+    background-color: rgb(68, 68, 68);
+    color: whitesmoke;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+#appId {
+    font-weight: 700;
+}
+
+.controls {
+    width: 100%;
+    grid-column: span 2;
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+}
