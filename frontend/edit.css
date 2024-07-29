@@ -68,8 +68,9 @@ body {
     border-radius: 3px;
     background-color: rgb(68, 68, 68);
     color: whitesmoke;
-    padding-top: 4px;
-    padding-bottom: 4px;
+    height: 30px;
+    font-size: 15px;
+    font-weight: 520;
 }
 
 .appInfo > div > select {
@@ -77,8 +78,9 @@ body {
     border-radius: 3px;
     background-color: rgb(68, 68, 68);
     color: whitesmoke;
-    padding-top: 4px;
-    padding-bottom: 4px;
+    height: 30px;
+    font-size: 15px;
+    font-weight: 520;
 }
 
 #appId {
@@ -91,4 +93,26 @@ body {
     display: flex;
     justify-content: flex-end;
     gap: 5px;
+}
+
+.controls > button {
+    background-color: rgb(157, 157, 157);
+    border: none;
+    border-radius: 5px;
+    color: rgb(29, 29, 29);
+    padding-top: 4px;
+    padding-bottom: 4px;
+    transition: 0.1s;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.controls > button:hover {
+    background-color: rgb(184, 184, 184);
+    color: rgb(29, 29, 29);
+}
+
+.controls > button:active {
+    background-color: rgb(132, 132, 132);
+    color: rgb(215, 215, 215);
 }

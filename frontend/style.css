@@ -1,7 +1,14 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
 body {
     background-color: rgb(18, 18, 18);
     color: whitesmoke;
     font-family: Arial, Helvetica, sans-serif;
+    height: 100%;
+    overflow: hidden;
 }
 
 .center {
@@ -10,11 +17,24 @@ body {
     margin: 0rem;
 }
 
+.main {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    box-sizing: border-box;
+    height: 100%;
+}
+
 .app-grid {
     margin-top: 10px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
     gap: 10px;
+    top: 0;
+    margin-bottom: 20px;
+}
+
+.scroll-alone {
+    overflow: auto;
 }
 
 .app-div {

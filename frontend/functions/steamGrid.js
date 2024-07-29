@@ -18,12 +18,18 @@ async function searchGame(gameName) {
         options
     );
     const body = await result.json();
+    console.log(body);
 
     return body.data[0];
 }
 
 async function getBanner(gameName, savePath) {
     const gameData = await searchGame(gameName);
+    console.log(gameData);
+    if(!gameData) {
+        ipcRenderer.send("refresh");
+        return `${gameName}.png`
+    }
     const options = {
         method: "GET",
         headers: {
@@ -53,8 +59,8 @@ async function queueBanner(gameName, savePath) {
 
     if (itemsQueue.length === 1) {
         setTimeout(async () => {
-            const banner = await getBanner(gameName, savePath);
             console.log("getting banner for " + gameName)
+            const banner = await getBanner(gameName, savePath);
             if (banner) itemsQueue.shift();
         }, 400);
     } else {

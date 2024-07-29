@@ -15,6 +15,9 @@ let saveFile = {};
 
 const appGrid = document.getElementById("appgrid");
 // const progressHolder = document.getElementById("progress");
+const searchForm = document.getElementById("searchForm");
+const searchBar = document.getElementById("search");
+const clearSearch = document.getElementById("clearSearch");
 
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
@@ -195,4 +198,81 @@ function editSaveObj(fileName, location, type, args = null) {
 function saveTheFile() {
     // progressHolder.innerText = "";
     fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile, null, 4));
+}
+
+searchForm.onsubmit = (ev) => {
+    ev.preventDefault();
+    if(searchBar.value !== "")
+        search(searchBar.value);
+    else
+        makeAppGrid();
+}
+
+searchBar.oninput = () => {
+    if(searchBar.value !== "")
+        search(searchBar.value);
+    else
+        makeAppGrid();
+}
+
+clearSearch.onclick = () => {
+    searchBar.value = "";
+    makeAppGrid();
+}
+
+function search(query) {
+    appGrid.innerHTML = "";
+    for (let i = 0; i < Object.keys(saveFile).length; i++) {
+        const key = Object.keys(saveFile)[i];
+
+        if(key.toLowerCase().includes(query.toLowerCase()) || saveFile[key].gridName.toLowerCase().includes(query.toLowerCase())) {
+            const appDiv = document.createElement("div");
+        const background = document.createElement("div");
+        const appImg = document.createElement("img");
+        const appName = document.createElement("p");
+        const optionsButton = document.createElement("button");
+        const bottomHolder = document.createElement("div");
+
+        appDiv.className = "app-div";
+
+        background.className = "app-bg";
+
+        appImg.className = "app-img";
+        appImg.src = path.join(imagesPath, `${key}.png`);
+        appImg.setAttribute("draggable", false);
+
+        appImg.onclick = () => {
+            console.log(`running game ${key}`);
+
+            launchApp(saveFile[key]);
+        };
+
+        // appDiv.onclick = () => {
+        //     console.log("appdiv click");
+        // }
+
+        optionsButton.onclick = () => {
+            console.log(`options click on ${key}`)
+            ipcRenderer.send("contextMenu", key);
+        }
+
+        appDiv.oncontextmenu = () => {
+            console.log(`right click on ${key}`);
+            ipcRenderer.send("contextMenu", key);
+        }
+
+        appName.innerText = saveFile[key].gridName;
+        optionsButton.className = "fa-solid fa-ellipsis";
+
+        bottomHolder.appendChild(appName);
+        bottomHolder.appendChild(optionsButton);
+        bottomHolder.className = "bottom-holder";
+
+        appDiv.appendChild(background);
+        appDiv.appendChild(appImg);
+        appDiv.appendChild(bottomHolder);
+
+        appGrid.appendChild(appDiv);
+        }
+    }
 }
