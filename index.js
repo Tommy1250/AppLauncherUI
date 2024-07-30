@@ -30,7 +30,7 @@ if (!fs.existsSync(savePath)) {
     fs.mkdirSync(savePath);
 }
 
-const iconpath = path.join(__dirname, "icon.ico");
+const iconpath = process.platform === "linux" ? path.join(__dirname, "icon.png") : path.join(__dirname, "icon.ico");
 
 function createWindow() {
     mainWindow = new BrowserWindow({

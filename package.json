@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-packager . AppLauncher --overwrite --platform=win32 --icon=icon.ico --out=release-builds"
+    "build": "electron-packager . AppLauncher --overwrite --platform=win32 --icon=icon.ico --out=release-builds",
+    "build-linux": "electron-packager . AppLauncher --overwrite --platform=linux --icon=icon.png --out=release-builds"
+
   },
   "keywords": [],
   "author": "",
