@@ -138,8 +138,26 @@ body {
 }
 
 .search-div {
+    margin-left: 1px;
+    margin-right: 1px;
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+}
+
+.iconbtn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.iconbtn:hover {
+    color: rgb(162, 162, 162);
+}
+
+.iconbtn:active {
+    color: rgb(122, 122, 122);
 }
 
 ::-webkit-scrollbar {

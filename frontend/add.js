@@ -11,7 +11,9 @@ const argsDiv = document.getElementById("argsDiv");
 const appNameInput = document.getElementById("appName");
 const appPathInput = document.getElementById("appPath");
 const appArgsInput = document.getElementById("appArgs");
-const appIdHolder = document.getElementById("appId")
+const appIdInput = document.getElementById("appId");
+const appIdLabel = document.getElementById("appIdLabel");
+
 /**
  * @type {HTMLSelectElement}
  */
@@ -41,28 +43,8 @@ ipcRenderer.on("savePath", (ev, args) => {
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
 });
 
-ipcRenderer.on("appname", (ev, args) => {
-    appName = args;
-    appIdHolder.innerText = `Id: ${appName}`;
-    appImg.src = path.join(imagesPath, `${appName}.png`);
-    appNameInput.value = saveFile[appName].gridName;
-    appPathInput.value = saveFile[appName].location;
-    if(saveFile[appName].type === "exe"){
-        argsDiv.style.display = "grid";
-        appArgsInput.value = saveFile[appName].args ?? "";
-        appTypeSelect.selectedIndex = 0;
-    } else {
-        argsDiv.style.display = "none";
-        appTypeSelect.selectedIndex = 1;
-    }
-})
-
 if (shortcutsFile === "") {
     ipcRenderer.send("getSavePath");
-}
-
-if (appName === "") {
-    ipcRenderer.send("appName");
 }
 
 appTypeSelect.oninput = () => {
@@ -74,15 +56,18 @@ appTypeSelect.oninput = () => {
 }
 
 saveButton.onclick = () => {
+    if(Object.keys(saveFile).includes(appIdInput.value))
+        return appIdInput.innerText = "This ID already exists please choose a different ID";
+
     if(appArgsInput.value !== ""){
-        saveFile[appName] = {
+        saveFile[appIdInput.value] = {
             "type": appTypeSelect[appTypeSelect.selectedIndex].value,
             "location": appPathInput.value,
             "args": appArgsInput.value,
             "gridName": appNameInput.value
         }
     } else {
-        saveFile[appName] = {
+        saveFile[appIdInput.value] = {
             "type": appTypeSelect[appTypeSelect.selectedIndex].value,
             "location": appPathInput.value,
             "gridName": appNameInput.value
@@ -92,7 +77,7 @@ saveButton.onclick = () => {
     fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile, null, 4));
 
     if(imageUpdated) {
-        fs.copyFileSync(newImagePath, path.join(imagesPath, `${appName}.png`));
+        fs.copyFileSync(newImagePath, path.join(imagesPath, `${appIdInput.value}.png`));
     }
 
     ipcRenderer.send("closeAndSave")
@@ -113,5 +98,5 @@ ipcRenderer.on("imageSelect", (ev, fileLocation) => {
 })
 
 imageSearchButton.onclick = () => {
-    shell.openExternal(`https://www.steamgriddb.com/search/grids?term=${encodeURIComponent(appName)}`)
+    shell.openExternal(`https://www.steamgriddb.com/`)
 }

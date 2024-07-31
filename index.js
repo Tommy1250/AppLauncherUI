@@ -25,6 +25,11 @@ let mainWindow;
  */
 let editWindow;
 
+/**
+ * @type {BrowserWindow}
+ */
+let addWindow;
+
 const savePath = path.join(app.getPath("userData"), "saves");
 if (!fs.existsSync(savePath)) {
     fs.mkdirSync(savePath);
@@ -166,6 +171,8 @@ ipcMain.on("contextMenu", (ev, gameName) => {
                         editWindow = null;
                         ipcMain.removeAllListeners("appName");
                     });
+                }else {
+                    editWindow.focus();
                 }
             },
         },
@@ -194,12 +201,12 @@ ipcMain.on("contextMenu", (ev, gameName) => {
     Menu.buildFromTemplate(template).popup();
 });
 
-ipcMain.on("closeAndSave", () => {
+ipcMain.on("closeAndSave", (ev) => {
     mainWindow.reload();
-    editWindow.close();
+    ev.sender.close();
 });
 
-ipcMain.on("chooseImage", () => {
+ipcMain.on("chooseImage", (event) => {
     console.log("choose image");
     dialog
         .showOpenDialog({
@@ -214,13 +221,43 @@ ipcMain.on("chooseImage", () => {
         })
         .then((file) => {
             if (!file.canceled) {
-                editWindow.webContents.send("imageSelect", file.filePaths[0]);
+                event.sender.send("imageSelect", file.filePaths[0]);
             }
         })
         .catch((reason) => {
             console.log(reason);
         });
 });
+
+ipcMain.on("addWindow", () => {
+    if (!addWindow) {
+        addWindow = new BrowserWindow({
+            width: 530,
+            height: 390,
+            webPreferences: {
+                nodeIntegration: true,
+                nodeIntegrationInWorker: true,
+                contextIsolation: false,
+            },
+        });
+
+        if (!app.isPackaged) {
+            addWindow.webContents.openDevTools();
+        }
+
+        addWindow.loadFile(path.join(__dirname, "frontend", "add.html"));
+        addWindow.setTitle("Add Shortcut");
+        addWindow.menuBarVisible = false;
+        addWindow.setIcon(iconpath);
+
+        addWindow.on("closed", () => {
+            addWindow.destroy();
+            addWindow = null;
+        });
+    }else {
+        addWindow.focus();
+    }
+})
 
 app.on("window-all-closed", (ev) => {
     ev.preventDefault();

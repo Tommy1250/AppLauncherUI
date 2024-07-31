@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Shortcut</title>
+    <script src="add.js" defer></script>
+    <link rel="stylesheet" href="edit.css">
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
+</head>
+
+<body>
+    <div class="container-edit">
+        <div class="appImage">
+            <img id="appImg" class="app-img">
+            <button id="imageSearch">Download new Image</button>
+            <button id="imageSelect">Select new Image</button>
+        </div>
+        <div class="appInfo">
+            <div>
+                <label for="appId" id="appIdLabel">Id:</label>
+                <input type="text" id="appId">
+            </div>
+            <div>
+                <label for="appName">Name:</label>
+                <input type="text" id="appName">
+            </div>
+            <div>
+                <label for="appPath">Path:</label>
+                <input type="text" id="appPath">
+            </div>
+            <div id="argsDiv">
+                <label for="appArgs">Args:</label>
+                <input type="text" id="appArgs">
+            </div>
+            <div>
+                <label for="appType">Type:</label>
+                <select id="appType">
+                    <option value="exe">Desktop shortcut</option>
+                    <option value="url">Internet shortcut</option>
+                </select>
+            </div>
+        </div>
+        <div class="controls">
+            <button id="cancel">Cancel</button>
+            <button id="save">Save changes</button>
+        </div>
+    </div>
+</body>
+
+</html>

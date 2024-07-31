@@ -14,10 +14,12 @@ let imagesPath = "";
 let saveFile = {};
 
 const appGrid = document.getElementById("appgrid");
-// const progressHolder = document.getElementById("progress");
 const searchForm = document.getElementById("searchForm");
 const searchBar = document.getElementById("search");
 const clearSearch = document.getElementById("clearSearch");
+
+const addButton = document.getElementById("add");
+const settingsButton = document.getElementById("settings");
 
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
@@ -72,14 +74,14 @@ function makeAppGrid() {
         // }
 
         optionsButton.onclick = () => {
-            console.log(`options click on ${key}`)
+            console.log(`options click on ${key}`);
             ipcRenderer.send("contextMenu", key);
-        }
+        };
 
         appDiv.oncontextmenu = () => {
             console.log(`right click on ${key}`);
             ipcRenderer.send("contextMenu", key);
-        }
+        };
 
         appName.innerText = saveFile[key].gridName;
         optionsButton.className = "fa-solid fa-ellipsis";
@@ -183,14 +185,14 @@ function editSaveObj(fileName, location, type, args = null) {
         saveFile[fileName] = {
             type: type,
             location: `${location}`,
-            gridName: fileName
+            gridName: fileName,
         };
     } else {
         saveFile[fileName] = {
             type: type,
             location: `${location}`,
             args: `${args}`,
-            gridName: fileName
+            gridName: fileName,
         };
     }
 }
@@ -202,77 +204,157 @@ function saveTheFile() {
 
 searchForm.onsubmit = (ev) => {
     ev.preventDefault();
-    if(searchBar.value !== "")
-        search(searchBar.value);
-    else
-        makeAppGrid();
-}
+    if (searchBar.value !== "") search(searchBar.value);
+    else makeAppGrid();
+};
 
 searchBar.oninput = () => {
-    if(searchBar.value !== "")
-        search(searchBar.value);
-    else
-        makeAppGrid();
-}
+    if (searchBar.value !== "") search(searchBar.value);
+    else makeAppGrid();
+};
 
 clearSearch.onclick = () => {
     searchBar.value = "";
     makeAppGrid();
-}
+};
 
 function search(query) {
     appGrid.innerHTML = "";
     for (let i = 0; i < Object.keys(saveFile).length; i++) {
         const key = Object.keys(saveFile)[i];
 
-        if(key.toLowerCase().includes(query.toLowerCase()) || saveFile[key].gridName.toLowerCase().includes(query.toLowerCase())) {
+        if (
+            key.toLowerCase().includes(query.toLowerCase()) ||
+            saveFile[key].gridName.toLowerCase().includes(query.toLowerCase())
+        ) {
             const appDiv = document.createElement("div");
-        const background = document.createElement("div");
-        const appImg = document.createElement("img");
-        const appName = document.createElement("p");
-        const optionsButton = document.createElement("button");
-        const bottomHolder = document.createElement("div");
+            const background = document.createElement("div");
+            const appImg = document.createElement("img");
+            const appName = document.createElement("p");
+            const optionsButton = document.createElement("button");
+            const bottomHolder = document.createElement("div");
 
-        appDiv.className = "app-div";
+            appDiv.className = "app-div";
 
-        background.className = "app-bg";
+            background.className = "app-bg";
 
-        appImg.className = "app-img";
-        appImg.src = path.join(imagesPath, `${key}.png`);
-        appImg.setAttribute("draggable", false);
+            appImg.className = "app-img";
+            appImg.src = path.join(imagesPath, `${key}.png`);
+            appImg.setAttribute("draggable", false);
 
-        appImg.onclick = () => {
-            console.log(`running game ${key}`);
+            appImg.onclick = () => {
+                console.log(`running game ${key}`);
 
-            launchApp(saveFile[key]);
-        };
+                launchApp(saveFile[key]);
+            };
 
-        // appDiv.onclick = () => {
-        //     console.log("appdiv click");
-        // }
+            // appDiv.onclick = () => {
+            //     console.log("appdiv click");
+            // }
 
-        optionsButton.onclick = () => {
-            console.log(`options click on ${key}`)
-            ipcRenderer.send("contextMenu", key);
-        }
+            optionsButton.onclick = () => {
+                console.log(`options click on ${key}`);
+                ipcRenderer.send("contextMenu", key);
+            };
 
-        appDiv.oncontextmenu = () => {
-            console.log(`right click on ${key}`);
-            ipcRenderer.send("contextMenu", key);
-        }
+            appDiv.oncontextmenu = () => {
+                console.log(`right click on ${key}`);
+                ipcRenderer.send("contextMenu", key);
+            };
 
-        appName.innerText = saveFile[key].gridName;
-        optionsButton.className = "fa-solid fa-ellipsis";
+            appName.innerText = saveFile[key].gridName;
+            optionsButton.className = "fa-solid fa-ellipsis";
 
-        bottomHolder.appendChild(appName);
-        bottomHolder.appendChild(optionsButton);
-        bottomHolder.className = "bottom-holder";
+            bottomHolder.appendChild(appName);
+            bottomHolder.appendChild(optionsButton);
+            bottomHolder.className = "bottom-holder";
 
-        appDiv.appendChild(background);
-        appDiv.appendChild(appImg);
-        appDiv.appendChild(bottomHolder);
+            appDiv.appendChild(background);
+            appDiv.appendChild(appImg);
+            appDiv.appendChild(bottomHolder);
 
-        appGrid.appendChild(appDiv);
+            appGrid.appendChild(appDiv);
         }
     }
+}
+
+let focusedItem = 0;
+let previousItem = 0;
+let useMouse = false;
+
+document.onkeydown = (ev) => {
+    const gridComputedStyle = window.getComputedStyle(appGrid);
+
+    // get number of grid columns
+    const gridColumnCount = gridComputedStyle
+        .getPropertyValue("grid-template-columns")
+        .split(" ").length;
+
+    if (ev.key === "ArrowLeft") {
+        if (focusedItem === 0 || document.activeElement === searchBar) return;
+        focusedItem--;
+        focusItem();
+    } else if (ev.key === "ArrowRight") {
+        if (
+            focusedItem === appGrid.childNodes.length - 1 ||
+            document.activeElement === searchBar
+        )
+            return;
+        focusedItem++;
+        focusItem();
+    } else if (ev.key === "ArrowUp") {
+        ev.preventDefault()
+        if (focusedItem - gridColumnCount <= 0) {
+            focusedItem = 0;
+            focusItem();
+        } else {
+            focusedItem -= gridColumnCount;
+            focusItem();
+        }
+    } else if (ev.key === "ArrowDown") {
+        ev.preventDefault()
+        if (focusedItem + gridColumnCount >= appGrid.childNodes.length - 1) {
+            focusedItem = appGrid.childNodes.length - 1;
+            focusItem();
+        } else {
+            focusedItem += gridColumnCount;
+            focusItem();
+        }
+    } else if (ev.key === "Enter") {
+        if (document.activeElement === searchBar) {
+            focusItem();
+        } else {
+            launchApp(saveFile[Object.keys(saveFile)[focusedItem]]);
+        }
+    } else {
+        searchBar.focus();
+        focusedItem = 0;
+        previousItem = 0;
+    }
+};
+
+function focusItem() {
+    console.log(focusedItem);
+    const app = appGrid.childNodes.item(focusedItem);
+    const previousApp = appGrid.childNodes.item(previousItem);
+
+    const rect = app.getBoundingClientRect();
+    appGrid.scrollBy({ behavior: "smooth", top: rect.top - 200 });
+
+    previousApp.style.removeProperty("background-color");
+    app.style.backgroundColor = "#e5e2e245";
+    previousItem = focusedItem;
+    useMouse = false;
+}
+
+document.onpointermove = () => {
+    if (!useMouse) {
+        const previousApp = appGrid.childNodes.item(previousItem);
+        previousApp.style.removeProperty("background-color");
+        useMouse = true;
+    }
+};
+
+addButton.onclick = () => {
+    ipcRenderer.send("addWindow");
 }
