@@ -138,8 +138,10 @@ body {
 }
 
 .search-div {
+    margin-top: 10px;
     margin-left: 1px;
     margin-right: 1px;
+    margin-bottom: 5px;
     display: grid;
     grid-template-columns: 1fr auto auto;
     gap: 10px;

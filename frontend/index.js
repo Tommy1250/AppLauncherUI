@@ -3,7 +3,6 @@ const { ipcRenderer } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { queueBanner } = require("./functions/steamGrid");
-const launchApp = require("./functions/launchApp");
 
 let shortcutsFile = "";
 let savePath = "";
@@ -19,20 +18,15 @@ const searchBar = document.getElementById("search");
 const clearSearch = document.getElementById("clearSearch");
 
 const addButton = document.getElementById("add");
-const settingsButton = document.getElementById("settings");
+// const settingsButton = document.getElementById("settings");
 
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
     console.log(savePath);
     shortcutsFile = path.join(savePath, "shortcuts.json");
     imagesPath = path.join(savePath, "images");
-    if (!fs.existsSync(shortcutsFile)) {
-        fs.writeFileSync(shortcutsFile, "{}");
-        saveFile = {};
-    } else {
-        saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
-        makeAppGrid();
-    }
+    saveFile = JSON.parse(fs.readFileSync(path.join(shortcutsFile), "utf-8"));
+    makeAppGrid();
 
     if (!fs.existsSync(imagesPath)) {
         fs.mkdirSync(imagesPath);
@@ -66,7 +60,7 @@ function makeAppGrid() {
         appImg.onclick = () => {
             console.log(`running game ${key}`);
 
-            launchApp(saveFile[key], window);
+            ipcRenderer.send("launch", key);
         };
 
         // appDiv.onclick = () => {
@@ -214,6 +208,7 @@ function editSaveObj(fileName, location, type, args = null) {
 
 function saveTheFile() {
     // progressHolder.innerText = "";
+    ipcRenderer.send("updateSaveMain")
     fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile, null, 4));
 }
 
@@ -260,7 +255,7 @@ function search(query) {
             appImg.onclick = () => {
                 console.log(`running game ${key}`);
 
-                launchApp(saveFile[key], window);
+                ipcRenderer.send("launch", key);
             };
 
             // appDiv.onclick = () => {
@@ -348,12 +343,8 @@ document.onkeydown = (ev) => {
         if (document.activeElement === searchBar) {
             focusItem();
         } else {
-            launchApp(saveFile[Object.keys(saveFile)[focusedItem]], window);
+            ipcRenderer.send("launch", Object.keys(saveFile)[focusedItem]);
         }
-    } else {
-        searchBar.focus();
-        focusedItem = 0;
-        previousItem = 0;
     }
 };
 
@@ -385,68 +376,61 @@ addButton.onclick = () => {
     ipcRenderer.send("addWindow");
 };
 
-// window.addEventListener("gamepadconnected", (ev) => {
-//     if (!controllerIndex) controllerIndex = ev.gamepad.index;
-
-//     controllerCount++;
-// });
-
-// window.addEventListener("gamepaddisconnected", (ev) => {
-//     controllerCount--;
-//     if (controllerCount !== 0) {
-//         controllerIndex = navigator.getGamepads()[0].index;
-//     } else {
-//         controllerIndex = null;
-//     }
-// });
-
-// function controllerInput() {
-   
-// }
-
 Controller.search();
 
-window.addEventListener('gc.controller.found', function(event) {
-    let controller = event.detail.controller;
-    console.log("Controller found at index " + controller.index + ".");
-    console.log("'" + controller.name + "' is ready!");
-}, false);
+window.addEventListener(
+    "gc.controller.found",
+    function (event) {
+        let controller = event.detail.controller;
+        console.log("Controller found at index " + controller.index + ".");
+        console.log("'" + controller.name + "' is ready!");
+    },
+    false
+);
 
-window.addEventListener('gc.button.press', function(event) {
-    if(!document.hasFocus()) return;
-    let button = event.detail;
-    if (button.name === "DPAD_LEFT") {
-        if (focusedItem === 0 || document.activeElement === searchBar) return;
-        focusedItem--;
-        focusItem();
-    } else if (button.name === "DPAD_RIGHT") {
-        if (
-            focusedItem === appGrid.childNodes.length - 1 ||
-            document.activeElement === searchBar
-        )
-            return;
-        focusedItem++;
-        focusItem();
-    } else if (button.name === "DPAD_UP") {
-        if (focusedItem - gridColumnCount <= 0) {
-            focusedItem = 0;
+window.addEventListener(
+    "gc.button.press",
+    function (event) {
+        if (!document.hasFocus()) return;
+        let button = event.detail;
+        if (button.name === "DPAD_LEFT") {
+            if (focusedItem === 0 || document.activeElement === searchBar)
+                return;
+            focusedItem--;
             focusItem();
-        } else {
-            focusedItem -= gridColumnCount;
+        } else if (button.name === "DPAD_RIGHT") {
+            if (
+                focusedItem === appGrid.childNodes.length - 1 ||
+                document.activeElement === searchBar
+            )
+                return;
+            focusedItem++;
             focusItem();
+        } else if (button.name === "DPAD_UP") {
+            if (focusedItem - gridColumnCount <= 0) {
+                focusedItem = 0;
+                focusItem();
+            } else {
+                focusedItem -= gridColumnCount;
+                focusItem();
+            }
+        } else if (button.name === "DPAD_DOWN") {
+            if (
+                focusedItem + gridColumnCount >=
+                appGrid.childNodes.length - 1
+            ) {
+                focusedItem = appGrid.childNodes.length - 1;
+                focusItem();
+            } else {
+                focusedItem += gridColumnCount;
+                focusItem();
+            }
+        } else if (button.name === "FACE_1") {
+            ipcRenderer.send("launch", Object.keys(saveFile)[focusedItem]);
         }
-    } else if (button.name === "DPAD_DOWN") {
-        if (focusedItem + gridColumnCount >= appGrid.childNodes.length - 1) {
-            focusedItem = appGrid.childNodes.length - 1;
-            focusItem();
-        } else {
-            focusedItem += gridColumnCount;
-            focusItem();
-        }
-    }else if (button.name === "FACE_1") {
-        launchApp(saveFile[Object.keys(saveFile)[focusedItem]], window);
-    }
-}, false);
+    },
+    false
+);
 
 // // Analog Stick start movement event
 // window.addEventListener('gc.analog.start', function(event) {

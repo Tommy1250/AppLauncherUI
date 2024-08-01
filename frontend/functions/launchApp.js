@@ -8,7 +8,6 @@ const path = require("path");
  * @param {{type: "url" | "exe", location: string, args?: string}} appConfig 
  */
 function launchApp(appConfig, theWindow) {
-    console.log(appConfig)
     if (appConfig.type === "url") {
         shell.openExternal(appConfig.location);
         if(theWindow)

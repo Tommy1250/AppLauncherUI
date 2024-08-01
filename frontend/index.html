@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,25 +9,21 @@
     <script src="index.js" defer></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="fontawesome/css/all.min.css">
-    
+
 </head>
+
 <body>
     <div class="main scroll-alone">
-        <div>
-            <div class="center">
-                <h1>App launcher</h1>
-            </div>
-            <div class="search-div">
-                <form id="searchForm" class="search-box">
-                    <input type="text" id="search"
-                        placeholder="Search library...">
-                    <button type="button" id="clearSearch">clear</button>
-                </form>
-                <button id="add" class="fa-solid fa-plus fa-lg iconbtn"></button>
-                <button id="settings" class="fa-solid fa-gear fa-lg iconbtn"></button>
-            </div>
+        <div class="search-div">
+            <form id="searchForm" class="search-box">
+                <input type="text" id="search" placeholder="Search library...">
+                <button type="button" id="clearSearch">clear</button>
+            </form>
+            <button id="add" class="fa-solid fa-plus fa-lg iconbtn"></button>
+            <button id="settings" class="fa-solid fa-gear fa-lg iconbtn"></button>
         </div>
         <div id="appgrid" class="app-grid scroll-alone"></div>
     </div>
 </body>
+
 </html>
