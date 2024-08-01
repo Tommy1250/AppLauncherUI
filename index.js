@@ -135,7 +135,7 @@ ipcMain.on("contextMenu", (ev, gameName) => {
         {
             label: "Start",
             click: () => {
-                launchApp(saveFile[gameName]);
+                launchApp(saveFile[gameName], mainWindow);
             },
         },
         {

@@ -7,10 +7,12 @@ const path = require("path");
  * 
  * @param {{type: "url" | "exe", location: string, args?: string}} appConfig 
  */
-function launchApp(appConfig) {
+function launchApp(appConfig, theWindow) {
     console.log(appConfig)
     if (appConfig.type === "url") {
         shell.openExternal(appConfig.location);
+        if(theWindow)
+            theWindow.close();
     } else if (appConfig.type === "exe") {
         if (appConfig.args) {
             const child = spawn(
@@ -24,6 +26,8 @@ function launchApp(appConfig) {
             );
     
             child.unref();
+            if(theWindow)
+                theWindow.close();
         } else {
             const child = spawn(`${appConfig.location}`, {
                 detached: true,
@@ -32,6 +36,8 @@ function launchApp(appConfig) {
             });
     
             child.unref();
+            if(theWindow)
+                theWindow.close();
         }
     }
 }

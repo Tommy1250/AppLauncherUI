@@ -18,18 +18,20 @@ async function searchGame(gameName) {
         options
     );
     const body = await result.json();
-    console.log(body);
 
-    return body.data[0];
+    return body;
 }
 
 async function getBanner(gameName, savePath) {
-    const gameData = await searchGame(gameName);
-    console.log(gameData);
-    if(!gameData) {
+    const searchResults = await searchGame(gameName);
+    console.log(searchResults);
+    if(!searchResults.data || !searchResults.success || !searchResults.data[0]) {
         ipcRenderer.send("refresh");
         return `${gameName}.png`
     }
+
+    const gameData = searchResults.data[0];
+
     const options = {
         method: "GET",
         headers: {

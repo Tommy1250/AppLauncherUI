@@ -66,7 +66,7 @@ function makeAppGrid() {
         appImg.onclick = () => {
             console.log(`running game ${key}`);
 
-            launchApp(saveFile[key]);
+            launchApp(saveFile[key], window);
         };
 
         // appDiv.onclick = () => {
@@ -172,6 +172,21 @@ document.addEventListener("drop", async (e) => {
             )
                 await queueBanner(fileNameArr.join("."), imagesPath);
             else makeAppGrid();
+        } else if (file.name.endsWith(".exe")) {
+            console.log("exe file");
+
+            let fileNameArr = file.name.split(".");
+            fileNameArr.pop();
+
+            editSaveObj(fileNameArr.join("."), file.path, "exe");
+
+            if (
+                !fs.existsSync(
+                    path.join(imagesPath, `${fileNameArr.join(".")}.png`)
+                )
+            )
+                await queueBanner(fileNameArr.join("."), imagesPath);
+            else makeAppGrid();
         }
     }
     saveTheFile();
@@ -245,7 +260,7 @@ function search(query) {
             appImg.onclick = () => {
                 console.log(`running game ${key}`);
 
-                launchApp(saveFile[key]);
+                launchApp(saveFile[key], window);
             };
 
             // appDiv.onclick = () => {
@@ -280,16 +295,25 @@ function search(query) {
 
 let focusedItem = 0;
 let previousItem = 0;
-let useMouse = false;
+let useMouse = true;
+let gridColumnCount = 0;
 
-document.onkeydown = (ev) => {
+window.onresize = () => {
+    computeGridSize();
+};
+
+function computeGridSize() {
     const gridComputedStyle = window.getComputedStyle(appGrid);
 
     // get number of grid columns
-    const gridColumnCount = gridComputedStyle
+    gridColumnCount = gridComputedStyle
         .getPropertyValue("grid-template-columns")
         .split(" ").length;
+}
 
+computeGridSize();
+
+document.onkeydown = (ev) => {
     if (ev.key === "ArrowLeft") {
         if (focusedItem === 0 || document.activeElement === searchBar) return;
         focusedItem--;
@@ -303,7 +327,7 @@ document.onkeydown = (ev) => {
         focusedItem++;
         focusItem();
     } else if (ev.key === "ArrowUp") {
-        ev.preventDefault()
+        ev.preventDefault();
         if (focusedItem - gridColumnCount <= 0) {
             focusedItem = 0;
             focusItem();
@@ -312,7 +336,7 @@ document.onkeydown = (ev) => {
             focusItem();
         }
     } else if (ev.key === "ArrowDown") {
-        ev.preventDefault()
+        ev.preventDefault();
         if (focusedItem + gridColumnCount >= appGrid.childNodes.length - 1) {
             focusedItem = appGrid.childNodes.length - 1;
             focusItem();
@@ -324,7 +348,7 @@ document.onkeydown = (ev) => {
         if (document.activeElement === searchBar) {
             focusItem();
         } else {
-            launchApp(saveFile[Object.keys(saveFile)[focusedItem]]);
+            launchApp(saveFile[Object.keys(saveFile)[focusedItem]], window);
         }
     } else {
         searchBar.focus();
@@ -334,27 +358,98 @@ document.onkeydown = (ev) => {
 };
 
 function focusItem() {
-    console.log(focusedItem);
+    // console.log(focusedItem);
     const app = appGrid.childNodes.item(focusedItem);
     const previousApp = appGrid.childNodes.item(previousItem);
 
     const rect = app.getBoundingClientRect();
-    appGrid.scrollBy({ behavior: "smooth", top: rect.top - 200 });
+    appGrid.scrollBy({ behavior: "smooth", top: rect.top - 250 });
 
     previousApp.style.removeProperty("background-color");
     app.style.backgroundColor = "#e5e2e245";
     previousItem = focusedItem;
     useMouse = false;
+    document.body.style.cursor = "none";
 }
 
 document.onpointermove = () => {
     if (!useMouse) {
         const previousApp = appGrid.childNodes.item(previousItem);
         previousApp.style.removeProperty("background-color");
+        document.body.style.removeProperty("cursor");
         useMouse = true;
     }
 };
 
 addButton.onclick = () => {
     ipcRenderer.send("addWindow");
-}
+};
+
+// window.addEventListener("gamepadconnected", (ev) => {
+//     if (!controllerIndex) controllerIndex = ev.gamepad.index;
+
+//     controllerCount++;
+// });
+
+// window.addEventListener("gamepaddisconnected", (ev) => {
+//     controllerCount--;
+//     if (controllerCount !== 0) {
+//         controllerIndex = navigator.getGamepads()[0].index;
+//     } else {
+//         controllerIndex = null;
+//     }
+// });
+
+// function controllerInput() {
+   
+// }
+
+Controller.search();
+
+window.addEventListener('gc.controller.found', function(event) {
+    let controller = event.detail.controller;
+    console.log("Controller found at index " + controller.index + ".");
+    console.log("'" + controller.name + "' is ready!");
+}, false);
+
+window.addEventListener('gc.button.press', function(event) {
+    if(!document.hasFocus()) return;
+    let button = event.detail;
+    if (button.name === "DPAD_LEFT") {
+        if (focusedItem === 0 || document.activeElement === searchBar) return;
+        focusedItem--;
+        focusItem();
+    } else if (button.name === "DPAD_RIGHT") {
+        if (
+            focusedItem === appGrid.childNodes.length - 1 ||
+            document.activeElement === searchBar
+        )
+            return;
+        focusedItem++;
+        focusItem();
+    } else if (button.name === "DPAD_UP") {
+        if (focusedItem - gridColumnCount <= 0) {
+            focusedItem = 0;
+            focusItem();
+        } else {
+            focusedItem -= gridColumnCount;
+            focusItem();
+        }
+    } else if (button.name === "DPAD_DOWN") {
+        if (focusedItem + gridColumnCount >= appGrid.childNodes.length - 1) {
+            focusedItem = appGrid.childNodes.length - 1;
+            focusItem();
+        } else {
+            focusedItem += gridColumnCount;
+            focusItem();
+        }
+    }else if (button.name === "FACE_1") {
+        launchApp(saveFile[Object.keys(saveFile)[focusedItem]], window);
+    }
+}, false);
+
+// // Analog Stick start movement event
+// window.addEventListener('gc.analog.start', function(event) {
+//     var stick = event.detail;
+//     console.log(stick);
+// })
