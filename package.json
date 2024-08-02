@@ -10,7 +10,7 @@
     "deb64": "electron-installer-debian --src release-builds/applauncherui-linux-x64/ --dest release-builds/installers/ --icon icon.png --arch amd64"
   },
   "keywords": [],
-  "author": "",
+  "author": "Tommy",
   "license": "ISC",
   "dependencies": {
     "get-windows-shortcut-properties": "^1.3.0",
