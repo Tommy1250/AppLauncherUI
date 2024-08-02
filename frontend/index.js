@@ -54,7 +54,10 @@ function makeAppGrid() {
         background.className = "app-bg";
 
         appImg.className = "app-img";
-        appImg.src = path.join(imagesPath, `${key}.png`);
+        let imagePath = path.join(imagesPath, `${key}.png`);
+        if(!fs.existsSync(imagePath))
+            imagePath = path.join(__dirname, "missing.png");
+        appImg.src = imagePath;
         appImg.setAttribute("draggable", false);
 
         appImg.onclick = () => {
@@ -208,8 +211,8 @@ function editSaveObj(fileName, location, type, args = null) {
 
 function saveTheFile() {
     // progressHolder.innerText = "";
+    fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile));
     ipcRenderer.send("updateSaveMain")
-    fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile, null, 4));
 }
 
 searchForm.onsubmit = (ev) => {

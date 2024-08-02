@@ -44,7 +44,7 @@ ipcRenderer.on("savePath", (ev, args) => {
 ipcRenderer.on("appname", (ev, args) => {
     appName = args;
     appIdHolder.innerText = `Id: ${appName}`;
-    appImg.src = path.join(imagesPath, `${appName}.png`);
+    appImg.src = fs.existsSync(path.join(imagesPath, `${appName}.png`)) ? path.join(imagesPath, `${appName}.png`) : path.join(__dirname, `missing.png`);
     appNameInput.value = saveFile[appName].gridName;
     appPathInput.value = saveFile[appName].location;
     if(saveFile[appName].type === "exe"){

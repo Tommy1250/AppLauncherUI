@@ -17,17 +17,21 @@ async function searchGame(gameName) {
         )}`,
         options
     );
+
     const body = await result.json();
 
     return body;
 }
 
 async function getBanner(gameName, savePath) {
-    const searchResults = await searchGame(gameName);
-    console.log(searchResults);
-    if(!searchResults.data || !searchResults.success || !searchResults.data[0]) {
-        ipcRenderer.send("refresh");
-        return `${gameName}.png`
+    let searchResults;
+    searchResults = await searchGame(gameName);
+    if (
+        !searchResults.data ||
+        !searchResults.success ||
+        !searchResults.data[0]
+    ) {
+        return `${gameName}.png`;
     }
 
     const gameData = searchResults.data[0];
@@ -47,8 +51,8 @@ async function getBanner(gameName, savePath) {
     const body = await result.json();
     if (!body.success || body.data.length === 0) {
         ipcRenderer.send("refresh");
-        return `${gameName}.png`
-    };
+        return `${gameName}.png`;
+    }
     const imageUrl = body.data[0].url;
 
     await downloadImage(imageUrl, gameName, savePath);
@@ -59,16 +63,26 @@ async function queueBanner(gameName, savePath) {
     if (!itemsQueue.includes(gameName)) itemsQueue.push(gameName);
     else return null;
 
-    if (itemsQueue.length === 1) {
+    if (itemsQueue.length >= 1) {
         setTimeout(async () => {
-            console.log("getting banner for " + gameName)
+            console.log("getting banner for " + gameName);
+            try {
+                const banner = await getBanner(gameName, savePath);
+                if (banner) itemsQueue.shift();
+            } catch {
+                itemsQueue.shift();
+                ipcRenderer.send("refresh");
+            }
+        }, 500);
+    } else {
+        console.log("getting banner for " + gameName);
+        try {
             const banner = await getBanner(gameName, savePath);
             if (banner) itemsQueue.shift();
-        }, 400);
-    } else {
-        const banner = await getBanner(gameName, savePath);
-        console.log("getting banner for " + gameName);
-        if (banner) itemsQueue.shift();
+        } catch {
+            itemsQueue.shift();
+            ipcRenderer.send("refresh");
+        }
     }
     return `${gameName}.png`;
 }
