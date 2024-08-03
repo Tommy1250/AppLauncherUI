@@ -13,7 +13,7 @@
 </head>
 
 <body>
-    <div class="main scroll-alone">
+    <div class="main scroll-alone" id="mainContent">
         <div class="search-div">
             <form id="searchForm" class="search-box">
                 <input type="text" id="search" placeholder="Search library...">
@@ -23,6 +23,28 @@
             <button id="settings" class="fa-solid fa-gear fa-lg iconbtn"></button>
         </div>
         <div id="appgrid" class="app-grid scroll-alone"></div>
+    </div>
+    <div class="settings" id="settingsDiv">
+        <div class="container">
+            <div class="switch-div">
+                <label for="startWithPc" class="setting-label">Start app with pc:</label>
+                <label class="switch">
+                    <input type="checkbox" id="startWithPc">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div>
+                <label for="steamGridToken" class="setting-label">Steam grid Token:</label>
+                <input type="text" id="steamGridToken" class="setting-input">
+                <div class="controls">
+                    <button id="goToSteamGirdBtn" class="setting-button">Sign up for a token</button>
+                </div>
+            </div>
+            <div class="controls">
+                <button id="cancel">Cancel</button>
+                <button id="save">Save changes</button>
+            </div>
+        </div>
     </div>
 </body>
 

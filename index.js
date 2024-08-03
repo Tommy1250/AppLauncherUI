@@ -31,19 +31,30 @@ let editWindow;
 let addWindow;
 
 const savePath = path.join(app.getPath("userData"), "saves");
-const shortcutsFile = path.join(savePath, "shortcuts.json");
-const latestGamesFile = path.join(savePath, "latest.json");
+const shortcutsPath = path.join(savePath, "shortcuts.json");
+const latestGamesPath = path.join(savePath, "latest.json");
+const settingsPath = path.join(savePath, "settings.json");
 
 if (!fs.existsSync(savePath)) {
     fs.mkdirSync(savePath);
 }
 
-if (!fs.existsSync(shortcutsFile)) {
-    fs.writeFileSync(shortcutsFile, "{}");
+if (!fs.existsSync(shortcutsPath)) {
+    fs.writeFileSync(shortcutsPath, "{}");
 }
 
-if (!fs.existsSync(latestGamesFile)) {
-    fs.writeFileSync(latestGamesFile, "[]");
+if (!fs.existsSync(latestGamesPath)) {
+    fs.writeFileSync(latestGamesPath, "[]");
+}
+
+if (!fs.existsSync(settingsPath)) {
+    fs.writeFileSync(
+        settingsPath,
+        JSON.stringify({
+            startWithPc: true,
+            steamGridToken: "",
+        })
+    );
 }
 
 /**
@@ -56,7 +67,12 @@ let saveFile = JSON.parse(
 /**
  * @type {string[]}
  */
-let latestLaunchedGames = JSON.parse(fs.readFileSync(latestGamesFile, "utf-8"));
+let latestLaunchedGames = JSON.parse(fs.readFileSync(latestGamesPath, "utf-8"));
+
+/**
+ * @type {{startWithPc: boolean, steamGridToken: string}}
+ */
+let settingsFile = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
 
 const iconpath =
     process.platform === "linux"
@@ -104,7 +120,7 @@ ipcMain.on("refresh", () => {
 });
 
 ipcMain.on("updateSaveMain", () => {
-    saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
+    saveFile = JSON.parse(fs.readFileSync(shortcutsPath, "utf-8"));
 });
 
 let tray = null;
@@ -115,8 +131,7 @@ function addToLatestAndLaunch(gameName, window = null) {
     if (latestLaunchedGames.length > 5) {
         latestLaunchedGames.shift();
     }
-    fs.writeFileSync(latestGamesFile, JSON.stringify(latestLaunchedGames));
-    
+
     const trayTemplate = [
         {
             label: "Show app",
@@ -137,18 +152,22 @@ function addToLatestAndLaunch(gameName, window = null) {
     ];
 
     if (latestLaunchedGames.length !== 0) {
+        let updatedLatest = [...latestLaunchedGames]
         for (let i = 0; i < latestLaunchedGames.length; i++) {
-            const gameName = latestLaunchedGames[i];
-            trayTemplate.splice(1, 0, {
-                label: gameName,
-                click: () => {
-                    addToLatestAndLaunch(
-                        gameName,
-                        mainWindow ? mainWindow : null
-                    );
-                },
-            });
+            const gameName2 = latestLaunchedGames[i];
+            if (saveFile[gameName2]) {
+                trayTemplate.splice(1, 0, {
+                    label: gameName2,
+                    click: () => {
+                        launchApp(gameName2, mainWindow ? mainWindow : null);
+                    },
+                });
+            } else {
+                updatedLatest.splice(i, 1);
+            }
         }
+        latestLaunchedGames = updatedLatest
+        fs.writeFileSync(latestGamesPath, JSON.stringify(latestLaunchedGames));
     }
 
     const trayMenu = Menu.buildFromTemplate(trayTemplate);
@@ -157,11 +176,66 @@ function addToLatestAndLaunch(gameName, window = null) {
     launchApp(saveFile[gameName], window);
 }
 
+function removeFromLatest(gameName) {
+    const trayTemplate = [
+        {
+            label: "Show app",
+            click: function () {
+                if (mainWindow) {
+                    mainWindow.show();
+                } else {
+                    createWindow();
+                }
+            },
+        },
+        {
+            label: "Quit",
+            click: function () {
+                app.exit();
+            },
+        },
+    ];
+
+    if (latestLaunchedGames.length !== 0) {
+        let updatedLatest = [...latestLaunchedGames]
+        for (let i = 0; i < latestLaunchedGames.length; i++) {
+            const gameName2 = latestLaunchedGames[i];
+            if (gameName2 !== gameName) {
+                trayTemplate.splice(1, 0, {
+                    label: gameName2,
+                    click: () => {
+                        launchApp(gameName2, mainWindow ? mainWindow : null);
+                    },
+                });
+            } else {
+                updatedLatest.splice(i, 1);
+            }
+        }
+        latestLaunchedGames = updatedLatest
+        fs.writeFileSync(latestGamesPath, JSON.stringify(latestLaunchedGames));
+    }
+
+    const trayMenu = Menu.buildFromTemplate(trayTemplate);
+    tray.setContextMenu(trayMenu);
+}
+
 if (!gotTheLock) {
     app.quit();
 } else {
     app.whenReady().then(() => {
         createWindow();
+
+        if (!app.isPackaged) {
+            app.setLoginItemSettings({
+                openAtLogin: false,
+                path: app.getPath("exe"),
+            });
+        } else {
+            app.setLoginItemSettings({
+                openAtLogin: settingsFile.startWithPc,
+                path: app.getPath("exe"),
+            });
+        }
 
         app.on("activate", () => {
             if (BrowserWindow.getAllWindows().length === 0) {
@@ -191,18 +265,22 @@ if (!gotTheLock) {
         ];
 
         if (latestLaunchedGames.length !== 0) {
+            let updatedLatest = [...latestLaunchedGames]
             for (let i = 0; i < latestLaunchedGames.length; i++) {
                 const gameName = latestLaunchedGames[i];
-                trayTemplate.splice(1, 0, {
-                    label: gameName,
-                    click: () => {
-                        addToLatestAndLaunch(
-                            gameName,
-                            mainWindow ? mainWindow : null
-                        );
-                    },
-                });
+                if (saveFile[gameName]) {
+                    trayTemplate.splice(1, 0, {
+                        label: gameName,
+                        click: () => {
+                            launchApp(gameName, mainWindow ? mainWindow : null);
+                        },
+                    });
+                } else {
+                    updatedLatest.splice(i, 1);
+                }
             }
+            latestLaunchedGames = updatedLatest
+            fs.writeFileSync(latestGamesPath, JSON.stringify(latestLaunchedGames));
         }
 
         const menu = Menu.buildFromTemplate(trayTemplate);
@@ -279,6 +357,7 @@ ipcMain.on("contextMenu", (ev, gameName) => {
                     path.join(savePath, "shortcuts.json"),
                     JSON.stringify(saveFile)
                 );
+                removeFromLatest(gameName)
                 mainWindow.webContents.send("updateSave");
             },
         },
@@ -355,6 +434,26 @@ ipcMain.on("addWindow", () => {
     } else {
         addWindow.focus();
     }
+});
+
+ipcMain.on("updateSave", (ev, args) => {
+    if (settingsFile.startWithPc !== args.startWithPc) {
+        if (!app.isPackaged) {
+            app.setLoginItemSettings({
+                openAtLogin: false,
+                path: app.getPath("exe"),
+            });
+        } else {
+            app.setLoginItemSettings({
+                openAtLogin: args.startWithPc,
+                path: app.getPath("exe"),
+            });
+        }
+    }
+
+    settingsFile = args;
+
+    fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 });
 
 app.on("window-all-closed", (ev) => {

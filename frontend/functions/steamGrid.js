@@ -3,11 +3,13 @@ const downloadImage = require("./writeImage");
 
 const itemsQueue = [];
 
-async function searchGame(gameName) {
+async function searchGame(gameName, token) {
+    if(!token) 
+        return null;
     const options = {
         method: "GET",
         headers: {
-            Authorization: "Bearer 35cf9783ab374a9db206fdc9d3c863f3",
+            Authorization: `Bearer ${token}`,
         },
     };
 
@@ -23,9 +25,11 @@ async function searchGame(gameName) {
     return body;
 }
 
-async function getBanner(gameName, savePath) {
+async function getBanner(gameName, savePath, token) {
+    if(!token) 
+        return `${gameName}.png`;
     let searchResults;
-    searchResults = await searchGame(gameName);
+    searchResults = await searchGame(gameName, token);
     if (
         !searchResults.data ||
         !searchResults.success ||
@@ -39,8 +43,7 @@ async function getBanner(gameName, savePath) {
     const options = {
         method: "GET",
         headers: {
-            "User-Agent": "Insomnia/2023.5.7",
-            Authorization: "Bearer 35cf9783ab374a9db206fdc9d3c863f3",
+            Authorization: `Bearer ${token}`
         },
     };
 
@@ -59,7 +62,7 @@ async function getBanner(gameName, savePath) {
     return `${gameName}.png`;
 }
 
-async function queueBanner(gameName, savePath) {
+async function queueBanner(gameName, savePath, token) {
     if (!itemsQueue.includes(gameName)) itemsQueue.push(gameName);
     else return null;
 
@@ -67,7 +70,7 @@ async function queueBanner(gameName, savePath) {
         setTimeout(async () => {
             console.log("getting banner for " + gameName);
             try {
-                const banner = await getBanner(gameName, savePath);
+                const banner = await getBanner(gameName, savePath, token);
                 if (banner) itemsQueue.shift();
             } catch {
                 itemsQueue.shift();
@@ -77,7 +80,7 @@ async function queueBanner(gameName, savePath) {
     } else {
         console.log("getting banner for " + gameName);
         try {
-            const banner = await getBanner(gameName, savePath);
+            const banner = await getBanner(gameName, savePath, token);
             if (banner) itemsQueue.shift();
         } catch {
             itemsQueue.shift();

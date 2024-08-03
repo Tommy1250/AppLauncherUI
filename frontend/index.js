@@ -1,5 +1,5 @@
 const getWindowsShortcutProperties = require("get-windows-shortcut-properties");
-const { ipcRenderer } = require("electron");
+const { ipcRenderer, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { queueBanner } = require("./functions/steamGrid");
@@ -12,13 +12,27 @@ let imagesPath = "";
  */
 let saveFile = {};
 
+/**
+ * @type {{startWithPc: boolean, steamGridToken: string}}
+ */
+let settingsFile = {};
+
 const appGrid = document.getElementById("appgrid");
 const searchForm = document.getElementById("searchForm");
 const searchBar = document.getElementById("search");
 const clearSearch = document.getElementById("clearSearch");
 
 const addButton = document.getElementById("add");
-// const settingsButton = document.getElementById("settings");
+const settingsButton = document.getElementById("settings");
+
+const mainDiv = document.getElementById("mainContent");
+const settingsDiv = document.getElementById("settingsDiv");
+
+const settingsCancelBtn = document.getElementById("cancel");
+const settingsSaveBtn = document.getElementById("save");
+const goToSteamGirdBtn = document.getElementById("goToSteamGirdBtn");
+const steamGridTokenInput = document.getElementById("steamGridToken");
+const startWithPcCheckBox = document.getElementById("startWithPc");
 
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
@@ -26,6 +40,11 @@ ipcRenderer.on("savePath", (ev, args) => {
     shortcutsFile = path.join(savePath, "shortcuts.json");
     imagesPath = path.join(savePath, "images");
     saveFile = JSON.parse(fs.readFileSync(path.join(shortcutsFile), "utf-8"));
+    settingsFile = JSON.parse(fs.readFileSync(path.join(savePath, "settings.json"), "utf-8"));
+
+    steamGridTokenInput.value = settingsFile.steamGridToken;
+    startWithPcCheckBox.checked = settingsFile.startWithPc;
+
     makeAppGrid();
 
     if (!fs.existsSync(imagesPath)) {
@@ -55,7 +74,7 @@ function makeAppGrid() {
 
         appImg.className = "app-img";
         let imagePath = path.join(imagesPath, `${key}.png`);
-        if(!fs.existsSync(imagePath))
+        if (!fs.existsSync(imagePath))
             imagePath = path.join(__dirname, "missing.png");
         appImg.src = imagePath;
         appImg.setAttribute("draggable", false);
@@ -144,9 +163,17 @@ document.addEventListener("drop", async (e) => {
                 !fs.existsSync(
                     path.join(imagesPath, `${fileNameArr.join(".")}.png`)
                 )
-            )
-                await queueBanner(fileNameArr.join("."), imagesPath);
-            else makeAppGrid();
+            ) {
+                if (
+                    settingsFile.steamGridToken &&
+                    settingsFile.steamGridToken !== ""
+                )
+                    await queueBanner(
+                        fileNameArr.join("."),
+                        imagesPath,
+                        settingsFile.steamGridToken
+                    );
+            } else makeAppGrid();
         } else if (file.name.endsWith(".lnk")) {
             console.log("realSortcut");
             const shortcutData =
@@ -166,9 +193,17 @@ document.addEventListener("drop", async (e) => {
                 !fs.existsSync(
                     path.join(imagesPath, `${fileNameArr.join(".")}.png`)
                 )
-            )
-                await queueBanner(fileNameArr.join("."), imagesPath);
-            else makeAppGrid();
+            ) {
+                if (
+                    settingsFile.steamGridToken &&
+                    settingsFile.steamGridToken !== ""
+                )
+                    await queueBanner(
+                        fileNameArr.join("."),
+                        imagesPath,
+                        settingsFile.steamGridToken
+                    );
+            } else makeAppGrid();
         } else if (file.name.endsWith(".exe")) {
             console.log("exe file");
 
@@ -181,15 +216,20 @@ document.addEventListener("drop", async (e) => {
                 !fs.existsSync(
                     path.join(imagesPath, `${fileNameArr.join(".")}.png`)
                 )
-            )
-                await queueBanner(fileNameArr.join("."), imagesPath);
-            else makeAppGrid();
+            ) {
+                if (
+                    settingsFile.steamGridToken &&
+                    settingsFile.steamGridToken !== ""
+                )
+                    await queueBanner(
+                        fileNameArr.join("."),
+                        imagesPath,
+                        settingsFile.steamGridToken
+                    );
+            } else makeAppGrid();
         }
     }
     saveTheFile();
-    // setTimeout(() => {
-    //     makeAppGrid();
-    // }, 200)
 });
 
 function editSaveObj(fileName, location, type, args = null) {
@@ -212,7 +252,7 @@ function editSaveObj(fileName, location, type, args = null) {
 function saveTheFile() {
     // progressHolder.innerText = "";
     fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile));
-    ipcRenderer.send("updateSaveMain")
+    ipcRenderer.send("updateSaveMain");
 }
 
 searchForm.onsubmit = (ev) => {
@@ -440,3 +480,24 @@ window.addEventListener(
 //     var stick = event.detail;
 //     console.log(stick);
 // })
+
+settingsButton.onclick = () => {
+    mainDiv.style.display = "none";
+    settingsDiv.style.display = "flex";
+};
+
+settingsCancelBtn.onclick = () => {
+    mainDiv.style.display = "grid";
+    settingsDiv.style.display = "none";
+};
+
+goToSteamGirdBtn.onclick = () => {
+    shell.openExternal("https://www.steamgriddb.com/profile/preferences/api");
+};
+
+settingsSaveBtn.onclick = () => {
+    settingsFile = {startWithPc: startWithPcCheckBox.checked, steamGridToken: steamGridTokenInput.value};
+    mainDiv.style.display = "grid";
+    settingsDiv.style.display = "none";
+    ipcRenderer.send("updateSave", settingsFile);
+}
