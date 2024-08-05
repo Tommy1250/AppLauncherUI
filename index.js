@@ -159,7 +159,7 @@ function addToLatestAndLaunch(gameName, window = null) {
                 trayTemplate.splice(1, 0, {
                     label: gameName2,
                     click: () => {
-                        launchApp(gameName2, mainWindow ? mainWindow : null);
+                        launchApp(saveFile[gameName2], mainWindow ? mainWindow : null);
                     },
                 });
             } else {
@@ -272,7 +272,7 @@ if (!gotTheLock) {
                     trayTemplate.splice(1, 0, {
                         label: gameName,
                         click: () => {
-                            launchApp(gameName, mainWindow ? mainWindow : null);
+                            launchApp(saveFile[gameName], mainWindow ? mainWindow : null);
                         },
                     });
                 } else {

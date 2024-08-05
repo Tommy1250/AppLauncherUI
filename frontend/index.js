@@ -85,10 +85,6 @@ function makeAppGrid() {
             ipcRenderer.send("launch", key);
         };
 
-        // appDiv.onclick = () => {
-        //     console.log("appdiv click");
-        // }
-
         optionsButton.onclick = () => {
             console.log(`options click on ${key}`);
             ipcRenderer.send("contextMenu", key);
@@ -139,7 +135,6 @@ document.addEventListener("drop", async (e) => {
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        // progressHolder.innerText = `Proccessing: ${i + 1} out of ${files.length}`;
         const shortcutPath = file.path;
 
         if (file.name.endsWith(".url")) {
@@ -165,7 +160,6 @@ document.addEventListener("drop", async (e) => {
                 )
             ) {
                 if (
-                    settingsFile.steamGridToken &&
                     settingsFile.steamGridToken !== ""
                 )
                     await queueBanner(
@@ -195,7 +189,6 @@ document.addEventListener("drop", async (e) => {
                 )
             ) {
                 if (
-                    settingsFile.steamGridToken &&
                     settingsFile.steamGridToken !== ""
                 )
                     await queueBanner(
@@ -218,7 +211,6 @@ document.addEventListener("drop", async (e) => {
                 )
             ) {
                 if (
-                    settingsFile.steamGridToken &&
                     settingsFile.steamGridToken !== ""
                 )
                     await queueBanner(
@@ -273,6 +265,8 @@ clearSearch.onclick = () => {
 
 function search(query) {
     appGrid.innerHTML = "";
+    focusedItem = 0;
+    previousItem = 0;
     for (let i = 0; i < Object.keys(saveFile).length; i++) {
         const key = Object.keys(saveFile)[i];
 
@@ -300,11 +294,7 @@ function search(query) {
 
                 ipcRenderer.send("launch", key);
             };
-
-            // appDiv.onclick = () => {
-            //     console.log("appdiv click");
-            // }
-
+            
             optionsButton.onclick = () => {
                 console.log(`options click on ${key}`);
                 ipcRenderer.send("contextMenu", key);
