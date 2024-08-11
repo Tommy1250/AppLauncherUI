@@ -7,6 +7,7 @@ const { queueBanner } = require("./functions/steamGrid");
 let shortcutsFile = "";
 let savePath = "";
 let imagesPath = "";
+let orderPath = "";
 /**
  * @type {{appname: {type: "url" | "exe", location: string, args?: string, gridName: string}}}
  */
@@ -16,6 +17,11 @@ let saveFile = {};
  * @type {{startWithPc: boolean, steamGridToken: string}}
  */
 let settingsFile = {};
+
+/**
+ * @type {string[]}
+ */
+let orderFile = []; 
 
 const appGrid = document.getElementById("appgrid");
 const searchForm = document.getElementById("searchForm");
@@ -39,8 +45,20 @@ ipcRenderer.on("savePath", (ev, args) => {
     console.log(savePath);
     shortcutsFile = path.join(savePath, "shortcuts.json");
     imagesPath = path.join(savePath, "images");
-    saveFile = JSON.parse(fs.readFileSync(path.join(shortcutsFile), "utf-8"));
-    settingsFile = JSON.parse(fs.readFileSync(path.join(savePath, "settings.json"), "utf-8"));
+    orderPath = path.join(savePath, "order.json");
+
+    saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
+    settingsFile = JSON.parse(
+        fs.readFileSync(path.join(savePath, "settings.json"), "utf-8")
+    );
+
+    if(!fs.existsSync(orderPath)) {
+        const keys = Object.keys(saveFile);
+        orderFile.push(...keys);
+        fs.writeFileSync(orderPath, JSON.stringify(orderFile));
+    }else{
+        orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
+    }
 
     steamGridTokenInput.value = settingsFile.steamGridToken;
     startWithPcCheckBox.checked = settingsFile.startWithPc;
@@ -61,52 +79,7 @@ function makeAppGrid() {
     for (let i = 0; i < Object.keys(saveFile).length; i++) {
         const key = Object.keys(saveFile)[i];
 
-        const appDiv = document.createElement("div");
-        const background = document.createElement("div");
-        const appImg = document.createElement("img");
-        const appName = document.createElement("p");
-        const optionsButton = document.createElement("button");
-        const bottomHolder = document.createElement("div");
-
-        appDiv.className = "app-div";
-
-        background.className = "app-bg";
-
-        appImg.className = "app-img";
-        let imagePath = path.join(imagesPath, `${key}.png`);
-        if (!fs.existsSync(imagePath))
-            imagePath = path.join(__dirname, "missing.png");
-        appImg.src = imagePath;
-        appImg.setAttribute("draggable", false);
-
-        appImg.onclick = () => {
-            console.log(`running game ${key}`);
-
-            ipcRenderer.send("launch", key);
-        };
-
-        optionsButton.onclick = () => {
-            console.log(`options click on ${key}`);
-            ipcRenderer.send("contextMenu", key);
-        };
-
-        appDiv.oncontextmenu = () => {
-            console.log(`right click on ${key}`);
-            ipcRenderer.send("contextMenu", key);
-        };
-
-        appName.innerText = saveFile[key].gridName;
-        optionsButton.className = "fa-solid fa-ellipsis";
-
-        bottomHolder.appendChild(appName);
-        bottomHolder.appendChild(optionsButton);
-        bottomHolder.className = "bottom-holder";
-
-        appDiv.appendChild(background);
-        appDiv.appendChild(appImg);
-        appDiv.appendChild(bottomHolder);
-
-        appGrid.appendChild(appDiv);
+        addItemToGrid(key);
     }
 }
 
@@ -159,9 +132,7 @@ document.addEventListener("drop", async (e) => {
                     path.join(imagesPath, `${fileNameArr.join(".")}.png`)
                 )
             ) {
-                if (
-                    settingsFile.steamGridToken !== ""
-                )
+                if (settingsFile.steamGridToken !== "")
                     await queueBanner(
                         fileNameArr.join("."),
                         imagesPath,
@@ -188,9 +159,7 @@ document.addEventListener("drop", async (e) => {
                     path.join(imagesPath, `${fileNameArr.join(".")}.png`)
                 )
             ) {
-                if (
-                    settingsFile.steamGridToken !== ""
-                )
+                if (settingsFile.steamGridToken !== "")
                     await queueBanner(
                         fileNameArr.join("."),
                         imagesPath,
@@ -210,9 +179,7 @@ document.addEventListener("drop", async (e) => {
                     path.join(imagesPath, `${fileNameArr.join(".")}.png`)
                 )
             ) {
-                if (
-                    settingsFile.steamGridToken !== ""
-                )
+                if (settingsFile.steamGridToken !== "")
                     await queueBanner(
                         fileNameArr.join("."),
                         imagesPath,
@@ -274,51 +241,62 @@ function search(query) {
             key.toLowerCase().includes(query.toLowerCase()) ||
             saveFile[key].gridName.toLowerCase().includes(query.toLowerCase())
         ) {
-            const appDiv = document.createElement("div");
-            const background = document.createElement("div");
-            const appImg = document.createElement("img");
-            const appName = document.createElement("p");
-            const optionsButton = document.createElement("button");
-            const bottomHolder = document.createElement("div");
-
-            appDiv.className = "app-div";
-
-            background.className = "app-bg";
-
-            appImg.className = "app-img";
-            appImg.src = path.join(imagesPath, `${key}.png`);
-            appImg.setAttribute("draggable", false);
-
-            appImg.onclick = () => {
-                console.log(`running game ${key}`);
-
-                ipcRenderer.send("launch", key);
-            };
-            
-            optionsButton.onclick = () => {
-                console.log(`options click on ${key}`);
-                ipcRenderer.send("contextMenu", key);
-            };
-
-            appDiv.oncontextmenu = () => {
-                console.log(`right click on ${key}`);
-                ipcRenderer.send("contextMenu", key);
-            };
-
-            appName.innerText = saveFile[key].gridName;
-            optionsButton.className = "fa-solid fa-ellipsis";
-
-            bottomHolder.appendChild(appName);
-            bottomHolder.appendChild(optionsButton);
-            bottomHolder.className = "bottom-holder";
-
-            appDiv.appendChild(background);
-            appDiv.appendChild(appImg);
-            appDiv.appendChild(bottomHolder);
-
-            appGrid.appendChild(appDiv);
+            addItemToGrid(key);
         }
     }
+}
+
+/**
+ *
+ * @param {string} key
+ */
+function addItemToGrid(key) {
+    const appDiv = document.createElement("div");
+    const background = document.createElement("div");
+    const appImg = document.createElement("img");
+    const appName = document.createElement("p");
+    const optionsButton = document.createElement("button");
+    const bottomHolder = document.createElement("div");
+
+    appDiv.className = "app-div";
+
+    background.className = "app-bg";
+
+    appImg.className = "app-img";
+    let imagePath = path.join(imagesPath, `${key}.png`);
+    if (!fs.existsSync(imagePath))
+        imagePath = path.join(__dirname, "missing.png");
+    appImg.src = imagePath;
+    appImg.setAttribute("draggable", false);
+
+    appImg.onclick = () => {
+        console.log(`running game ${key}`);
+
+        ipcRenderer.send("launch", key);
+    };
+
+    optionsButton.onclick = () => {
+        console.log(`options click on ${key}`);
+        ipcRenderer.send("contextMenu", key);
+    };
+
+    appDiv.oncontextmenu = () => {
+        console.log(`right click on ${key}`);
+        ipcRenderer.send("contextMenu", key);
+    };
+
+    appName.innerText = saveFile[key].gridName;
+    optionsButton.className = "fa-solid fa-ellipsis";
+
+    bottomHolder.appendChild(appName);
+    bottomHolder.appendChild(optionsButton);
+    bottomHolder.className = "bottom-holder";
+
+    appDiv.appendChild(background);
+    appDiv.appendChild(appImg);
+    appDiv.appendChild(bottomHolder);
+
+    appGrid.appendChild(appDiv);
 }
 
 let focusedItem = 0;
@@ -486,8 +464,11 @@ goToSteamGirdBtn.onclick = () => {
 };
 
 settingsSaveBtn.onclick = () => {
-    settingsFile = {startWithPc: startWithPcCheckBox.checked, steamGridToken: steamGridTokenInput.value};
+    settingsFile = {
+        startWithPc: startWithPcCheckBox.checked,
+        steamGridToken: steamGridTokenInput.value,
+    };
     mainDiv.style.display = "grid";
     settingsDiv.style.display = "none";
     ipcRenderer.send("updateSave", settingsFile);
-}
+};

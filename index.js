@@ -223,6 +223,12 @@ if (!gotTheLock) {
     app.quit();
 } else {
     app.whenReady().then(() => {
+        app.on("second-instance", () => {
+            if(!mainWindow)
+                createWindow();
+            mainWindow.show();
+        })
+
         createWindow();
 
         if (!app.isPackaged) {
