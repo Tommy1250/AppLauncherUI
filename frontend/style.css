@@ -296,3 +296,48 @@ input:checked+.slider {
 input:checked+.slider:before {
     transform: translateX(26px);
 }
+
+.showmove {
+    background-color: #181717;
+    border: 1px solid #404040d1;
+    color: #ececec;
+    border-radius: 5px;
+    padding: 20px;
+    /* margin: 0; */
+}
+
+.showmove::backdrop {
+    background-color: #22212166;
+}
+
+.head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    height: fit-content;
+}
+
+.head > button {
+    height: fit-content;
+    width: fit-content;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #f5f5f5;
+}
+
+.head > button:hover {
+    color: rgb(174, 174, 174);
+}
+
+.head > button:focus {
+    border-radius: 1px;
+    border-color: rgb(113, 113, 255);
+}
+
+.head > p {
+    margin: 0;
+    margin-bottom: 2px;
+    font-weight: bolder;
+    font-size: large;
+    height: fit-content;
+}

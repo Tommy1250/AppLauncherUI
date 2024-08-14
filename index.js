@@ -34,6 +34,7 @@ const savePath = path.join(app.getPath("userData"), "saves");
 const shortcutsPath = path.join(savePath, "shortcuts.json");
 const latestGamesPath = path.join(savePath, "latest.json");
 const settingsPath = path.join(savePath, "settings.json");
+const orderPath = path.join(savePath, "order.json");
 
 if (!fs.existsSync(savePath)) {
     fs.mkdirSync(savePath);
@@ -74,6 +75,19 @@ let latestLaunchedGames = JSON.parse(fs.readFileSync(latestGamesPath, "utf-8"));
  */
 let settingsFile = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
 
+/**
+ * @type {string[]}
+ */
+let orderFile = [];
+
+if(!fs.existsSync(orderPath)) {
+    const keys = Object.keys(saveFile);
+    orderFile.push(...keys);
+    fs.writeFileSync(orderPath, JSON.stringify(orderFile));
+}else{
+    orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
+}
+
 const iconpath =
     process.platform === "linux"
         ? path.join(__dirname, "icon.png")
@@ -113,14 +127,16 @@ ipcMain.on("getSavePath", (event, arg) => {
 });
 
 ipcMain.on("refresh", () => {
-    mainWindow.webContents.send("refresh");
     saveFile = JSON.parse(
-        fs.readFileSync(path.join(savePath, "shortcuts.json"), "utf-8")
+        fs.readFileSync(shortcutsPath, "utf-8")
     );
+    orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
+    mainWindow.webContents.send("refresh");
 });
 
 ipcMain.on("updateSaveMain", () => {
     saveFile = JSON.parse(fs.readFileSync(shortcutsPath, "utf-8"));
+    orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
 });
 
 let tray = null;
@@ -307,7 +323,9 @@ ipcMain.on("launch", (ev, gameName) => {
     addToLatestAndLaunch(gameName, ev.sender);
 });
 
-ipcMain.on("contextMenu", (ev, gameName) => {
+ipcMain.on("contextMenu", (ev, args) => {
+    const gameName = args.key;
+    const index = args.index;
     const template = [
         {
             label: "Start",
@@ -356,6 +374,12 @@ ipcMain.on("contextMenu", (ev, gameName) => {
             },
         },
         {
+            label: "Change possition",
+            click: () => {
+                mainWindow.webContents.send("showMovePopup", index);
+            },
+        },
+        {
             label: "Remove",
             click: () => {
                 delete saveFile[gameName];
@@ -364,6 +388,7 @@ ipcMain.on("contextMenu", (ev, gameName) => {
                     JSON.stringify(saveFile)
                 );
                 removeFromLatest(gameName)
+                removeFromOrderList(index);
                 mainWindow.webContents.send("updateSave");
             },
         },
@@ -380,6 +405,37 @@ ipcMain.on("contextMenu", (ev, gameName) => {
 
     Menu.buildFromTemplate(template).popup();
 });
+
+function removeFromOrderList(location) {
+    orderFile.splice(location, 1);
+    fs.writeFileSync(orderPath, JSON.stringify(orderFile));
+}
+
+/**
+ * @param {number} from
+ * @param {number} to 
+ */
+function changeOrderList(from, to) {
+    while (from < 0) {
+        from += orderFile.length;
+    }
+    while (to < 0) {
+        to += orderFile.length;
+    }
+    if (to >= orderFile.length) {
+        let k = to - orderFile.length + 1;
+        while (k--) {
+            orderFile.push(undefined);
+        }
+    }
+    orderFile.splice(to, 0, orderFile.splice(from, 1)[0]);
+    fs.writeFileSync(orderPath, JSON.stringify(orderFile));
+    mainWindow.webContents.send("updateSave");
+}
+
+ipcMain.on("changeOrder", (ev, args) => {
+    changeOrderList(args.from, args.to);
+})
 
 ipcMain.on("closeAndSave", (ev) => {
     mainWindow.reload();

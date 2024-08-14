@@ -21,7 +21,7 @@ let settingsFile = {};
 /**
  * @type {string[]}
  */
-let orderFile = []; 
+let orderFile = [];
 
 const appGrid = document.getElementById("appgrid");
 const searchForm = document.getElementById("searchForm");
@@ -40,6 +40,16 @@ const goToSteamGirdBtn = document.getElementById("goToSteamGirdBtn");
 const steamGridTokenInput = document.getElementById("steamGridToken");
 const startWithPcCheckBox = document.getElementById("startWithPc");
 
+/**
+ * @type {HTMLDialogElement}
+ */
+const movetomenu = document.getElementById("movetomenu");
+const closeButton = document.getElementById("close");
+const moveButton = document.getElementById("moveperm");
+const toinput = document.getElementById("toinput");
+
+let moveItem = -10;
+
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
     console.log(savePath);
@@ -52,13 +62,7 @@ ipcRenderer.on("savePath", (ev, args) => {
         fs.readFileSync(path.join(savePath, "settings.json"), "utf-8")
     );
 
-    if(!fs.existsSync(orderPath)) {
-        const keys = Object.keys(saveFile);
-        orderFile.push(...keys);
-        fs.writeFileSync(orderPath, JSON.stringify(orderFile));
-    }else{
-        orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
-    }
+    orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
 
     steamGridTokenInput.value = settingsFile.steamGridToken;
     startWithPcCheckBox.checked = settingsFile.startWithPc;
@@ -76,15 +80,16 @@ if (shortcutsFile === "") {
 
 function makeAppGrid() {
     appGrid.innerHTML = "";
-    for (let i = 0; i < Object.keys(saveFile).length; i++) {
-        const key = Object.keys(saveFile)[i];
+    for (let i = 0; i < orderFile.length; i++) {
+        const key = orderFile[i];
 
-        addItemToGrid(key);
+        addItemToGrid(key, i);
     }
 }
 
 function updateSaveFile() {
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
+    orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
     makeAppGrid();
 }
 
@@ -206,11 +211,13 @@ function editSaveObj(fileName, location, type, args = null) {
             gridName: fileName,
         };
     }
+    if (!orderFile.includes(fileName)) orderFile.push(fileName);
 }
 
 function saveTheFile() {
     // progressHolder.innerText = "";
     fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile));
+    fs.writeFileSync(orderPath, JSON.stringify(orderFile));
     ipcRenderer.send("updateSaveMain");
 }
 
@@ -234,14 +241,14 @@ function search(query) {
     appGrid.innerHTML = "";
     focusedItem = 0;
     previousItem = 0;
-    for (let i = 0; i < Object.keys(saveFile).length; i++) {
-        const key = Object.keys(saveFile)[i];
+    for (let i = 0; i < orderFile.length; i++) {
+        const key = orderFile[i];
 
         if (
             key.toLowerCase().includes(query.toLowerCase()) ||
             saveFile[key].gridName.toLowerCase().includes(query.toLowerCase())
         ) {
-            addItemToGrid(key);
+            addItemToGrid(key, i);
         }
     }
 }
@@ -249,8 +256,9 @@ function search(query) {
 /**
  *
  * @param {string} key
+ * @param {number} index
  */
-function addItemToGrid(key) {
+function addItemToGrid(key, index) {
     const appDiv = document.createElement("div");
     const background = document.createElement("div");
     const appImg = document.createElement("img");
@@ -276,13 +284,13 @@ function addItemToGrid(key) {
     };
 
     optionsButton.onclick = () => {
-        console.log(`options click on ${key}`);
-        ipcRenderer.send("contextMenu", key);
+        console.log(`options click on ${key} ${index}`);
+        ipcRenderer.send("contextMenu", { key, index });
     };
 
     appDiv.oncontextmenu = () => {
-        console.log(`right click on ${key}`);
-        ipcRenderer.send("contextMenu", key);
+        console.log(`right click on ${key} ${index}`);
+        ipcRenderer.send("contextMenu", { key, index });
     };
 
     appName.innerText = saveFile[key].gridName;
@@ -351,10 +359,12 @@ document.onkeydown = (ev) => {
             focusItem();
         }
     } else if (ev.key === "Enter") {
+        if (document.activeElement === toinput)
+            return;
         if (document.activeElement === searchBar) {
             focusItem();
         } else {
-            ipcRenderer.send("launch", Object.keys(saveFile)[focusedItem]);
+            ipcRenderer.send("launch", orderFile[focusedItem]);
         }
     }
 };
@@ -437,7 +447,7 @@ window.addEventListener(
                 focusItem();
             }
         } else if (button.name === "FACE_1") {
-            ipcRenderer.send("launch", Object.keys(saveFile)[focusedItem]);
+            ipcRenderer.send("launch", orderFile[focusedItem]);
         }
     },
     false
@@ -472,3 +482,25 @@ settingsSaveBtn.onclick = () => {
     settingsDiv.style.display = "none";
     ipcRenderer.send("updateSave", settingsFile);
 };
+
+ipcRenderer.on("showMovePopup", (ev, index) => {
+    moveItem = index;
+    toinput.value = index + 1;
+    movetomenu.showModal();
+});
+
+closeButton.onclick = () => {
+    movetomenu.close();
+}
+
+moveButton.onclick = () => {
+    const parsed = parseInt(toinput.value) - 1;
+    ipcRenderer.send("changeOrder", {from: moveItem, to: parsed >= orderFile.length ? orderFile.length - 1 : parsed});
+    movetomenu.close();
+}
+
+toinput.addEventListener("keydown", (ev) => {
+    if(ev.key === "Enter") {
+        moveButton.click();
+    }
+})
