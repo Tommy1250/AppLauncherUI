@@ -48,7 +48,7 @@ async function getBanner(gameName, savePath, token) {
     };
 
     const result = await fetch(
-        `https://www.steamgriddb.com/api/v2/grids/game/${gameData.id}`,
+        `https://www.steamgriddb.com/api/v2/grids/game/${gameData.id}?types=static&dimensions=600x900&nsfw=false&limit=1`,
         options
     );
     const body = await result.json();
