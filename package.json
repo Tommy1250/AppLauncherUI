@@ -5,10 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-packager . AppLauncher --overwrite --platform=win32 --icon=icon.ico --out=release-builds",
-    "build-linux": "electron-packager . applauncherui --overwrite --platform=linux --icon=icon.png --out=release-builds",
-    "deb64": "electron-installer-debian --src release-builds/applauncherui-linux-x64/ --dest release-builds/installers/ --icon icon.png --arch amd64",
-    "build-macos": "electron-packager . applauncherui --overwrite --platform=darwin --icon=icon.png --out=release-builds"
+    "build": "electron-packager . AppLauncher --overwrite --platform=win32 --icon=assets/icon.ico --out=release-builds",
+    "build-linux": "electron-packager . applauncherui --overwrite --platform=linux --icon=assets/icon.png --out=release-builds",
+    "deb64": "electron-installer-debian --src release-builds/applauncherui-linux-x64/ --dest release-builds/installers/ --icon assets/icon.png --arch amd64",
+    "build-macos": "electron-packager . applauncherui --overwrite --platform=darwin --icon=assets/icon.icns --out=release-builds"
   },
   "keywords": [],
   "author": "Tommy",

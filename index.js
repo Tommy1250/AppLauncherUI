@@ -35,6 +35,7 @@ const shortcutsPath = path.join(savePath, "shortcuts.json");
 const latestGamesPath = path.join(savePath, "latest.json");
 const settingsPath = path.join(savePath, "settings.json");
 const orderPath = path.join(savePath, "order.json");
+const windowBoundPath = path.join(savePath, "window.json");
 
 if (!fs.existsSync(savePath)) {
     fs.mkdirSync(savePath);
@@ -46,6 +47,10 @@ if (!fs.existsSync(shortcutsPath)) {
 
 if (!fs.existsSync(latestGamesPath)) {
     fs.writeFileSync(latestGamesPath, "[]");
+}
+
+if(!fs.existsSync(windowBoundPath)) {
+    fs.writeFileSync(windowBoundPath, JSON.stringify({width: 1280, height: 720, x: undefined, y: undefined}));
 }
 
 if (!fs.existsSync(settingsPath)) {
@@ -80,23 +85,40 @@ let settingsFile = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
  */
 let orderFile = [];
 
-if(!fs.existsSync(orderPath)) {
+if (!fs.existsSync(orderPath)) {
     const keys = Object.keys(saveFile);
     orderFile.push(...keys);
     fs.writeFileSync(orderPath, JSON.stringify(orderFile));
-}else{
+} else {
     orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
 }
 
 const iconpath =
     process.platform === "linux"
-        ? path.join(__dirname, "icon.png")
-        : path.join(__dirname, "icon.ico");
+        ? path.join(__dirname, "assets", "icon.png")
+        : process.platform === "darwin"
+        ? path.join(__dirname, "assets", "icon.icns")
+        : path.join(__dirname, "assets", "icon.ico");
+
+function saveWindowState() {
+    if(!mainWindow) return;
+
+    const bounds = mainWindow.getBounds();
+
+    // Save the window bounds
+    fs.writeFileSync(windowBoundPath, JSON.stringify(bounds));
+}
 
 function createWindow() {
+    const windowBounds = JSON.parse(fs.readFileSync(windowBoundPath, "utf-8"))
+
     mainWindow = new BrowserWindow({
-        width: 1280,
-        height: 720,
+        width: windowBounds.width,
+        height: windowBounds.height,
+        x: windowBounds.x,
+        y: windowBounds.y,
+        minWidth: 570,
+        minHeight: 380,
         webPreferences: {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
@@ -115,6 +137,11 @@ function createWindow() {
     mainWindow.webContents.send("savePath", savePath);
     mainWindow.menuBarVisible = false;
 
+    mainWindow.on("close", () => {
+        if(mainWindow.getBounds() !== windowBounds)
+            saveWindowState()
+    })
+
     mainWindow.on("closed", () => {
         mainWindow.destroy();
         mainWindow = null;
@@ -127,9 +154,7 @@ ipcMain.on("getSavePath", (event, arg) => {
 });
 
 ipcMain.on("refresh", () => {
-    saveFile = JSON.parse(
-        fs.readFileSync(shortcutsPath, "utf-8")
-    );
+    saveFile = JSON.parse(fs.readFileSync(shortcutsPath, "utf-8"));
     orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
     mainWindow.webContents.send("refresh");
 });
@@ -168,21 +193,24 @@ function addToLatestAndLaunch(gameName, window = null) {
     ];
 
     if (latestLaunchedGames.length !== 0) {
-        let updatedLatest = [...latestLaunchedGames]
+        let updatedLatest = [...latestLaunchedGames];
         for (let i = 0; i < latestLaunchedGames.length; i++) {
             const gameName2 = latestLaunchedGames[i];
             if (saveFile[gameName2]) {
                 trayTemplate.splice(1, 0, {
                     label: gameName2,
                     click: () => {
-                        launchApp(saveFile[gameName2], mainWindow ? mainWindow : null);
+                        launchApp(
+                            saveFile[gameName2],
+                            mainWindow ? mainWindow : null
+                        );
                     },
                 });
             } else {
                 updatedLatest.splice(i, 1);
             }
         }
-        latestLaunchedGames = updatedLatest
+        latestLaunchedGames = updatedLatest;
         fs.writeFileSync(latestGamesPath, JSON.stringify(latestLaunchedGames));
     }
 
@@ -213,7 +241,7 @@ function removeFromLatest(gameName) {
     ];
 
     if (latestLaunchedGames.length !== 0) {
-        let updatedLatest = [...latestLaunchedGames]
+        let updatedLatest = [...latestLaunchedGames];
         for (let i = 0; i < latestLaunchedGames.length; i++) {
             const gameName2 = latestLaunchedGames[i];
             if (gameName2 !== gameName) {
@@ -227,7 +255,7 @@ function removeFromLatest(gameName) {
                 updatedLatest.splice(i, 1);
             }
         }
-        latestLaunchedGames = updatedLatest
+        latestLaunchedGames = updatedLatest;
         fs.writeFileSync(latestGamesPath, JSON.stringify(latestLaunchedGames));
     }
 
@@ -240,10 +268,9 @@ if (!gotTheLock) {
 } else {
     app.whenReady().then(() => {
         app.on("second-instance", () => {
-            if(!mainWindow)
-                createWindow();
+            if (!mainWindow) createWindow();
             mainWindow.show();
-        })
+        });
 
         createWindow();
 
@@ -281,28 +308,35 @@ if (!gotTheLock) {
             {
                 label: "Quit",
                 click: function () {
+                    saveWindowState();
                     app.exit();
                 },
             },
         ];
 
         if (latestLaunchedGames.length !== 0) {
-            let updatedLatest = [...latestLaunchedGames]
+            let updatedLatest = [...latestLaunchedGames];
             for (let i = 0; i < latestLaunchedGames.length; i++) {
                 const gameName = latestLaunchedGames[i];
                 if (saveFile[gameName]) {
                     trayTemplate.splice(1, 0, {
                         label: gameName,
                         click: () => {
-                            launchApp(saveFile[gameName], mainWindow ? mainWindow : null);
+                            launchApp(
+                                saveFile[gameName],
+                                mainWindow ? mainWindow : null
+                            );
                         },
                     });
                 } else {
                     updatedLatest.splice(i, 1);
                 }
             }
-            latestLaunchedGames = updatedLatest
-            fs.writeFileSync(latestGamesPath, JSON.stringify(latestLaunchedGames));
+            latestLaunchedGames = updatedLatest;
+            fs.writeFileSync(
+                latestGamesPath,
+                JSON.stringify(latestLaunchedGames)
+            );
         }
 
         const menu = Menu.buildFromTemplate(trayTemplate);
@@ -340,7 +374,7 @@ ipcMain.on("contextMenu", (ev, args) => {
                 if (!editWindow) {
                     editWindow = new BrowserWindow({
                         width: 530,
-                        height: 390,
+                        height: 360,
                         webPreferences: {
                             nodeIntegration: true,
                             nodeIntegrationInWorker: true,
@@ -387,7 +421,7 @@ ipcMain.on("contextMenu", (ev, args) => {
                     path.join(savePath, "shortcuts.json"),
                     JSON.stringify(saveFile)
                 );
-                removeFromLatest(gameName)
+                removeFromLatest(gameName);
                 removeFromOrderList(index);
                 mainWindow.webContents.send("updateSave");
             },
@@ -413,7 +447,7 @@ function removeFromOrderList(location) {
 
 /**
  * @param {number} from
- * @param {number} to 
+ * @param {number} to
  */
 function changeOrderList(from, to) {
     while (from < 0) {
@@ -435,7 +469,7 @@ function changeOrderList(from, to) {
 
 ipcMain.on("changeOrder", (ev, args) => {
     changeOrderList(args.from, args.to);
-})
+});
 
 ipcMain.on("closeAndSave", (ev) => {
     mainWindow.reload();
@@ -472,7 +506,7 @@ ipcMain.on("addWindow", () => {
     if (!addWindow) {
         addWindow = new BrowserWindow({
             width: 530,
-            height: 390,
+            height: 360,
             webPreferences: {
                 nodeIntegration: true,
                 nodeIntegrationInWorker: true,
