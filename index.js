@@ -49,8 +49,11 @@ if (!fs.existsSync(latestGamesPath)) {
     fs.writeFileSync(latestGamesPath, "[]");
 }
 
-if(!fs.existsSync(windowBoundPath)) {
-    fs.writeFileSync(windowBoundPath, JSON.stringify({width: 1280, height: 720, x: undefined, y: undefined}));
+if (!fs.existsSync(windowBoundPath)) {
+    fs.writeFileSync(
+        windowBoundPath,
+        JSON.stringify({ width: 1280, height: 720, x: undefined, y: undefined })
+    );
 }
 
 if (!fs.existsSync(settingsPath)) {
@@ -101,7 +104,7 @@ const iconpath =
         : path.join(__dirname, "assets", "icon.ico");
 
 function saveWindowState() {
-    if(!mainWindow) return;
+    if (!mainWindow) return;
 
     const bounds = mainWindow.getBounds();
 
@@ -110,7 +113,7 @@ function saveWindowState() {
 }
 
 function createWindow() {
-    const windowBounds = JSON.parse(fs.readFileSync(windowBoundPath, "utf-8"))
+    const windowBounds = JSON.parse(fs.readFileSync(windowBoundPath, "utf-8"));
 
     mainWindow = new BrowserWindow({
         width: windowBounds.width,
@@ -138,9 +141,8 @@ function createWindow() {
     mainWindow.menuBarVisible = false;
 
     mainWindow.on("close", () => {
-        if(mainWindow.getBounds() !== windowBounds)
-            saveWindowState()
-    })
+        if (mainWindow.getBounds() !== windowBounds) saveWindowState();
+    });
 
     mainWindow.on("closed", () => {
         mainWindow.destroy();
@@ -422,7 +424,7 @@ ipcMain.on("contextMenu", (ev, args) => {
                     JSON.stringify(saveFile)
                 );
                 removeFromLatest(gameName);
-                removeFromOrderList(index);
+                removeFromOrderList(gameName);
                 mainWindow.webContents.send("updateSave");
             },
         },
@@ -441,7 +443,8 @@ ipcMain.on("contextMenu", (ev, args) => {
 });
 
 function removeFromOrderList(location) {
-    orderFile.splice(location, 1);
+    const itemLocation = orderFile.indexOf(location);
+    orderFile.splice(itemLocation, 1);
     fs.writeFileSync(orderPath, JSON.stringify(orderFile));
 }
 
@@ -477,6 +480,7 @@ ipcMain.on("closeAndSave", (ev) => {
     saveFile = JSON.parse(
         fs.readFileSync(path.join(savePath, "shortcuts.json"), "utf-8")
     );
+    orderFile = JSON.parse(fs.readFileSync(path.join(orderPath), "utf-8"));
 });
 
 ipcMain.on("chooseImage", (event) => {

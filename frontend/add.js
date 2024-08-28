@@ -12,7 +12,6 @@ const appNameInput = document.getElementById("appName");
 const appPathInput = document.getElementById("appPath");
 const appArgsInput = document.getElementById("appArgs");
 const appIdInput = document.getElementById("appId");
-const appIdLabel = document.getElementById("appIdLabel");
 
 /**
  * @type {HTMLSelectElement}
@@ -25,12 +24,15 @@ const saveButton = document.getElementById("save");
 let shortcutsFile = "";
 let savePath = "";
 let imagesPath = "";
+let orderPath = "";
 /**
  * @type {{appname: {type: "url" | "exe", location: string, args?: string, gridName: string}}}
  */
 let saveFile = {};
-
-let appName = "";
+/**
+ * @type {string[]}
+ */
+let orderFile = [];
 
 let imageUpdated = false;
 let newImagePath = "";
@@ -40,7 +42,9 @@ ipcRenderer.on("savePath", (ev, args) => {
     console.log(savePath);
     shortcutsFile = path.join(savePath, "shortcuts.json");
     imagesPath = path.join(savePath, "images");
+    orderPath = path.join(savePath, "order.json");
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
+    orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
 });
 
 if (shortcutsFile === "") {
@@ -56,8 +60,10 @@ appTypeSelect.oninput = () => {
 }
 
 saveButton.onclick = () => {
+    if(appIdInput.value === "This ID already exists please choose a different ID")
+        return null;
     if(Object.keys(saveFile).includes(appIdInput.value))
-        return appIdInput.innerText = "This ID already exists please choose a different ID";
+        return appIdInput.value = "This ID already exists please choose a different ID";
 
     if(appArgsInput.value !== ""){
         saveFile[appIdInput.value] = {
@@ -73,8 +79,10 @@ saveButton.onclick = () => {
             "gridName": appNameInput.value
         }
     }
+    orderFile.push(appIdInput.value);
     
     fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile, null, 4));
+    fs.writeFileSync(orderPath, JSON.stringify(orderFile));
 
     if(imageUpdated) {
         fs.copyFileSync(newImagePath, path.join(imagesPath, `${appIdInput.value}.png`));

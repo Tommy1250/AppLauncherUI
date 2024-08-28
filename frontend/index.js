@@ -8,6 +8,8 @@ let shortcutsFile = "";
 let savePath = "";
 let imagesPath = "";
 let orderPath = "";
+// let categoriesPath = "";
+
 /**
  * @type {{appname: {type: "url" | "exe", location: string, args?: string, gridName: string}}}
  */
@@ -23,10 +25,25 @@ let settingsFile = {};
  */
 let orderFile = [];
 
+// /**
+//  * @type {string[]}
+//  */
+// let categories = ["All"];
+// let activeCategory = "All";
+
+// /**
+//  * @type {string[]}
+//  */
+// let categoryEntries = [];
+
 const appGrid = document.getElementById("appgrid");
 const searchForm = document.getElementById("searchForm");
 const searchBar = document.getElementById("search");
 const clearSearch = document.getElementById("clearSearch");
+// /**
+//  * @type {HTMLSelectElement}
+//  */
+// const filterSelect = document.getElementById("filter");
 
 const addButton = document.getElementById("add");
 const settingsButton = document.getElementById("settings");
@@ -56,6 +73,7 @@ ipcRenderer.on("savePath", (ev, args) => {
     shortcutsFile = path.join(savePath, "shortcuts.json");
     imagesPath = path.join(savePath, "images");
     orderPath = path.join(savePath, "order.json");
+    // categoriesPath = path.join(savePath, "categories");
 
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
     settingsFile = JSON.parse(
@@ -64,10 +82,22 @@ ipcRenderer.on("savePath", (ev, args) => {
 
     orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
 
+    // if (!fs.existsSync(categoriesPath)) fs.mkdirSync(categoriesPath);
+
+    // categories.push(...fs.readdirSync(categoriesPath));
+
+    // for (let i = 0; i < categories.length; i++) {
+    //     const cat = categories[i];
+    //     const option = document.createElement("option");
+    //     option.innerText = cat.replace(".json", "");
+    //     option.value = cat;
+    //     filterSelect.appendChild(option);
+    // }
+
     steamGridTokenInput.value = settingsFile.steamGridToken;
     startWithPcCheckBox.checked = settingsFile.startWithPc;
 
-    makeAppGrid();
+    makeAppGrid(orderFile);
 
     if (!fs.existsSync(imagesPath)) {
         fs.mkdirSync(imagesPath);
@@ -78,10 +108,10 @@ if (shortcutsFile === "") {
     ipcRenderer.send("getSavePath");
 }
 
-function makeAppGrid() {
+function makeAppGrid(entries) {
     appGrid.innerHTML = "";
-    for (let i = 0; i < orderFile.length; i++) {
-        const key = orderFile[i];
+    for (let i = 0; i < entries.length; i++) {
+        const key = entries[i];
 
         addItemToGrid(key, i);
     }
@@ -90,12 +120,13 @@ function makeAppGrid() {
 function updateSaveFile() {
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
     orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
-    makeAppGrid();
+    makeAppGrid(orderFile);
+    // filterGrid(activeCategory);
 }
 
 ipcRenderer.on("updateSave", () => updateSaveFile());
 
-ipcRenderer.on("refresh", () => makeAppGrid());
+ipcRenderer.on("refresh", () => makeAppGrid(orderFile));
 
 //drag and drop methods
 document.addEventListener("dragover", (e) => {
@@ -143,7 +174,7 @@ document.addEventListener("drop", async (e) => {
                         imagesPath,
                         settingsFile.steamGridToken
                     );
-            } else makeAppGrid();
+            } else makeAppGrid(orderFile);
         } else if (file.name.endsWith(".lnk")) {
             console.log("realSortcut");
             const shortcutData =
@@ -170,7 +201,7 @@ document.addEventListener("drop", async (e) => {
                         imagesPath,
                         settingsFile.steamGridToken
                     );
-            } else makeAppGrid();
+            } else makeAppGrid(orderFile);
         } else if (file.name.endsWith(".exe")) {
             console.log("exe file");
 
@@ -190,7 +221,7 @@ document.addEventListener("drop", async (e) => {
                         imagesPath,
                         settingsFile.steamGridToken
                     );
-            } else makeAppGrid();
+            } else makeAppGrid(orderFile);
         }
     }
     saveTheFile();
@@ -212,29 +243,38 @@ function editSaveObj(fileName, location, type, args = null) {
         };
     }
     if (!orderFile.includes(fileName)) orderFile.push(fileName);
+    // if (activeCategory !== "All") {
+    //     if (!categoryEntries.includes(fileName)) categoryEntries.push(fileName);
+    // }
 }
 
 function saveTheFile() {
     // progressHolder.innerText = "";
     fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile));
     fs.writeFileSync(orderPath, JSON.stringify(orderFile));
+    // if (activeCategory !== "All") {
+    //     fs.writeFileSync(
+    //         path.join(categoriesPath, activeCategory),
+    //         JSON.stringify(categoryEntries)
+    //     );
+    // }
     ipcRenderer.send("updateSaveMain");
 }
 
 searchForm.onsubmit = (ev) => {
     ev.preventDefault();
     if (searchBar.value !== "") search(searchBar.value);
-    else makeAppGrid();
+    else makeAppGrid(orderFile);
 };
 
 searchBar.oninput = () => {
     if (searchBar.value !== "") search(searchBar.value);
-    else makeAppGrid();
+    else makeAppGrid(orderFile);
 };
 
 clearSearch.onclick = () => {
     searchBar.value = "";
-    makeAppGrid();
+    makeAppGrid(orderFile);
 };
 
 function search(query) {
@@ -307,6 +347,28 @@ function addItemToGrid(key, index) {
     appGrid.appendChild(appDiv);
 }
 
+// filterSelect.oninput = () => {
+//     filterGrid(filterSelect.options[filterSelect.selectedIndex].value);
+// };
+
+// function filterGrid(cat) {
+//     activeCategory = cat;
+//     if (cat === "All") {
+//         makeAppGrid(orderFile);
+//         categoryEntries = [];
+//     } else {
+//         categoryEntries = JSON.parse(
+//             fs.readFileSync(path.join(categoriesPath, cat), "utf-8")
+//         );
+//         for (let i = 0; i < categoryEntries.length; i++) {
+//             const entry = categoryEntries[i];
+//             if(!orderFile.includes(entry))
+//                 categoryEntries.splice(i, 1);
+//         }
+//         makeAppGrid(categoryEntries);
+//     }
+// }
+
 let focusedItem = 0;
 let previousItem = 0;
 let useMouse = true;
@@ -359,8 +421,7 @@ document.onkeydown = (ev) => {
             focusItem();
         }
     } else if (ev.key === "Enter") {
-        if (document.activeElement === toinput)
-            return;
+        if (document.activeElement === toinput) return;
         if (document.activeElement === searchBar) {
             focusItem();
         } else {
@@ -491,16 +552,19 @@ ipcRenderer.on("showMovePopup", (ev, index) => {
 
 closeButton.onclick = () => {
     movetomenu.close();
-}
+};
 
 moveButton.onclick = () => {
     const parsed = parseInt(toinput.value) - 1;
-    ipcRenderer.send("changeOrder", {from: moveItem, to: parsed >= orderFile.length ? orderFile.length - 1 : parsed});
+    ipcRenderer.send("changeOrder", {
+        from: moveItem,
+        to: parsed >= orderFile.length ? orderFile.length - 1 : parsed,
+    });
     movetomenu.close();
-}
+};
 
 toinput.addEventListener("keydown", (ev) => {
-    if(ev.key === "Enter") {
+    if (ev.key === "Enter") {
         moveButton.click();
     }
-})
+});
