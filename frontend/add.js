@@ -18,6 +18,7 @@ const appIdInput = document.getElementById("appId");
  */
 const appTypeSelect = document.getElementById("appType");
 
+const msStoreButton = document.getElementById("msStore");
 const cancelButton = document.getElementById("cancel");
 const saveButton = document.getElementById("save");
 
@@ -58,6 +59,11 @@ appTypeSelect.oninput = () => {
         argsDiv.style.display = "none";
     }
 }
+
+ipcRenderer.on("inputdata", (ev, args) => {
+    appPathInput.value = args.path;
+    appArgsInput.value = args.args;
+})
 
 saveButton.onclick = () => {
     if(appIdInput.value === "This ID already exists please choose a different ID")
@@ -107,4 +113,8 @@ ipcRenderer.on("imageSelect", (ev, fileLocation) => {
 
 imageSearchButton.onclick = () => {
     shell.openExternal(`https://www.steamgriddb.com/`)
+}
+
+msStoreButton.onclick = () => {
+    ipcRenderer.send("msStoreWindow")
 }

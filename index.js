@@ -30,6 +30,11 @@ let editWindow;
  */
 let addWindow;
 
+/**
+ * @type {BrowserWindow}
+ */
+let msStoreWindow;
+
 const savePath = path.join(app.getPath("userData"), "saves");
 const shortcutsPath = path.join(savePath, "shortcuts.json");
 const latestGamesPath = path.join(savePath, "latest.json");
@@ -530,10 +535,55 @@ ipcMain.on("addWindow", () => {
         addWindow.on("closed", () => {
             addWindow.destroy();
             addWindow = null;
+            if (msStoreWindow) {
+                msStoreWindow.close();
+            }
         });
     } else {
         addWindow.focus();
     }
+});
+
+ipcMain.on("msStoreWindow", () => {
+    if (!msStoreWindow) {
+        msStoreWindow = new BrowserWindow({
+            width: 800,
+            height: 600,
+            webPreferences: {
+                nodeIntegration: true,
+                nodeIntegrationInWorker: true,
+                contextIsolation: false,
+            },
+        });
+
+        if (!app.isPackaged) {
+            msStoreWindow.webContents.openDevTools();
+        }
+
+        msStoreWindow.loadFile(
+            path.join(__dirname, "frontend", "msstore.html")
+        );
+        msStoreWindow.setTitle("Microsoft store app selector");
+        msStoreWindow.menuBarVisible = false;
+        msStoreWindow.setIcon(iconpath);
+
+        msStoreWindow.on("closed", () => {
+            msStoreWindow.destroy();
+            msStoreWindow = null;
+        });
+    } else {
+        msStoreWindow.focus();
+    }
+});
+
+ipcMain.on("msappselect", (ev, appargs) => {
+    if (addWindow)
+        addWindow.webContents.send("inputdata", {
+            path: "explorer.exe",
+            args: `shell:appsFolder\\${appargs}`,
+        });
+
+    if (msStoreWindow) msStoreWindow.close();
 });
 
 ipcMain.on("updateSave", (ev, args) => {
