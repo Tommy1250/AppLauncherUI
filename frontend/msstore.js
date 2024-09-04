@@ -1,8 +1,15 @@
 const { ipcRenderer } = require("electron");
 const WinReg = require("winreg");
 
+const fs = require("fs");
+const path = require("path");
+
 const appsGrid = document.getElementById("apps");
 const loadingThing = document.getElementById("loading");
+const refreshBtn = document.getElementById("refreshBtn");
+
+let savePath = "";
+let cachePath = "";
 
 // Define the registry key where Microsoft Store apps are listed
 const regKey = new WinReg({
@@ -11,7 +18,7 @@ const regKey = new WinReg({
 });
 
 // Object to hold the data to be written to the file
-const writeableFile = {};
+let writeableFile = {};
 
 // Utility function to promisify WinReg methods
 function getRegistryKeys(key) {
@@ -68,26 +75,56 @@ async function listInstalledApps() {
             }
         }
 
-        loadingThing.innerText = "";
-        for (let i = 0; i < Object.keys(writeableFile).length; i++) {
-            const appKey = Object.keys(writeableFile)[i]
-            const appValue = writeableFile[appKey];
-
-            const appContainer = document.createElement("div");
-            const appButton = document.createElement("button");
-            appButton.innerText = appKey;
-
-            appButton.onclick = () => {
-                ipcRenderer.send("msappselect", appValue);
-            };
-
-            appContainer.appendChild(appButton)
-            appsGrid.appendChild(appContainer);
-        }
+        cacheFile = { ...writeableFile };
+        fs.writeFileSync(cachePath, JSON.stringify(cacheFile));
+        makeGrid();
     } catch (err) {
         console.error("Error reading registry:", err);
     }
 }
 
-// Call the function to list apps
-listInstalledApps();
+function makeGrid() {
+    loadingThing.innerText = "";
+    for (let i = 0; i < Object.keys(cacheFile).length; i++) {
+        const appKey = Object.keys(cacheFile)[i];
+        const appValue = cacheFile[appKey];
+
+        const appContainer = document.createElement("div");
+        const appButton = document.createElement("button");
+        appButton.innerText = appKey;
+
+        appButton.onclick = () => {
+            ipcRenderer.send("msappselect", appValue);
+        };
+
+        appContainer.appendChild(appButton);
+        appsGrid.appendChild(appContainer);
+    }
+}
+
+/**
+ * @type {{string: string}}
+ */
+let cacheFile = {};
+
+ipcRenderer.on("savePath", (ev, args) => {
+    savePath = args;
+    cachePath = path.join(savePath, "mscache.json");
+
+    if (fs.existsSync(cachePath)) {
+        cacheFile = JSON.parse(fs.readFileSync(cachePath, "utf-8"));
+        makeGrid();
+    } else listInstalledApps();
+});
+
+if (savePath === "") {
+    ipcRenderer.send("getSavePath");
+}
+
+refreshBtn.onclick = () => {
+    appsGrid.innerHTML = "";
+    loadingThing.innerText = "Loading installed apps...";
+    listInstalledApps();
+    writeableFile = {};
+    cacheFile = {};
+}

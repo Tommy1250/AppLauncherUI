@@ -547,7 +547,7 @@ ipcMain.on("addWindow", () => {
 ipcMain.on("msStoreWindow", () => {
     if (!msStoreWindow) {
         msStoreWindow = new BrowserWindow({
-            width: 800,
+            width: 900,
             height: 600,
             webPreferences: {
                 nodeIntegration: true,

@@ -36,3 +36,23 @@ button:hover {
     color: white;
     background-color: rgba(255, 255, 255, 0.20);
 }
+
+#refresh {
+    display: flex;
+    
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+p {
+    border: 1px white solid;
+    padding: 5px;
+    height: fit-content;
+    border-radius: 5px;
+    cursor: pointer;
+    place-self: center;
+}
+
+p:hover {
+    background-color: rgb(51, 51, 51);
+}
