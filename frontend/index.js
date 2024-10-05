@@ -36,6 +36,8 @@ let orderFile = [];
 //  */
 // let categoryEntries = [];
 
+const tooltip = document.getElementById("tooltip");
+
 const appGrid = document.getElementById("appgrid");
 const searchForm = document.getElementById("searchForm");
 const searchBar = document.getElementById("search");
@@ -242,10 +244,11 @@ function editSaveObj(fileName, location, type, args = null) {
             gridName: fileName,
         };
     }
-    if (!orderFile.includes(fileName)) orderFile.push(fileName);
     // if (activeCategory !== "All") {
     //     if (!categoryEntries.includes(fileName)) categoryEntries.push(fileName);
+    //     saveFile[fileName].category = [activeCategory]
     // }
+    if (!orderFile.includes(fileName)) orderFile.push(fileName);
 }
 
 function saveTheFile() {
@@ -334,6 +337,18 @@ function addItemToGrid(key, index) {
     };
 
     appName.innerText = saveFile[key].gridName;
+
+    appName.onpointerenter = (event) => {
+        tooltip.textContent = appName.innerText;
+        tooltip.style.left = event.clientX + "px";
+        tooltip.style.top = event.clientY - 50 + "px";
+        tooltip.style.display = "block";
+    };
+
+    appName.onpointerleave = () => {
+        tooltip.style.display = "none";
+    };
+    
     optionsButton.className = "fa-solid fa-ellipsis";
 
     bottomHolder.appendChild(appName);

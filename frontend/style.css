@@ -83,6 +83,17 @@ body {
     -webkit-box-orient: vertical;
 }
 
+.tooltip {
+    display: none;
+    position: absolute;
+    background-color: #ffffff;
+    color: #141414;
+    padding: 5px;
+    border: 1px solid #000000;
+    border-radius: 5px;
+    z-index: 1;
+}
+
 .bottom-holder > button {
     cursor: pointer;
     background: none;
@@ -169,21 +180,21 @@ body {
 
 /* Track */
 ::-webkit-scrollbar-track {
-    background: #292929; 
+    background: #292929;
 }
 
 ::-webkit-scrollbar-track-piece {
     background: #292929;
 }
-    
+
 /* Handle */
 ::-webkit-scrollbar-thumb {
-    background: #888; 
+    background: #888;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-    background: #555; 
+    background: #555;
 }
 
 .settings {
@@ -273,7 +284,7 @@ body {
     right: 0;
     bottom: 0;
     background-color: #ccc;
-    transition: .4s;
+    transition: 0.4s;
     border-radius: 34px;
 }
 
@@ -285,15 +296,15 @@ body {
     left: 4px;
     bottom: 4px;
     background-color: white;
-    transition: .4s;
+    transition: 0.4s;
     border-radius: 50%;
 }
 
-input:checked+.slider {
-    background-color: #2196F3;
+input:checked + .slider {
+    background-color: #2196f3;
 }
 
-input:checked+.slider:before {
+input:checked + .slider:before {
     transform: translateX(26px);
 }
 
