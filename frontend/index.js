@@ -529,11 +529,11 @@ window.addEventListener(
     false
 );
 
-// // Analog Stick start movement event
-// window.addEventListener('gc.analog.start', function(event) {
-//     var stick = event.detail;
-//     console.log(stick);
-// })
+// Analog Stick start movement event
+// // window.addEventListener('gc.analog.start', function(event) {
+// //     var stick = event.detail;
+// //     console.log(stick);
+// // })
 
 settingsButton.onclick = () => {
     mainDiv.style.display = "none";
@@ -563,10 +563,13 @@ ipcRenderer.on("showMovePopup", (ev, index) => {
     moveItem = index;
     toinput.value = index + 1;
     movetomenu.showModal();
+    movetomenu.classList.add("showmove")
 });
 
 closeButton.onclick = () => {
     movetomenu.close();
+    movetomenu.classList.remove("showmove")
+
 };
 
 moveButton.onclick = () => {
@@ -576,6 +579,8 @@ moveButton.onclick = () => {
         to: parsed >= orderFile.length ? orderFile.length - 1 : parsed,
     });
     movetomenu.close();
+    movetomenu.classList.remove("showmove")
+
 };
 
 toinput.addEventListener("keydown", (ev) => {
