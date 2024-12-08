@@ -7,6 +7,7 @@ const path = require("path");
 const appsGrid = document.getElementById("apps");
 const loadingThing = document.getElementById("loading");
 const refreshBtn = document.getElementById("refreshBtn");
+const searchbar = document.getElementById("searchbar");
 
 let savePath = "";
 let cachePath = "";
@@ -19,6 +20,11 @@ const regKey = new WinReg({
 
 // Object to hold the data to be written to the file
 let writeableFile = {};
+
+/**
+ * @type {{string: string}}
+ */
+let cacheFile = {};
 
 // Utility function to promisify WinReg methods
 function getRegistryKeys(key) {
@@ -97,15 +103,45 @@ function makeGrid() {
             ipcRenderer.send("msappselect", appValue);
         };
 
+        const appDivider = document.createElement("hr");
+
+        appContainer.appendChild(appDivider);
         appContainer.appendChild(appButton);
         appsGrid.appendChild(appContainer);
     }
 }
 
-/**
- * @type {{string: string}}
- */
-let cacheFile = {};
+function filterGrid(query) {
+    appsGrid.innerHTML = "";
+    if(query === "")
+        return makeGrid()
+    for (let i = 0; i < Object.keys(cacheFile).length; i++) {
+        const appKey = Object.keys(cacheFile)[i];
+        const appValue = cacheFile[appKey];
+        if (
+            appKey.toLowerCase().includes(query.toLowerCase()) ||
+            appValue.toLowerCase().includes(query.toLowerCase())
+        ) {
+            const appContainer = document.createElement("div");
+            const appButton = document.createElement("button");
+            appButton.innerText = appKey;
+
+            appButton.onclick = () => {
+                ipcRenderer.send("msappselect", appValue);
+            };
+
+            const appDivider = document.createElement("hr");
+
+            appContainer.appendChild(appDivider);
+            appContainer.appendChild(appButton);
+            appsGrid.appendChild(appContainer);
+        }
+    }
+}
+
+searchbar.oninput = () => {
+    filterGrid(searchbar.value);
+};
 
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
@@ -124,7 +160,7 @@ if (savePath === "") {
 refreshBtn.onclick = () => {
     appsGrid.innerHTML = "";
     loadingThing.innerText = "Loading installed apps...";
-    listInstalledApps();
     writeableFile = {};
     cacheFile = {};
-}
+    listInstalledApps();
+};
