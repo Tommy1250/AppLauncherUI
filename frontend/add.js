@@ -115,6 +115,10 @@ imageSearchButton.onclick = () => {
     shell.openExternal(`https://www.steamgriddb.com/`)
 }
 
+if(process.platform !== "win32"){
+    msStoreButton.style.display = "none"
+}
+
 msStoreButton.onclick = () => {
     ipcRenderer.send("msStoreWindow")
 }
