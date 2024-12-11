@@ -63,6 +63,7 @@ body {
     gap: 1px;
 }
 
+.util-action > input,
 .appInfo > div > input {
     border: 1px rgb(216, 216, 216) solid;
     border-radius: 3px;
@@ -72,6 +73,41 @@ body {
     font-size: 15px;
     font-weight: 520;
 }
+
+.util-action {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+}
+
+.util-action > input {
+    flex-grow: 0;
+    border-bottom-left-radius: 3px;
+    border-top-left-radius: 3px;
+    border-bottom-right-radius: 0px;
+    border-top-right-radius: 0px;
+    width: 100%;
+    border-right: none;
+}
+
+.util-action > button {
+    padding-left: 8px;
+    padding-right: 8px;
+    background-color: rgb(68, 68, 68);
+    border: 1px rgb(216, 216, 216) solid;
+    color: rgb(207, 207, 207);
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-left: none;
+    cursor: pointer;
+}
+
+.util-action > button:hover {
+    color: rgb(240, 240, 240);
+}
+
 
 .appInfo > div > select {
     border: 1px rgb(216, 216, 216) solid;

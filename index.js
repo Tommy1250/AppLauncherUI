@@ -14,6 +14,7 @@ const path = require("path");
 const gotTheLock = app.requestSingleInstanceLock();
 const fs = require("fs");
 const launchApp = require("./frontend/functions/launchApp");
+const { generateId } = require("./frontend/functions/appAddUtil");
 
 /**
  * @type {BrowserWindow}
@@ -511,6 +512,32 @@ ipcMain.on("chooseImage", (event) => {
         });
 });
 
+ipcMain.on("chooseExecFile", (event) => {
+    console.log("choose shortcut file")
+    dialog.showOpenDialog({
+        title: "Select executable file",
+        properties: ["openFile"],
+        filters: [
+            {
+                name: "Executable file",
+                extensions: ["exe", "bat", "sh", "cmd"]
+            },
+            {
+                name: "All files",
+                extensions: ["*"]
+            }
+        ]
+    })
+    .then((file) => {
+        if (!file.canceled) {
+            event.sender.send("execSelect", file.filePaths[0]);
+        }
+    })
+    .catch((reason) => {
+        console.log(reason);
+    });
+})
+
 ipcMain.on("addWindow", () => {
     if (!addWindow) {
         addWindow = new BrowserWindow({
@@ -581,6 +608,7 @@ ipcMain.on("msappselect", (ev, appargs) => {
         addWindow.webContents.send("inputdata", {
             path: "explorer.exe",
             args: `shell:appsFolder\\${appargs}`,
+            id: `ms-${generateId(25)}`
         });
 
     if (msStoreWindow) msStoreWindow.close();

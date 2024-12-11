@@ -4,7 +4,7 @@ const downloadImage = require("./writeImage");
 const itemsQueue = [];
 
 async function searchGame(gameName, token) {
-    if(!token) 
+    if(!token || token === "") 
         return null;
     const options = {
         method: "GET",
@@ -26,7 +26,7 @@ async function searchGame(gameName, token) {
 }
 
 async function getBanner(gameName, savePath, token) {
-    if(!token) 
+    if(!token || token === "")
         return `${gameName}.png`;
     let searchResults;
     searchResults = await searchGame(gameName, token);

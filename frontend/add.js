@@ -1,6 +1,7 @@
 const { ipcRenderer, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
+const { generateId } = require("./functions/appAddUtil");
 
 const appImg = document.getElementById("appImg");
 const imageSearchButton = document.getElementById("imageSearch");
@@ -21,6 +22,9 @@ const appTypeSelect = document.getElementById("appType");
 const msStoreButton = document.getElementById("msStore");
 const cancelButton = document.getElementById("cancel");
 const saveButton = document.getElementById("save");
+
+const genRandomIdButton = document.getElementById("genRandomId");
+const selectFileButton = document.getElementById("selectFile");
 
 let shortcutsFile = "";
 let savePath = "";
@@ -63,6 +67,7 @@ appTypeSelect.oninput = () => {
 ipcRenderer.on("inputdata", (ev, args) => {
     appPathInput.value = args.path;
     appArgsInput.value = args.args;
+    appIdInput.value = args.id;
 })
 
 saveButton.onclick = () => {
@@ -96,6 +101,21 @@ saveButton.onclick = () => {
 
     ipcRenderer.send("closeAndSave")
 }
+
+genRandomIdButton.onclick = () => {
+    if (appIdInput.value.startsWith("ms"))
+        appIdInput.value = `ms-${generateId(25)}`
+    else
+        appIdInput.value = `app-${generateId(25)}`
+}
+
+selectFileButton.onclick = () => {
+    ipcRenderer.send("chooseExecFile");
+}
+
+ipcRenderer.on("execSelect", (ev, fileLocation) => {
+    appPathInput.value = fileLocation
+})
 
 cancelButton.onclick = () => {
     window.close();
