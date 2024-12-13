@@ -73,7 +73,7 @@ if (!fs.existsSync(settingsPath)) {
 }
 
 /**
- * @type {{gameName: {type: "url" | "exe", location: string, args?: string, gridName: string}}}
+ * @type {{[gameName: string]: {type: "url" | "exe", location: string, args?: string, gridName: string}}}
  */
 let saveFile = JSON.parse(
     fs.readFileSync(path.join(savePath, "shortcuts.json"), "utf-8")
@@ -175,6 +175,8 @@ ipcMain.on("updateSaveMain", () => {
 let tray = null;
 
 function addToLatestAndLaunch(gameName, window = null) {
+    launchApp(saveFile[gameName], window);
+
     if (!latestLaunchedGames.includes(gameName))
         latestLaunchedGames.push(gameName);
     if (latestLaunchedGames.length > 5) {
@@ -204,9 +206,10 @@ function addToLatestAndLaunch(gameName, window = null) {
         let updatedLatest = [...latestLaunchedGames];
         for (let i = 0; i < latestLaunchedGames.length; i++) {
             const gameName2 = latestLaunchedGames[i];
-            if (saveFile[gameName2]) {
+            const gameInfo = saveFile[gameName2];
+            if (gameInfo) {
                 trayTemplate.splice(1, 0, {
-                    label: gameName2,
+                    label: gameInfo.gridName,
                     click: () => {
                         launchApp(
                             saveFile[gameName2],
@@ -225,7 +228,6 @@ function addToLatestAndLaunch(gameName, window = null) {
     const trayMenu = Menu.buildFromTemplate(trayTemplate);
     tray.setContextMenu(trayMenu);
 
-    launchApp(saveFile[gameName], window);
 }
 
 function removeFromLatest(gameName) {
@@ -252,9 +254,10 @@ function removeFromLatest(gameName) {
         let updatedLatest = [...latestLaunchedGames];
         for (let i = 0; i < latestLaunchedGames.length; i++) {
             const gameName2 = latestLaunchedGames[i];
+            const gameInfo = saveFile[gameName2];
             if (gameName2 !== gameName) {
                 trayTemplate.splice(1, 0, {
-                    label: gameName2,
+                    label: gameInfo.gridName,
                     click: () => {
                         launchApp(gameName2, mainWindow ? mainWindow : null);
                     },
@@ -326,9 +329,10 @@ if (!gotTheLock) {
             let updatedLatest = [...latestLaunchedGames];
             for (let i = 0; i < latestLaunchedGames.length; i++) {
                 const gameName = latestLaunchedGames[i];
-                if (saveFile[gameName]) {
+                const gameInfo = saveFile[gameName];
+                if (gameInfo) {
                     trayTemplate.splice(1, 0, {
-                        label: gameName,
+                        label: gameInfo.gridName,
                         click: () => {
                             launchApp(
                                 saveFile[gameName],
@@ -490,7 +494,7 @@ ipcMain.on("closeAndSave", (ev) => {
 });
 
 ipcMain.on("chooseImage", (event) => {
-    console.log("choose image");
+    // console.log("choose image");
     dialog
         .showOpenDialog({
             title: "Choose banner",
@@ -513,7 +517,7 @@ ipcMain.on("chooseImage", (event) => {
 });
 
 ipcMain.on("chooseExecFile", (event) => {
-    console.log("choose shortcut file")
+    // console.log("choose shortcut file")
     dialog.showOpenDialog({
         title: "Select executable file",
         properties: ["openFile"],
