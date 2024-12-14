@@ -24,7 +24,7 @@ let shortcutsFile = "";
 let savePath = "";
 let imagesPath = "";
 /**
- * @type {{appname: {type: "url" | "exe", location: string, args?: string, gridName: string}}}
+ * @type {{[appName: string]: {type: "url" | "exe", location: string, args?: string, gridName: string}}}
  */
 let saveFile = {};
 
@@ -113,5 +113,5 @@ ipcRenderer.on("imageSelect", (ev, fileLocation) => {
 })
 
 imageSearchButton.onclick = () => {
-    shell.openExternal(`https://www.steamgriddb.com/search/grids?term=${encodeURIComponent(appName)}`)
+    shell.openExternal(`https://www.steamgriddb.com/search/grids?term=${encodeURIComponent(saveFile[appName].gridName)}`)
 }
