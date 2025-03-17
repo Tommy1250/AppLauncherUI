@@ -1,6 +1,6 @@
 {
   "name": "applauncherui",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "An app launcher designed to work with basically anything",
   "main": "index.js",
   "scripts": {
