@@ -58,7 +58,7 @@ if (!fs.existsSync(latestGamesPath)) {
 if (!fs.existsSync(windowBoundPath)) {
     fs.writeFileSync(
         windowBoundPath,
-        JSON.stringify({ width: 1280, height: 720, x: undefined, y: undefined })
+        JSON.stringify({ width: 1280, height: 720, x: undefined, y: undefined, fullscreen: false })
     );
 }
 
@@ -113,14 +113,31 @@ function saveWindowState() {
     if (!mainWindow) return;
 
     const bounds = mainWindow.getBounds();
+    const maximized = mainWindow.isMaximized();
 
-    // Save the window bounds
-    fs.writeFileSync(windowBoundPath, JSON.stringify(bounds));
+    if(maximized){
+        const boundsFile = JSON.parse(fs.readFileSync(windowBoundPath, "utf-8"));
+        fs.writeFileSync(windowBoundPath, JSON.stringify({
+            width: boundsFile.width,
+            height: boundsFile.height,
+            x: boundsFile.x,
+            y: boundsFile.y,
+            maximized: maximized
+        }));
+    }else{
+        fs.writeFileSync(windowBoundPath, JSON.stringify({
+            width: bounds.width,
+            height: bounds.height,
+            x: bounds.x,
+            y: bounds.y,
+            maximized: maximized
+        }));
+    }
 }
 
 function createWindow() {
     const windowBounds = JSON.parse(fs.readFileSync(windowBoundPath, "utf-8"));
-
+    
     mainWindow = new BrowserWindow({
         width: windowBounds.width,
         height: windowBounds.height,
@@ -146,8 +163,11 @@ function createWindow() {
     mainWindow.webContents.send("savePath", savePath);
     mainWindow.menuBarVisible = false;
 
-    mainWindow.on("close", () => {
-        if (mainWindow.getBounds() !== windowBounds) saveWindowState();
+    if(windowBounds.maximized)
+        mainWindow.maximize();
+
+    mainWindow.on("close", (ev) => {
+        saveWindowState();
     });
 
     mainWindow.on("closed", () => {
@@ -159,12 +179,6 @@ function createWindow() {
 ipcMain.on("getSavePath", (event, arg) => {
     //send the savesPath to the requestor
     event.sender.send("savePath", savePath);
-});
-
-ipcMain.on("refresh", () => {
-    saveFile = JSON.parse(fs.readFileSync(shortcutsPath, "utf-8"));
-    orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
-    mainWindow.webContents.send("refresh");
 });
 
 ipcMain.on("updateSaveMain", () => {
@@ -485,12 +499,12 @@ ipcMain.on("changeOrder", (ev, args) => {
 });
 
 ipcMain.on("closeAndSave", (ev) => {
-    mainWindow.reload();
     ev.sender.close();
     saveFile = JSON.parse(
         fs.readFileSync(path.join(savePath, "shortcuts.json"), "utf-8")
     );
     orderFile = JSON.parse(fs.readFileSync(path.join(orderPath), "utf-8"));
+    mainWindow.webContents.send("updateSave")
 });
 
 ipcMain.on("chooseImage", (event) => {

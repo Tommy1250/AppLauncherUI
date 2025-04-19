@@ -67,6 +67,8 @@ const closeButton = document.getElementById("close");
 const moveButton = document.getElementById("moveperm");
 const toinput = document.getElementById("toinput");
 
+let currentScroll = 0;
+
 let moveItem = -10;
 
 ipcRenderer.on("savePath", (ev, args) => {
@@ -111,12 +113,14 @@ if (shortcutsFile === "") {
 }
 
 function makeAppGrid(entries) {
+    currentScroll = appGrid.scrollTop;
     appGrid.innerHTML = "";
     for (let i = 0; i < entries.length; i++) {
         const key = entries[i];
 
         addItemToGrid(key, i);
     }
+    appGrid.scrollTop = currentScroll;
 }
 
 function updateSaveFile() {
@@ -127,8 +131,6 @@ function updateSaveFile() {
 }
 
 ipcRenderer.on("updateSave", () => updateSaveFile());
-
-ipcRenderer.on("refresh", () => makeAppGrid(orderFile));
 
 //drag and drop methods
 document.addEventListener("dragover", (e) => {
