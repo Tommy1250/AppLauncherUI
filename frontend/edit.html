@@ -25,7 +25,10 @@
             </div>
             <div>
                 <label for="appPath">Path:</label>
-                <input type="text" id="appPath">
+                <div class="util-action">
+                    <input type="text" id="appPath">
+                    <button class="fa-solid fa-arrow-up-right-from-square" id="selectFile"></button>
+                </div>
             </div>
             <div id="argsDiv">
                 <label for="appArgs">Args:</label>
@@ -36,6 +39,7 @@
                 <select id="appType">
                     <option value="exe">Desktop shortcut</option>
                     <option value="url">Internet shortcut</option>
+                    <option value="dir">Folder shortcut</option>
                 </select>
             </div>
         </div>

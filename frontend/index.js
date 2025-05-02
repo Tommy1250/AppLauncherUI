@@ -11,7 +11,7 @@ let orderPath = "";
 // let categoriesPath = "";
 
 /**
- * @type {{appname: {type: "url" | "exe", location: string, args?: string, gridName: string}}}
+ * @type {{appname: {type: "url" | "exe" | "dir", location: string, args?: string, gridName: string}}}
  */
 let saveFile = {};
 
@@ -317,8 +317,12 @@ function addItemToGrid(key, index) {
 
     appImg.className = "app-img";
     let imagePath = path.join(imagesPath, `${key}.png`);
-    if (!fs.existsSync(imagePath))
-        imagePath = path.join(__dirname, "missing.png");
+    if (!fs.existsSync(imagePath)){
+        if(saveFile[key].type === "dir")
+            imagePath = path.join(__dirname, "missingdir.png");
+        else
+            imagePath = path.join(__dirname, "missing.png");
+    }
     appImg.src = imagePath;
     appImg.setAttribute("draggable", false);
 

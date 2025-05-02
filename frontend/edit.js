@@ -11,7 +11,7 @@ const argsDiv = document.getElementById("argsDiv");
 const appNameInput = document.getElementById("appName");
 const appPathInput = document.getElementById("appPath");
 const appArgsInput = document.getElementById("appArgs");
-const appIdHolder = document.getElementById("appId")
+const appIdHolder = document.getElementById("appId");
 /**
  * @type {HTMLSelectElement}
  */
@@ -20,11 +20,13 @@ const appTypeSelect = document.getElementById("appType");
 const cancelButton = document.getElementById("cancel");
 const saveButton = document.getElementById("save");
 
+const selectFileButton = document.getElementById("selectFile");
+
 let shortcutsFile = "";
 let savePath = "";
 let imagesPath = "";
 /**
- * @type {{[appName: string]: {type: "url" | "exe", location: string, args?: string, gridName: string}}}
+ * @type {{[appName: string]: {type: "url" | "exe" | "dir", location: string, args?: string, gridName: string}}}
  */
 let saveFile = {};
 
@@ -32,6 +34,7 @@ let appName = "";
 
 let imageUpdated = false;
 let newImagePath = "";
+let hasImage = false;
 
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
@@ -44,18 +47,34 @@ ipcRenderer.on("savePath", (ev, args) => {
 ipcRenderer.on("appname", (ev, args) => {
     appName = args;
     appIdHolder.innerText = `Id: ${appName}`;
-    appImg.src = fs.existsSync(path.join(imagesPath, `${appName}.png`)) ? path.join(imagesPath, `${appName}.png`) : path.join(__dirname, `missing.png`);
     appNameInput.value = saveFile[appName].gridName;
     appPathInput.value = saveFile[appName].location;
-    if(saveFile[appName].type === "exe"){
-        argsDiv.style.display = "grid";
-        appArgsInput.value = saveFile[appName].args ?? "";
-        appTypeSelect.selectedIndex = 0;
-    } else {
-        argsDiv.style.display = "none";
-        appTypeSelect.selectedIndex = 1;
+
+    if (fs.existsSync(path.join(imagesPath, `${appName}.png`))) {
+        appImg.src = path.join(imagesPath, `${appName}.png`);
+        hasImage = true;
     }
-})
+
+    switch (saveFile[appName].type) {
+        case "exe":
+            argsDiv.style.display = "grid";
+            appArgsInput.value = saveFile[appName].args ?? "";
+            appTypeSelect.selectedIndex = 0;
+
+            if (!hasImage) appImg.src = path.join(__dirname, `missing.png`);
+            break;
+        case "url":
+            argsDiv.style.display = "none";
+            appTypeSelect.selectedIndex = 1;
+            if (!hasImage) appImg.src = path.join(__dirname, `missing.png`);
+            break;
+        case "dir":
+            argsDiv.style.display = "none";
+            appTypeSelect.selectedIndex = 2;
+            if (!hasImage) appImg.src = path.join(__dirname, `missingdir.png`);
+            break;
+    }
+});
 
 if (shortcutsFile === "") {
     ipcRenderer.send("getSavePath");
@@ -66,52 +85,77 @@ if (appName === "") {
 }
 
 appTypeSelect.oninput = () => {
-    if(appTypeSelect.selectedIndex === 0){
+    if (appTypeSelect.selectedIndex === 0) {
         argsDiv.style.display = "grid";
     } else {
         argsDiv.style.display = "none";
     }
-}
+
+    if (!hasImage)
+        if (appTypeSelect[appTypeSelect.selectedIndex].value === "dir")
+            appImg.src = "./missingdir.png";
+        else appImg.src = "./missing.png";
+};
 
 saveButton.onclick = () => {
-    if(appArgsInput.value !== ""){
+    if (appArgsInput.value !== "") {
         saveFile[appName] = {
-            "type": appTypeSelect[appTypeSelect.selectedIndex].value,
-            "location": appPathInput.value,
-            "args": appArgsInput.value,
-            "gridName": appNameInput.value
-        }
+            type: appTypeSelect[appTypeSelect.selectedIndex].value,
+            location: appPathInput.value,
+            args: appArgsInput.value,
+            gridName: appNameInput.value,
+        };
     } else {
         saveFile[appName] = {
-            "type": appTypeSelect[appTypeSelect.selectedIndex].value,
-            "location": appPathInput.value,
-            "gridName": appNameInput.value
-        }
+            type: appTypeSelect[appTypeSelect.selectedIndex].value,
+            location: appPathInput.value,
+            gridName: appNameInput.value,
+        };
     }
-    
+
     fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile, null, 4));
 
-    if(imageUpdated) {
+    if (imageUpdated) {
         fs.copyFileSync(newImagePath, path.join(imagesPath, `${appName}.png`));
     }
 
-    ipcRenderer.send("closeAndSave")
-}
+    ipcRenderer.send("closeAndSave");
+};
+
+selectFileButton.onclick = () => {
+    if (appTypeSelect[appTypeSelect.selectedIndex].value !== "dir")
+        ipcRenderer.send("chooseExecFile");
+    else ipcRenderer.send("cooseDirectory");
+};
+
+ipcRenderer.on("execSelect", (ev, fileLocation) => {
+    appPathInput.value = fileLocation;
+});
+
+ipcRenderer.on("dirSelect", (ev, dirLocation) => {
+    appPathInput.value = dirLocation;
+    if (appNameInput.value.length == 0)
+        appNameInput.value = path.basename(dirLocation);
+});
 
 cancelButton.onclick = () => {
     window.close();
-}
+};
 
 imageSelectButton.onclick = () => {
     ipcRenderer.send("chooseImage");
-}
+};
 
 ipcRenderer.on("imageSelect", (ev, fileLocation) => {
     appImg.src = fileLocation;
     imageUpdated = true;
     newImagePath = fileLocation;
-})
+});
 
 imageSearchButton.onclick = () => {
-    shell.openExternal(`https://www.steamgriddb.com/search/grids?term=${encodeURIComponent(saveFile[appName].gridName)}`)
-}
+    shell.openExternal(
+        `https://www.steamgriddb.com/search/grids?term=${encodeURIComponent(
+            saveFile[appName].gridName
+        )}`
+    );
+};

@@ -73,7 +73,7 @@ if (!fs.existsSync(settingsPath)) {
 }
 
 /**
- * @type {{[gameName: string]: {type: "url" | "exe", location: string, args?: string, gridName: string}}}
+ * @type {{[gameName: string]: {type: "url" | "exe" | "dir", location: string, args?: string, gridName: string}}}
  */
 let saveFile = JSON.parse(
     fs.readFileSync(path.join(savePath, "shortcuts.json"), "utf-8")
@@ -190,6 +190,8 @@ let tray = null;
 
 function addToLatestAndLaunch(gameName, window = null) {
     launchApp(saveFile[gameName], window);
+
+    if(saveFile[gameName].type === "dir") return;
 
     if (!latestLaunchedGames.includes(gameName))
         latestLaunchedGames.push(gameName);
@@ -549,6 +551,21 @@ ipcMain.on("chooseExecFile", (event) => {
     .then((file) => {
         if (!file.canceled) {
             event.sender.send("execSelect", file.filePaths[0]);
+        }
+    })
+    .catch((reason) => {
+        console.log(reason);
+    });
+})
+
+ipcMain.on("cooseDirectory", event => {
+    dialog.showOpenDialog({
+        title: "Select Folder",
+        properties: ["openDirectory"]
+    })
+    .then((file) => {
+        if (!file.canceled) {
+            event.sender.send("dirSelect", file.filePaths[0]);
         }
     })
     .catch((reason) => {

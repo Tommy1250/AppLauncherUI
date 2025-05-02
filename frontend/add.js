@@ -62,6 +62,12 @@ appTypeSelect.oninput = () => {
     } else {
         argsDiv.style.display = "none";
     }
+
+    if(!imageUpdated)
+        if(appTypeSelect[appTypeSelect.selectedIndex].value === "dir")
+            appImg.src = "./missingdir.png"
+        else
+            appImg.src = "./missing.png"
 }
 
 ipcRenderer.on("inputdata", (ev, args) => {
@@ -103,18 +109,32 @@ saveButton.onclick = () => {
 }
 
 genRandomIdButton.onclick = () => {
-    if (appIdInput.value.startsWith("ms"))
-        appIdInput.value = `ms-${generateId(25)}`
-    else
-        appIdInput.value = `app-${generateId(25)}`
+    if(appTypeSelect[appTypeSelect.selectedIndex].value !== "dir"){
+        if (appIdInput.value.startsWith("ms"))
+            appIdInput.value = `ms-${generateId(25)}`
+        else
+            appIdInput.value = `app-${generateId(25)}`
+    }else{
+        appIdInput.value = `dir-${generateId(10)}`
+    }
 }
 
 selectFileButton.onclick = () => {
-    ipcRenderer.send("chooseExecFile");
+    if(appTypeSelect[appTypeSelect.selectedIndex].value !== "dir")
+        ipcRenderer.send("chooseExecFile");
+    else
+        ipcRenderer.send("cooseDirectory")
 }
 
 ipcRenderer.on("execSelect", (ev, fileLocation) => {
     appPathInput.value = fileLocation
+})
+
+ipcRenderer.on("dirSelect", (ev, dirLocation) => {
+    appPathInput.value = dirLocation;
+    appIdInput.value = `dir-${generateId(10)}`
+    if(appNameInput.value.length == 0)
+        appNameInput.value = path.basename(dirLocation)
 })
 
 cancelButton.onclick = () => {

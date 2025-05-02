@@ -5,7 +5,7 @@ const path = require("path");
 
 /**
  * 
- * @param {{type: "url" | "exe", location: string, args?: string}} appConfig 
+ * @param {{type: "url" | "exe" | "dir", location: string, args?: string}} appConfig 
  */
 function launchApp(appConfig, theWindow) {
     if(!appConfig) {
@@ -42,6 +42,8 @@ function launchApp(appConfig, theWindow) {
             if(theWindow)
                 theWindow.close();
         }
+    } else if (appConfig.type === "dir") {
+        shell.openPath(appConfig.location);
     }
 }
 
