@@ -53,7 +53,7 @@ async function getBanner(gameName, savePath, token) {
     );
     const body = await result.json();
     if (!body.success || body.data.length === 0) {
-        ipcRenderer.send("refresh");
+        ipcRenderer.send("updateSaveNoClose");
         return `${gameName}.png`;
     }
     const imageUrl = body.data[0].url;
@@ -74,7 +74,7 @@ async function queueBanner(gameName, savePath, token) {
                 if (banner) itemsQueue.shift();
             } catch {
                 itemsQueue.shift();
-                ipcRenderer.send("refresh");
+                ipcRenderer.send("updateSaveNoClose");
             }
         }, 500);
     } else {
@@ -84,7 +84,7 @@ async function queueBanner(gameName, savePath, token) {
             if (banner) itemsQueue.shift();
         } catch {
             itemsQueue.shift();
-            ipcRenderer.send("refresh");
+            ipcRenderer.send("updateSaveNoClose");
         }
     }
     return `${gameName}.png`;

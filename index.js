@@ -509,6 +509,14 @@ ipcMain.on("closeAndSave", (ev) => {
     mainWindow.webContents.send("updateSave")
 });
 
+ipcMain.on("updateSaveNoClose", (ev) => {
+    saveFile = JSON.parse(
+        fs.readFileSync(path.join(savePath, "shortcuts.json"), "utf-8")
+    );
+    orderFile = JSON.parse(fs.readFileSync(path.join(orderPath), "utf-8"));
+    mainWindow.webContents.send("updateSave")
+});
+
 ipcMain.on("chooseImage", (event) => {
     // console.log("choose image");
     dialog

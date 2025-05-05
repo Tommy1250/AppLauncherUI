@@ -13,7 +13,7 @@ async function downloadImage(imageUrl, shortcutName, savePath){
             // after download completed close filestream
             file.on("finish", () => {
                 file.close();
-                ipcRenderer.send("refresh");
+                ipcRenderer.send("updateSaveNoClose");
             });
         }
     );
