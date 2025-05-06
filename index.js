@@ -43,6 +43,9 @@ const settingsPath = path.join(savePath, "settings.json");
 const orderPath = path.join(savePath, "order.json");
 const windowBoundPath = path.join(savePath, "window.json");
 
+const imagesPath = path.join(savePath, "images");
+exports.imagesPath = imagesPath;
+
 if (!fs.existsSync(savePath)) {
     fs.mkdirSync(savePath);
 }
@@ -58,7 +61,13 @@ if (!fs.existsSync(latestGamesPath)) {
 if (!fs.existsSync(windowBoundPath)) {
     fs.writeFileSync(
         windowBoundPath,
-        JSON.stringify({ width: 1280, height: 720, x: undefined, y: undefined, fullscreen: false })
+        JSON.stringify({
+            width: 1280,
+            height: 720,
+            x: undefined,
+            y: undefined,
+            fullscreen: false,
+        })
     );
 }
 
@@ -68,6 +77,9 @@ if (!fs.existsSync(settingsPath)) {
         JSON.stringify({
             startWithPc: true,
             steamGridToken: "",
+            enableServer: false,
+            serverPort: 7080,
+            serverPassword: "1234",
         })
     );
 }
@@ -78,6 +90,7 @@ if (!fs.existsSync(settingsPath)) {
 let saveFile = JSON.parse(
     fs.readFileSync(path.join(savePath, "shortcuts.json"), "utf-8")
 );
+exports.shortcutsPath = shortcutsPath;
 
 /**
  * @type {string[]}
@@ -85,9 +98,21 @@ let saveFile = JSON.parse(
 let latestLaunchedGames = JSON.parse(fs.readFileSync(latestGamesPath, "utf-8"));
 
 /**
- * @type {{startWithPc: boolean, steamGridToken: string}}
+ * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string}}
  */
 let settingsFile = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
+exports.settingsFile = settingsFile;
+
+if (!settingsFile.serverPort) {
+    settingsFile = {
+        startWithPc: settingsFile.startWithPc,
+        steamGridToken: settingsFile.steamGridToken,
+        enableServer: settingsFile.enableServer ?? false,
+        serverPort: 7080,
+        serverPassword: settingsFile.serverPassword ?? "1234",
+    };
+    fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
+}
 
 /**
  * @type {string[]}
@@ -101,6 +126,7 @@ if (!fs.existsSync(orderPath)) {
 } else {
     orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
 }
+exports.orderPath = orderPath;
 
 const iconpath =
     process.platform === "linux"
@@ -115,29 +141,37 @@ function saveWindowState() {
     const bounds = mainWindow.getBounds();
     const maximized = mainWindow.isMaximized();
 
-    if(maximized){
-        const boundsFile = JSON.parse(fs.readFileSync(windowBoundPath, "utf-8"));
-        fs.writeFileSync(windowBoundPath, JSON.stringify({
-            width: boundsFile.width,
-            height: boundsFile.height,
-            x: boundsFile.x,
-            y: boundsFile.y,
-            maximized: maximized
-        }));
-    }else{
-        fs.writeFileSync(windowBoundPath, JSON.stringify({
-            width: bounds.width,
-            height: bounds.height,
-            x: bounds.x,
-            y: bounds.y,
-            maximized: maximized
-        }));
+    if (maximized) {
+        const boundsFile = JSON.parse(
+            fs.readFileSync(windowBoundPath, "utf-8")
+        );
+        fs.writeFileSync(
+            windowBoundPath,
+            JSON.stringify({
+                width: boundsFile.width,
+                height: boundsFile.height,
+                x: boundsFile.x,
+                y: boundsFile.y,
+                maximized: maximized,
+            })
+        );
+    } else {
+        fs.writeFileSync(
+            windowBoundPath,
+            JSON.stringify({
+                width: bounds.width,
+                height: bounds.height,
+                x: bounds.x,
+                y: bounds.y,
+                maximized: maximized,
+            })
+        );
     }
 }
 
 function createWindow() {
     const windowBounds = JSON.parse(fs.readFileSync(windowBoundPath, "utf-8"));
-    
+
     mainWindow = new BrowserWindow({
         width: windowBounds.width,
         height: windowBounds.height,
@@ -163,8 +197,7 @@ function createWindow() {
     mainWindow.webContents.send("savePath", savePath);
     mainWindow.menuBarVisible = false;
 
-    if(windowBounds.maximized)
-        mainWindow.maximize();
+    if (windowBounds.maximized) mainWindow.maximize();
 
     mainWindow.on("close", (ev) => {
         saveWindowState();
@@ -188,10 +221,10 @@ ipcMain.on("updateSaveMain", () => {
 
 let tray = null;
 
-function addToLatestAndLaunch(gameName, window = null) {
+function addToLatestAndLaunch(gameName, window = mainWindow) {
     launchApp(saveFile[gameName], window);
 
-    if(saveFile[gameName].type === "dir") return;
+    if (saveFile[gameName].type === "dir") return;
 
     if (!latestLaunchedGames.includes(gameName))
         latestLaunchedGames.push(gameName);
@@ -243,8 +276,8 @@ function addToLatestAndLaunch(gameName, window = null) {
 
     const trayMenu = Menu.buildFromTemplate(trayTemplate);
     tray.setContextMenu(trayMenu);
-
 }
+exports.addToLatestAndLaunch = addToLatestAndLaunch;
 
 function removeFromLatest(gameName) {
     const trayTemplate = [
@@ -506,7 +539,7 @@ ipcMain.on("closeAndSave", (ev) => {
         fs.readFileSync(path.join(savePath, "shortcuts.json"), "utf-8")
     );
     orderFile = JSON.parse(fs.readFileSync(path.join(orderPath), "utf-8"));
-    mainWindow.webContents.send("updateSave")
+    mainWindow.webContents.send("updateSave");
 });
 
 ipcMain.on("updateSaveNoClose", (ev) => {
@@ -514,7 +547,7 @@ ipcMain.on("updateSaveNoClose", (ev) => {
         fs.readFileSync(path.join(savePath, "shortcuts.json"), "utf-8")
     );
     orderFile = JSON.parse(fs.readFileSync(path.join(orderPath), "utf-8"));
-    mainWindow.webContents.send("updateSave")
+    mainWindow.webContents.send("updateSave");
 });
 
 ipcMain.on("chooseImage", (event) => {
@@ -542,44 +575,46 @@ ipcMain.on("chooseImage", (event) => {
 
 ipcMain.on("chooseExecFile", (event) => {
     // console.log("choose shortcut file")
-    dialog.showOpenDialog({
-        title: "Select executable file",
-        properties: ["openFile"],
-        filters: [
-            {
-                name: "Executable file",
-                extensions: ["exe", "bat", "sh", "cmd"]
-            },
-            {
-                name: "All files",
-                extensions: ["*"]
+    dialog
+        .showOpenDialog({
+            title: "Select executable file",
+            properties: ["openFile"],
+            filters: [
+                {
+                    name: "Executable file",
+                    extensions: ["exe", "bat", "sh", "cmd"],
+                },
+                {
+                    name: "All files",
+                    extensions: ["*"],
+                },
+            ],
+        })
+        .then((file) => {
+            if (!file.canceled) {
+                event.sender.send("execSelect", file.filePaths[0]);
             }
-        ]
-    })
-    .then((file) => {
-        if (!file.canceled) {
-            event.sender.send("execSelect", file.filePaths[0]);
-        }
-    })
-    .catch((reason) => {
-        console.log(reason);
-    });
-})
+        })
+        .catch((reason) => {
+            console.log(reason);
+        });
+});
 
-ipcMain.on("cooseDirectory", event => {
-    dialog.showOpenDialog({
-        title: "Select Folder",
-        properties: ["openDirectory"]
-    })
-    .then((file) => {
-        if (!file.canceled) {
-            event.sender.send("dirSelect", file.filePaths[0]);
-        }
-    })
-    .catch((reason) => {
-        console.log(reason);
-    });
-})
+ipcMain.on("cooseDirectory", (event) => {
+    dialog
+        .showOpenDialog({
+            title: "Select Folder",
+            properties: ["openDirectory"],
+        })
+        .then((file) => {
+            if (!file.canceled) {
+                event.sender.send("dirSelect", file.filePaths[0]);
+            }
+        })
+        .catch((reason) => {
+            console.log(reason);
+        });
+});
 
 ipcMain.on("addWindow", () => {
     if (!addWindow) {
@@ -651,7 +686,7 @@ ipcMain.on("msappselect", (ev, appargs) => {
         addWindow.webContents.send("inputdata", {
             path: "explorer.exe",
             args: `shell:appsFolder\\${appargs}`,
-            id: `ms-${generateId(25)}`
+            id: `ms-${generateId(25)}`,
         });
 
     if (msStoreWindow) msStoreWindow.close();
@@ -672,6 +707,21 @@ ipcMain.on("updateSave", (ev, args) => {
         }
     }
 
+    if (settingsFile.enableServer !== args.enableServer | settingsFile.serverPort !== args.serverPort | settingsFile.serverPassword !== args.serverPassword) {
+        dialog.showMessageBox({
+            type: "question",
+            buttons: ['Cancel', 'Ok'],
+            title: 'Apply Settings',
+            detail: 'You need to restart the launcher to change the remote server restart now?',
+            icon: path.join(iconpath)
+        }).then((returnValue) => {
+            if (returnValue.response === 1) {
+                app.relaunch();
+                app.exit();
+            }
+        })
+    }
+
     settingsFile = args;
 
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
@@ -680,3 +730,7 @@ ipcMain.on("updateSave", (ev, args) => {
 app.on("window-all-closed", (ev) => {
     ev.preventDefault();
 });
+
+if(settingsFile.enableServer) {
+    require("./remote")
+}

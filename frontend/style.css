@@ -210,6 +210,8 @@ body {
     width: 60%;
     display: grid;
     gap: 7px;
+    margin-bottom: 22px;
+    margin-top: 16px;
 }
 
 .setting-input {
@@ -404,4 +406,9 @@ input:checked + .slider:before {
     font-weight: bolder;
     font-size: large;
     height: fit-content;
+}
+
+hr {
+    border-color: #0000009e;
+    width: 85%;
 }

@@ -16,7 +16,7 @@ let orderPath = "";
 let saveFile = {};
 
 /**
- * @type {{startWithPc: boolean, steamGridToken: string}}
+ * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string}}
  */
 let settingsFile = {};
 
@@ -59,6 +59,10 @@ const goToSteamGirdBtn = document.getElementById("goToSteamGirdBtn");
 const steamGridTokenInput = document.getElementById("steamGridToken");
 const startWithPcCheckBox = document.getElementById("startWithPc");
 
+const serverCheckBox = document.getElementById("enableServer");
+const serverPortInput = document.getElementById("serverPort");
+const serverPassInput = document.getElementById("serverPass");
+
 /**
  * @type {HTMLDialogElement}
  */
@@ -100,6 +104,9 @@ ipcRenderer.on("savePath", (ev, args) => {
 
     steamGridTokenInput.value = settingsFile.steamGridToken;
     startWithPcCheckBox.checked = settingsFile.startWithPc;
+    serverCheckBox.checked = settingsFile.enableServer;
+    serverPortInput.value = settingsFile.serverPort;
+    serverPassInput.value = settingsFile.serverPassword;
 
     makeAppGrid(orderFile);
 
@@ -549,6 +556,12 @@ settingsButton.onclick = () => {
 settingsCancelBtn.onclick = () => {
     mainDiv.style.display = "grid";
     settingsDiv.style.display = "none";
+
+    steamGridTokenInput.value = settingsFile.steamGridToken;
+    startWithPcCheckBox.checked = settingsFile.startWithPc;
+    serverCheckBox.checked = settingsFile.enableServer;
+    serverPortInput.value = settingsFile.serverPort;
+    serverPassInput.value = settingsFile.serverPassword;
 };
 
 goToSteamGirdBtn.onclick = () => {
@@ -556,9 +569,14 @@ goToSteamGirdBtn.onclick = () => {
 };
 
 settingsSaveBtn.onclick = () => {
+    if(serverPortInput.value === "")
+        return serverPortInput.value = settingsFile.serverPort
     settingsFile = {
         startWithPc: startWithPcCheckBox.checked,
         steamGridToken: steamGridTokenInput.value,
+        enableServer: serverCheckBox.checked,
+        serverPort: serverPortInput.value,
+        serverPassword: serverPassInput.value
     };
     mainDiv.style.display = "grid";
     settingsDiv.style.display = "none";

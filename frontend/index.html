@@ -27,8 +27,9 @@
         </div>
         <div id="appgrid" class="app-grid scroll-alone"></div>
     </div>
-    <div class="settings" id="settingsDiv">
-        <div class="container">
+    <div class="settings scroll-alone" id="settingsDiv">
+        <div class="container scroll-alone">
+            <h1 class="center">System</h1>
             <div class="switch-div">
                 <label for="startWithPc" class="setting-label">Start app with pc:</label>
                 <label class="switch">
@@ -36,6 +37,8 @@
                     <span class="slider round"></span>
                 </label>
             </div>
+            <hr>
+            <h1 class="center">App Icons</h1>
             <div>
                 <label for="steamGridToken" class="setting-label">Steam grid Token:</label>
                 <input type="text" id="steamGridToken" class="setting-input">
@@ -43,6 +46,24 @@
                     <button id="goToSteamGirdBtn" class="setting-button">Sign up for a token</button>
                 </div>
             </div>
+            <hr>
+            <h1 class="center">Remote Server</h1>
+            <div class="switch-div">
+                <label for="enableServer" class="setting-label">Enable remote launch server:</label>
+                <label class="switch">
+                    <input type="checkbox" id="enableServer">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div>
+                <label for="serverPort" class="setting-label">Server port:</label>
+                <input type="text" id="serverPort" class="setting-input">
+            </div>
+            <div>
+                <label for="serverPass" class="setting-label">Server password:</label>
+                <input type="text" id="serverPass" class="setting-input">
+            </div>
+            <hr>
             <div class="controls">
                 <button id="cancel">Cancel</button>
                 <button id="save">Save changes</button>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppLauncher Login Page</title>
+    <link rel="stylesheet" href="/login.css">
+</head>
+
+<body>
+    <div class="settings scroll-alone" id="settingsDiv">
+        <div class="container scroll-alone">
+            <h1 class="center">Login</h1>
+            <div>
+                <label for="passwordInput" class="setting-label">Password:</label>
+                <input type="password" id="passwordInput" class="setting-input">
+            </div>
+            <div class="controls">
+                <button id="login">Login</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const passwordInput = document.getElementById("passwordInput");
+        const loginButton = document.getElementById("login");
+
+        loginButton.onclick = () => {
+            fetch("/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "text/plain"
+                },
+                credentials: "same-origin",
+                body: passwordInput.value
+            }).then(res => {
+                if(res.ok){
+                    window.location.href = "/";
+                }
+            })
+        }
+    </script>
+</body>
+
+</html>
