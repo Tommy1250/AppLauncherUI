@@ -98,7 +98,7 @@ exports.shortcutsPath = shortcutsPath;
 let latestLaunchedGames = JSON.parse(fs.readFileSync(latestGamesPath, "utf-8"));
 
 /**
- * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string}}
+ * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean}}
  */
 let settingsFile = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
 exports.settingsFile = settingsFile;
@@ -111,6 +111,11 @@ if (!settingsFile.serverPort) {
         serverPort: 7080,
         serverPassword: settingsFile.serverPassword ?? "1234",
     };
+    fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
+}
+
+if(settingsFile.dontWarnShell === undefined) {
+    settingsFile.dontWarnShell = false;
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 }
 
@@ -707,19 +712,25 @@ ipcMain.on("updateSave", (ev, args) => {
         }
     }
 
-    if (settingsFile.enableServer !== args.enableServer | settingsFile.serverPort !== args.serverPort | settingsFile.serverPassword !== args.serverPassword) {
-        dialog.showMessageBox({
-            type: "question",
-            buttons: ['Cancel', 'Ok'],
-            title: 'Apply Settings',
-            detail: 'You need to restart the launcher to change the remote server restart now?',
-            icon: path.join(iconpath)
-        }).then((returnValue) => {
-            if (returnValue.response === 1) {
-                app.relaunch();
-                app.exit();
-            }
-        })
+    if (
+        (settingsFile.enableServer !== args.enableServer) |
+        (settingsFile.serverPort !== args.serverPort) |
+        (settingsFile.serverPassword !== args.serverPassword)
+    ) {
+        dialog
+            .showMessageBox({
+                type: "question",
+                buttons: ["Cancel", "Ok"],
+                title: "Apply Settings",
+                detail: "You need to restart the launcher to change the remote server restart now?",
+                icon: path.join(iconpath),
+            })
+            .then((returnValue) => {
+                if (returnValue.response === 1) {
+                    app.relaunch();
+                    app.exit();
+                }
+            });
     }
 
     settingsFile = args;
@@ -727,10 +738,31 @@ ipcMain.on("updateSave", (ev, args) => {
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 });
 
+ipcMain.on("showShellMsg", (ev, args) => {
+    if(settingsFile.dontWarnShell) 
+        return;
+    dialog
+        .showMessageBox({
+            type: "warning",
+            buttons: ["Ok"],
+            title: "Warning",
+            detail: "This button toggles shell mode it does nothing to the args enabling it might make some apps not launch and sometimes it might make other apps work like any app that needs a shell(cmd) window to launch\nEnable at your own risk",
+            icon: path.join(iconpath),
+            checkboxLabel: "Don't warn me again",
+            checkboxChecked: false,
+        })
+        .then((returnValue) => {
+            if(returnValue.checkboxChecked) {
+                settingsFile.dontWarnShell = true;
+                fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
+            }
+        });
+});
+
 app.on("window-all-closed", (ev) => {
     ev.preventDefault();
 });
 
-if(settingsFile.enableServer) {
-    require("./remote")
+if (settingsFile.enableServer) {
+    require("./remote");
 }

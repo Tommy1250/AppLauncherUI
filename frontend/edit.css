@@ -99,15 +99,22 @@ body {
     border-top-right-radius: 3px;
     border-bottom-right-radius: 3px;
     border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
+    border-bottom-left-radius: 0px;
     border-left: none;
     cursor: pointer;
+}
+
+.util-action > button.inactive {
+    color: #a20101;
 }
 
 .util-action > button:hover {
     color: rgb(240, 240, 240);
 }
 
+.util-action > button.inactive:hover {
+    color: #e50000;
+}
 
 .appInfo > div > select {
     border: 1px rgb(216, 216, 216) solid;

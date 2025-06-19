@@ -12,6 +12,9 @@ const appNameInput = document.getElementById("appName");
 const appPathInput = document.getElementById("appPath");
 const appArgsInput = document.getElementById("appArgs");
 const appIdHolder = document.getElementById("appId");
+
+const toggleShell = document.getElementById("toggleShell");
+
 /**
  * @type {HTMLSelectElement}
  */
@@ -26,7 +29,7 @@ let shortcutsFile = "";
 let savePath = "";
 let imagesPath = "";
 /**
- * @type {{[appName: string]: {type: "url" | "exe" | "dir", location: string, args?: string, gridName: string}}}
+ * @type {{[appName: string]: {type: "url" | "exe" | "dir", location: string, args?: string, gridName: string, shellMode?: boolean}}}
  */
 let saveFile = {};
 
@@ -35,6 +38,7 @@ let appName = "";
 let imageUpdated = false;
 let newImagePath = "";
 let hasImage = false;
+let shellMode = false;
 
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
@@ -60,6 +64,10 @@ ipcRenderer.on("appname", (ev, args) => {
             argsDiv.style.display = "grid";
             appArgsInput.value = saveFile[appName].args ?? "";
             appTypeSelect.selectedIndex = 0;
+            if(saveFile[appName].shellMode){
+                toggleShell.classList.remove("inactive");
+                shellMode = true;
+            }
 
             if (!hasImage) appImg.src = path.join(__dirname, `missing.png`);
             break;
@@ -97,6 +105,17 @@ appTypeSelect.oninput = () => {
         else appImg.src = "./missing.png";
 };
 
+toggleShell.onclick = () => {
+    if(shellMode) {
+        shellMode = false;
+        toggleShell.classList.add("inactive");
+    }else{
+        ipcRenderer.send("showShellMsg");
+        shellMode = true;
+        toggleShell.classList.remove("inactive");
+    }
+}
+
 saveButton.onclick = () => {
     if (appArgsInput.value !== "") {
         saveFile[appName] = {
@@ -111,6 +130,12 @@ saveButton.onclick = () => {
             location: appPathInput.value,
             gridName: appNameInput.value,
         };
+    }
+
+    if(shellMode) {
+        saveFile[appName].shellMode = shellMode;
+    } else {
+        delete saveFile[appName].shellMode;
     }
 
     fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile, null, 4));

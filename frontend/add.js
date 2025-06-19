@@ -14,6 +14,8 @@ const appPathInput = document.getElementById("appPath");
 const appArgsInput = document.getElementById("appArgs");
 const appIdInput = document.getElementById("appId");
 
+const toggleShell = document.getElementById("toggleShell");
+
 /**
  * @type {HTMLSelectElement}
  */
@@ -31,7 +33,7 @@ let savePath = "";
 let imagesPath = "";
 let orderPath = "";
 /**
- * @type {{appname: {type: "url" | "exe", location: string, args?: string, gridName: string}}}
+ * @type {{appname: {type: "url" | "exe", location: string, args?: string, gridName: string, shellMode?: boolean}}}
  */
 let saveFile = {};
 /**
@@ -41,6 +43,7 @@ let orderFile = [];
 
 let imageUpdated = false;
 let newImagePath = "";
+let shellMode = false;
 
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
@@ -76,6 +79,17 @@ ipcRenderer.on("inputdata", (ev, args) => {
     appIdInput.value = args.id;
 })
 
+toggleShell.onclick = () => {
+    if(shellMode) {
+        shellMode = false;
+        toggleShell.classList.add("inactive");
+    }else{
+        ipcRenderer.send("showShellMsg");
+        shellMode = true;
+        toggleShell.classList.remove("inactive");
+    }
+}
+
 saveButton.onclick = () => {
     if(appIdInput.value === "This ID already exists please choose a different ID")
         return null;
@@ -96,6 +110,11 @@ saveButton.onclick = () => {
             "gridName": appNameInput.value
         }
     }
+
+    if(shellMode) {
+        saveFile[appIdInput.value].shellMode = shellMode;
+    }
+
     orderFile.push(appIdInput.value);
     
     fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile, null, 4));
