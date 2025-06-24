@@ -430,7 +430,7 @@ ipcMain.on("contextMenu", (ev, args) => {
         {
             label: "Start",
             click: () => {
-                addToLatestAndLaunch(saveFile[gameName], mainWindow);
+                addToLatestAndLaunch(gameName, mainWindow);
             },
         },
         {
