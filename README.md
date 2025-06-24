@@ -29,7 +29,7 @@ This app is built using the following technologies:
 
 ## Roadmap
 | Feature | Progress |
-|---------|----------|
+| --------- | :----------: |
 | App banner auto get | Done |
 | Microsoft store launching | Done |
 | Microsoft store adding | Done |
