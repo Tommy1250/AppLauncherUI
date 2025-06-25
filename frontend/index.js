@@ -133,7 +133,8 @@ function makeAppGrid(entries) {
 function updateSaveFile() {
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
     orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
-    makeAppGrid(orderFile);
+    if (searchBar.value !== "") search(searchBar.value);
+    else makeAppGrid(orderFile);
     // filterGrid(activeCategory);
 }
 
