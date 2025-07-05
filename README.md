@@ -44,11 +44,15 @@ This app is built using the following technologies:
 ```bash
 git clone https://github.com/Tommy1250/AppLauncherUI
 ```
-2. Install the packages
+2. Cd into the project directory
+```bash
+cd ApplauncherUI
+```
+3. Install the packages
 ```bash
 npm ci
 ```
-3. Compile the app for your desired platform
+4. Compile the app for your desired platform
 - Windows
 ```bash
 npm run build
