@@ -44,9 +44,9 @@ This app is built using the following technologies:
 ```bash
 git clone https://github.com/Tommy1250/AppLauncherUI
 ```
-2. Cd into the project directory
+2. cd into the project directory
 ```bash
-cd ApplauncherUI
+cd AppLauncherUI
 ```
 3. Install the packages
 ```bash
