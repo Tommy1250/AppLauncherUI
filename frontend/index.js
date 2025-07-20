@@ -325,8 +325,8 @@ function addItemToGrid(key, index) {
 
     appImg.className = "app-img";
     let imagePath = path.join(imagesPath, `${key}.png`);
-    if (!fs.existsSync(imagePath)){
-        if(saveFile[key].type === "dir")
+    if (!fs.existsSync(imagePath)) {
+        if (saveFile[key].type === "dir")
             imagePath = path.join(__dirname, "missingdir.png");
         else
             imagePath = path.join(__dirname, "missing.png");
@@ -362,7 +362,7 @@ function addItemToGrid(key, index) {
     appName.onpointerleave = () => {
         tooltip.style.display = "none";
     };
-    
+
     optionsButton.className = "fa-solid fa-ellipsis";
 
     bottomHolder.appendChild(appName);
@@ -543,11 +543,75 @@ window.addEventListener(
     false
 );
 
+let moveCounter = 0;
+
 // Analog Stick start movement event
-// // window.addEventListener('gc.analog.start', function(event) {
-// //     var stick = event.detail;
-// //     console.log(stick);
-// // })
+window.addEventListener('gc.analog.start', function (event) {
+    let data = event.detail;
+
+    if (!document.hasFocus()) return;
+    if (data.name !== "LEFT_ANALOG_STICK")
+        return
+
+    moveCounter = 20;
+})
+
+window.addEventListener("gc.analog.hold", (ev) => {
+    if (!document.hasFocus()) return;
+
+    const data = ev.detail
+    if (data.name !== "LEFT_ANALOG_STICK")
+        return
+
+    if (data.position.y > 0.8 || data.position.y < -0.8) {
+        moveCounter += 1
+        if (moveCounter > 20) {
+            moveCounter = 0;
+
+            if (data.position.y < -0.8) {
+                if (focusedItem - gridColumnCount <= 0) {
+                    focusedItem = 0;
+                    focusItem();
+                } else {
+                    focusedItem -= gridColumnCount;
+                    focusItem();
+                }
+            } else if (data.position.y > 0.8) {
+                if (
+                    focusedItem + gridColumnCount >=
+                    appGrid.childNodes.length - 1
+                ) {
+                    focusedItem = appGrid.childNodes.length - 1;
+                    focusItem();
+                } else {
+                    focusedItem += gridColumnCount;
+                    focusItem();
+                }
+            }
+        }
+    }
+    if (data.position.x > 0.8 || data.position.x < -0.8) {
+        moveCounter += 1
+        if (moveCounter > 20) {
+            moveCounter = 0;
+
+            if (data.position.x < -0.8) {
+                if (focusedItem === 0 || document.activeElement === searchBar)
+                    return;
+                focusedItem--;
+                focusItem();
+            } else if (data.position.x > 0.8) {
+                if (
+                    focusedItem === appGrid.childNodes.length - 1 ||
+                    document.activeElement === searchBar
+                )
+                    return;
+                focusedItem++;
+                focusItem();
+            }
+        }
+    }
+})
 
 settingsButton.onclick = () => {
     mainDiv.style.display = "none";
@@ -570,7 +634,7 @@ goToSteamGirdBtn.onclick = () => {
 };
 
 settingsSaveBtn.onclick = () => {
-    if(serverPortInput.value === "")
+    if (serverPortInput.value === "")
         return serverPortInput.value = settingsFile.serverPort
     settingsFile = {
         startWithPc: startWithPcCheckBox.checked,

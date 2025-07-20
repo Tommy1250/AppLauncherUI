@@ -25,9 +25,9 @@ This app is built using the following technologies:
 
 - winreg – to access the Windows Registry and detect Microsoft Store/Xbox apps.
 
-#### The app doesn't fully support/untested on Linux and macOS if you want to try to use it on any of these platforms do at your own risk
+__The app doesn't fully support/untested on Linux and macOS if you want to try to use it on any of these platforms do at your own risk__
 
-## Roadmap
+# Roadmap
 | Feature | Progress |
 | --------- | :----------: |
 | App banner auto get | Done |
@@ -39,7 +39,7 @@ This app is built using the following technologies:
 | Remote interface | Done |
 | Playtime tracking | Planning |
 | Better controller support | Undecided |
-### To compile the app:
+# Compiling the app:
 1. download the source code
 ```bash
 git clone https://github.com/Tommy1250/AppLauncherUI
