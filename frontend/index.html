@@ -23,6 +23,7 @@
                 <select id="filter"></select>
             </div> -->
             <button id="add" class="fa-solid fa-plus fa-lg iconbtn"></button>
+            <button id="filter" class="fa-solid fa-filter fa-lg iconbtn"></button>
             <button id="settings" class="fa-solid fa-gear fa-lg iconbtn"></button>
         </div>
         <div id="appgrid" class="app-grid scroll-alone"></div>
@@ -77,6 +78,27 @@
         </div>
         <input type="number" min="1" id="toinput">
         <button id="moveperm">Move</button>
+    </dialog>
+    <dialog id="movetomenu">
+        <div class="head">
+            <p>Type the possition</p>
+            <button id="close">x</button>
+        </div>
+        <input type="number" min="1" id="toinput">
+        <button id="moveperm">Move</button>
+    </dialog>
+    <dialog class="categories-dialog" id="categoriesManager">
+        <div class="title-bar">
+            <h3>Filter categories</h3>
+            <button id="cancelBtnCategories" class="fa-solid fa-xmark fa-lg iconbtn"></button>
+        </div>
+        <hr>
+        <div class="categories-list" id="categoriesDiv"></div>
+        <br>
+        <form id="addCategoryForm" class="search-box full">
+            <input type="text" id="categoryName" placeholder="Add new category...">
+            <button type="submit" id="addCategory">Add</button>
+        </form>
     </dialog>
     <div id="tooltip" class="tooltip"></div>
 </body>

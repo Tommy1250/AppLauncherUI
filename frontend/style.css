@@ -148,13 +148,17 @@ body {
     border: 1px gray;
 }
 
+.full > input {
+    width: calc(100% - 40px);
+}
+
 .search-div {
     margin-top: 10px;
     margin-left: 1px;
     margin-right: 1px;
     margin-bottom: 5px;
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr auto auto auto;
     gap: 10px;
 }
 
@@ -411,4 +415,97 @@ input:checked + .slider:before {
 hr {
     border-color: #0000009e;
     width: 85%;
+}
+
+.categories-dialog {
+    background-color: #181717;
+    box-shadow: 0 2px 4px rgba(232, 232, 232, 0.234);
+    border: none;
+    border-radius: 10px;
+    width: 50%;
+    max-width: 465px;
+    min-width: 190px;
+}
+
+.categories-dialog::backdrop {
+    background-color: #00000050;
+}
+
+.categories-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.category-div {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-checkbox {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    user-select: none;
+    margin-right: 10px;
+    /* margin-bottom: 5px; */
+    margin-top: 5px;
+    color: whitesmoke;
+}
+
+.custom-checkbox input {
+    display: none;
+}
+
+.custom-checkbox .checkmark {
+    height: 24px;
+    width: 24px;
+    background-color: #eee;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    margin-right: 5px;
+    position: relative;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.custom-checkbox input:checked + .checkmark {
+    background-color: #4caf50;
+    border-color: #4caf50;
+}
+
+.custom-checkbox .checkmark::after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.custom-checkbox input:checked + .checkmark::after {
+    display: block;
+}
+
+.title-bar {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5px;
+    margin-bottom: 8px;
+}
+
+.title-bar > h3 {
+    color: whitesmoke;
+    font-size: 25px;
+    margin-top: 0px;
+    margin-bottom: 0px;
 }

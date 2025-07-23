@@ -25,6 +25,8 @@ This app is built using the following technologies:
 
 - winreg – to access the Windows Registry and detect Microsoft Store/Xbox apps.
 
+- Font Awesome – awesome free icons.
+
 __The app doesn't fully support/untested on Linux and macOS if you want to try to use it on any of these platforms do at your own risk__
 
 # Roadmap

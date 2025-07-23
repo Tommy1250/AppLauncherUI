@@ -8,10 +8,10 @@ let shortcutsFile = "";
 let savePath = "";
 let imagesPath = "";
 let orderPath = "";
-// let categoriesPath = "";
+let categoriesPath = "";
 
 /**
- * @type {{appname: {type: "url" | "exe" | "dir", location: string, args?: string, gridName: string}}}
+ * @type {{[appname: string]: {type: "url" | "exe" | "dir", location: string, args?: string, gridName: string, shellMode?: boolean, categories?: string[]}}}
  */
 let saveFile = {};
 
@@ -25,16 +25,10 @@ let settingsFile = {};
  */
 let orderFile = [];
 
-// /**
-//  * @type {string[]}
-//  */
-// let categories = ["All"];
-// let activeCategory = "All";
-
-// /**
-//  * @type {string[]}
-//  */
-// let categoryEntries = [];
+/**
+ * @type {{selected: string[], categories: string[]}}
+ */
+let categoriesFile = {}
 
 const tooltip = document.getElementById("tooltip");
 
@@ -42,10 +36,6 @@ const appGrid = document.getElementById("appgrid");
 const searchForm = document.getElementById("searchForm");
 const searchBar = document.getElementById("search");
 const clearSearch = document.getElementById("clearSearch");
-// /**
-//  * @type {HTMLSelectElement}
-//  */
-// const filterSelect = document.getElementById("filter");
 
 const addButton = document.getElementById("add");
 const settingsButton = document.getElementById("settings");
@@ -71,6 +61,13 @@ const closeButton = document.getElementById("close");
 const moveButton = document.getElementById("moveperm");
 const toinput = document.getElementById("toinput");
 
+const categoriesManager = document.getElementById("categoriesManager");
+const categoriesDiv = document.getElementById("categoriesDiv");
+const filterButton = document.getElementById("filter");
+const cancelBtnCategories = document.getElementById("cancelBtnCategories");
+const addCategoryForm = document.getElementById("addCategoryForm");
+const categoryNameInput = document.getElementById("categoryName");
+
 let currentScroll = 0;
 
 let moveItem = -10;
@@ -81,26 +78,15 @@ ipcRenderer.on("savePath", (ev, args) => {
     shortcutsFile = path.join(savePath, "shortcuts.json");
     imagesPath = path.join(savePath, "images");
     orderPath = path.join(savePath, "order.json");
-    // categoriesPath = path.join(savePath, "categories");
-
+    categoriesPath = path.join(savePath, "categories.json");
+    
+    categoriesFile = JSON.parse(fs.readFileSync(categoriesPath, "utf-8"));
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
     settingsFile = JSON.parse(
         fs.readFileSync(path.join(savePath, "settings.json"), "utf-8")
     );
 
     orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
-
-    // if (!fs.existsSync(categoriesPath)) fs.mkdirSync(categoriesPath);
-
-    // categories.push(...fs.readdirSync(categoriesPath));
-
-    // for (let i = 0; i < categories.length; i++) {
-    //     const cat = categories[i];
-    //     const option = document.createElement("option");
-    //     option.innerText = cat.replace(".json", "");
-    //     option.value = cat;
-    //     filterSelect.appendChild(option);
-    // }
 
     steamGridTokenInput.value = settingsFile.steamGridToken;
     startWithPcCheckBox.checked = settingsFile.startWithPc;
@@ -122,12 +108,23 @@ if (shortcutsFile === "") {
 function makeAppGrid(entries) {
     currentScroll = appGrid.scrollTop;
     appGrid.innerHTML = "";
-    for (let i = 0; i < entries.length; i++) {
-        const key = entries[i];
+    if(categoriesFile.selected.length === 0){
+        for (let i = 0; i < entries.length; i++) {
+            const key = entries[i];
+    
+            addItemToGrid(key, i);
+            appGrid.scrollTop = currentScroll;
+        }
+    }else{
+        for (let i = 0; i < entries.length; i++) {
+            const key = entries[i];
+            if(saveFile[key].categories?.some(cat => categoriesFile.selected.includes(cat))) {
+                addItemToGrid(key, i);
+            }
 
-        addItemToGrid(key, i);
+            appGrid.scrollTop = currentScroll;
+        }
     }
-    appGrid.scrollTop = currentScroll;
 }
 
 function updateSaveFile() {
@@ -245,6 +242,7 @@ function editSaveObj(fileName, location, type, args = null) {
             type: type,
             location: `${location}`,
             gridName: fileName,
+            categories: [...categoriesFile.selected]
         };
     } else {
         saveFile[fileName] = {
@@ -252,25 +250,16 @@ function editSaveObj(fileName, location, type, args = null) {
             location: `${location}`,
             args: `${args}`,
             gridName: fileName,
+            categories: [...categoriesFile.selected]
         };
     }
-    // if (activeCategory !== "All") {
-    //     if (!categoryEntries.includes(fileName)) categoryEntries.push(fileName);
-    //     saveFile[fileName].category = [activeCategory]
-    // }
+
     if (!orderFile.includes(fileName)) orderFile.push(fileName);
 }
 
 function saveTheFile() {
-    // progressHolder.innerText = "";
     fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile));
     fs.writeFileSync(orderPath, JSON.stringify(orderFile));
-    // if (activeCategory !== "All") {
-    //     fs.writeFileSync(
-    //         path.join(categoriesPath, activeCategory),
-    //         JSON.stringify(categoryEntries)
-    //     );
-    // }
     ipcRenderer.send("updateSaveMain");
 }
 
@@ -376,28 +365,6 @@ function addItemToGrid(key, index) {
     appGrid.appendChild(appDiv);
 }
 
-// filterSelect.oninput = () => {
-//     filterGrid(filterSelect.options[filterSelect.selectedIndex].value);
-// };
-
-// function filterGrid(cat) {
-//     activeCategory = cat;
-//     if (cat === "All") {
-//         makeAppGrid(orderFile);
-//         categoryEntries = [];
-//     } else {
-//         categoryEntries = JSON.parse(
-//             fs.readFileSync(path.join(categoriesPath, cat), "utf-8")
-//         );
-//         for (let i = 0; i < categoryEntries.length; i++) {
-//             const entry = categoryEntries[i];
-//             if(!orderFile.includes(entry))
-//                 categoryEntries.splice(i, 1);
-//         }
-//         makeAppGrid(categoryEntries);
-//     }
-// }
-
 let focusedItem = 0;
 let previousItem = 0;
 let useMouse = true;
@@ -451,6 +418,7 @@ document.onkeydown = (ev) => {
         }
     } else if (ev.key === "Enter") {
         if (document.activeElement === toinput) return;
+        if (document.activeElement === categoryNameInput) return;
         if (document.activeElement === searchBar) {
             focusItem();
         } else {
@@ -677,3 +645,99 @@ toinput.addEventListener("keydown", (ev) => {
         moveButton.click();
     }
 });
+
+filterButton.onclick = () => {
+    makeCategorySelector();
+    categoriesManager.showModal();
+}
+
+cancelBtnCategories.onclick = () => {
+    categoriesManager.close();
+}
+
+categoriesManager.addEventListener("close", () => {
+    updateCategoriesFile();
+})
+
+addCategoryForm.onsubmit = (ev) => {
+    ev.preventDefault();
+    const category = categoryNameInput.value.trim();
+
+    if (!categoriesFile.categories.includes(category)){
+        categoriesFile.categories.push(category);
+        updateCategoriesFile();
+        makeCategorySelector();
+        categoryNameInput.value = "";
+    }
+}
+
+function makeCategorySelector() {
+    categoriesDiv.innerHTML = "";
+
+    for (let i = 0; i < categoriesFile.categories.length; i++) {
+        const category = categoriesFile.categories[i];
+
+        const div = document.createElement("div");
+        const label = document.createElement("label");
+        const button = document.createElement("button");
+
+        div.classList.add("category-div")
+
+        label.classList.add("custom-checkbox")
+        
+        const checkBox = document.createElement("input");
+        checkBox.type = "checkbox";
+        
+        if(categoriesFile.selected.includes(category))
+            checkBox.checked = true;
+        
+        checkBox.onchange = () => {
+            if(checkBox.checked){
+                categoriesFile.selected.push(category.toString());
+            }else{
+                categoriesFile.selected.splice(categoriesFile.selected.indexOf(category.toString()), 1);
+            }
+            makeAppGrid(orderFile);
+        }
+
+        const span = document.createElement("span");
+        span.classList.add("checkmark");
+        
+        const text = document.createTextNode(category.toString());
+
+        button.classList.add("fa-solid", "fa-trash", "fa-lg", "iconbtn");
+
+        button.onclick = () => {
+            deleteCategory(category.toString());
+        }
+        
+        label.appendChild(checkBox);
+        label.appendChild(span);
+        label.appendChild(text);
+
+        div.appendChild(label);
+        div.appendChild(button);
+        categoriesDiv.appendChild(div);
+    }
+}
+
+function updateCategoriesFile() {
+    fs.writeFileSync(categoriesPath, JSON.stringify(categoriesFile));
+    ipcRenderer.send("updateCategoriesMain");
+}
+
+/**
+ * 
+ * @param {string} categoryName 
+ */
+function deleteCategory(categoryName) {
+    if (categoriesFile.categories.includes(categoryName)) {
+        categoriesFile.categories.splice(categoriesFile.categories.indexOf(categoryName), 1);
+    }
+    if(categoriesFile.selected.includes(categoryName)) {
+        categoriesFile.selected.splice(categoriesFile.selected.indexOf(categoryName.toString()), 1);
+        makeAppGrid(orderFile);
+    }
+    updateCategoriesFile();
+    makeCategorySelector();
+}

@@ -8,8 +8,6 @@ const {
     dialog,
 } = require("electron");
 const path = require("path");
-// const { GlobalKeyboardListener } = require("node-global-key-listener");
-// const listener = new GlobalKeyboardListener();
 
 const gotTheLock = app.requestSingleInstanceLock();
 const fs = require("fs");
@@ -42,6 +40,7 @@ const latestGamesPath = path.join(savePath, "latest.json");
 const settingsPath = path.join(savePath, "settings.json");
 const orderPath = path.join(savePath, "order.json");
 const windowBoundPath = path.join(savePath, "window.json");
+const categoriesPath = path.join(savePath, "categories.json");
 
 const imagesPath = path.join(savePath, "images");
 exports.imagesPath = imagesPath;
@@ -56,6 +55,13 @@ if (!fs.existsSync(shortcutsPath)) {
 
 if (!fs.existsSync(latestGamesPath)) {
     fs.writeFileSync(latestGamesPath, "[]");
+}
+
+if (!fs.existsSync(categoriesPath)) {
+    fs.writeFileSync(categoriesPath, JSON.stringify({
+        selected: [],
+        categories: []
+    }))
 }
 
 if (!fs.existsSync(windowBoundPath)) {
@@ -85,7 +91,7 @@ if (!fs.existsSync(settingsPath)) {
 }
 
 /**
- * @type {{[gameName: string]: {type: "url" | "exe" | "dir", location: string, args?: string, gridName: string}}}
+ * @type {{[gameName: string]: {type: "url" | "exe" | "dir", location: string, args?: string, gridName: string, shellMode?: boolean, categories?: string[]}}}
  */
 let saveFile = JSON.parse(
     fs.readFileSync(path.join(savePath, "shortcuts.json"), "utf-8")
@@ -114,7 +120,7 @@ if (!settingsFile.serverPort) {
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 }
 
-if(settingsFile.dontWarnShell === undefined) {
+if (settingsFile.dontWarnShell === undefined) {
     settingsFile.dontWarnShell = false;
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 }
@@ -123,6 +129,11 @@ if(settingsFile.dontWarnShell === undefined) {
  * @type {string[]}
  */
 let orderFile = [];
+
+/**
+ * @type {{selected: string[], categories: string[]}}
+ */
+let categoriesFile = JSON.parse(fs.readFileSync(categoriesPath, "utf-8"));
 
 if (!fs.existsSync(orderPath)) {
     const keys = Object.keys(saveFile);
@@ -137,8 +148,8 @@ const iconpath =
     process.platform === "linux"
         ? path.join(__dirname, "assets", "icon.png")
         : process.platform === "darwin"
-        ? path.join(__dirname, "assets", "icon.icns")
-        : path.join(__dirname, "assets", "icon.ico");
+            ? path.join(__dirname, "assets", "icon.icns")
+            : path.join(__dirname, "assets", "icon.ico");
 
 function saveWindowState() {
     if (!mainWindow) return;
@@ -480,6 +491,34 @@ ipcMain.on("contextMenu", (ev, args) => {
             },
         },
         {
+            label: "Manage categories",
+            submenu: categoriesFile.categories.map(category => {
+                const gameCategories = saveFile[gameName].categories ?? [];
+
+                return {
+                    label: category,
+                    type: 'checkbox',
+                    checked: saveFile[gameName].categories?.includes(category),
+                    click: () => {
+                        if (gameCategories.includes(category)) {
+                            gameCategories.splice(gameCategories.indexOf(category), 1);
+                        } else {
+                            gameCategories.push(category);
+                        }
+
+                        saveFile[gameName].categories = gameCategories;
+
+                        fs.writeFileSync(
+                            path.join(savePath, "shortcuts.json"),
+                            JSON.stringify(saveFile)
+                        );
+                        mainWindow.webContents.send("updateSave");
+                    }
+                }
+
+            })
+        },
+        {
             label: "Remove",
             click: () => {
                 delete saveFile[gameName];
@@ -505,6 +544,14 @@ ipcMain.on("contextMenu", (ev, args) => {
 
     Menu.buildFromTemplate(template).popup();
 });
+
+ipcMain.on("updateCategoriesMain", () => {
+    updateCategoriesFile();
+})
+
+function updateCategoriesFile() {
+    categoriesFile = JSON.parse(fs.readFileSync(categoriesPath, "utf-8"));
+}
 
 function removeFromOrderList(location) {
     const itemLocation = orderFile.indexOf(location);
@@ -739,7 +786,7 @@ ipcMain.on("updateSave", (ev, args) => {
 });
 
 ipcMain.on("showShellMsg", (ev, args) => {
-    if(settingsFile.dontWarnShell) 
+    if (settingsFile.dontWarnShell)
         return;
     dialog
         .showMessageBox({
@@ -752,7 +799,7 @@ ipcMain.on("showShellMsg", (ev, args) => {
             checkboxChecked: false,
         })
         .then((returnValue) => {
-            if(returnValue.checkboxChecked) {
+            if (returnValue.checkboxChecked) {
                 settingsFile.dontWarnShell = true;
                 fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
             }
