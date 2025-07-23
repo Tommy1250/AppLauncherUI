@@ -736,6 +736,7 @@ function deleteCategory(categoryName) {
     }
     if(categoriesFile.selected.includes(categoryName)) {
         categoriesFile.selected.splice(categoriesFile.selected.indexOf(categoryName.toString()), 1);
+        makeAppGrid(orderFile);
     }
     updateCategoriesFile();
     makeCategorySelector();
