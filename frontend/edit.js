@@ -117,19 +117,14 @@ toggleShell.onclick = () => {
 }
 
 saveButton.onclick = () => {
+    saveFile[appName].type = appTypeSelect[appTypeSelect.selectedIndex].value;
+    saveFile[appName].location = appPathInput.value;
+    saveFile[appName].gridName = appNameInput.value;
+
     if (appArgsInput.value !== "") {
-        saveFile[appName] = {
-            type: appTypeSelect[appTypeSelect.selectedIndex].value,
-            location: appPathInput.value,
-            args: appArgsInput.value,
-            gridName: appNameInput.value,
-        };
+        saveFile[appName].args = appArgsInput.value;
     } else {
-        saveFile[appName] = {
-            type: appTypeSelect[appTypeSelect.selectedIndex].value,
-            location: appPathInput.value,
-            gridName: appNameInput.value,
-        };
+        delete saveFile[appName].args;
     }
 
     if(shellMode) {
