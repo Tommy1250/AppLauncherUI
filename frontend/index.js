@@ -1,5 +1,5 @@
 const getWindowsShortcutProperties = require("get-windows-shortcut-properties");
-const { ipcRenderer, shell } = require("electron");
+const { ipcRenderer, shell, webFrame } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { queueBanner } = require("./functions/steamGrid");
@@ -131,6 +131,7 @@ function makeAppGrid(entries) {
 function updateSaveFile() {
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
     orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
+    webFrame.clearCache();
     if (searchBar.value !== "") search(searchBar.value);
     else makeAppGrid(orderFile);
     // filterGrid(activeCategory);
@@ -318,7 +319,7 @@ function addItemToGrid(key, index) {
         else
             imagePath = path.join(__dirname, "missing.png");
     }
-    appImg.src = `${imagePath}?t=${Date.now()}`;
+    appImg.src = imagePath;
     appImg.setAttribute("draggable", false);
 
     appImg.onclick = () => {
