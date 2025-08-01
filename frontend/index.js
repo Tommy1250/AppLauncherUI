@@ -113,17 +113,18 @@ function makeAppGrid(entries) {
             const key = entries[i];
     
             addItemToGrid(key, i);
-            appGrid.scrollTop = currentScroll;
         }
+
+        appGrid.scrollTop = currentScroll;
     }else{
         for (let i = 0; i < entries.length; i++) {
             const key = entries[i];
             if(saveFile[key].categories?.some(cat => categoriesFile.selected.includes(cat))) {
                 addItemToGrid(key, i);
             }
-
-            appGrid.scrollTop = currentScroll;
         }
+
+        appGrid.scrollTop = currentScroll;
     }
 }
 
@@ -317,7 +318,7 @@ function addItemToGrid(key, index) {
         else
             imagePath = path.join(__dirname, "missing.png");
     }
-    appImg.src = imagePath;
+    appImg.src = `${imagePath}?t=${Date.now()}`;
     appImg.setAttribute("draggable", false);
 
     appImg.onclick = () => {

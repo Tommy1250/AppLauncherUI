@@ -633,6 +633,14 @@ ipcMain.on("chooseImage", (event) => {
         });
 });
 
+ipcMain.on("updateImageInWindow", (ev, args) => {
+    if(args.source === "add") {
+        addWindow.webContents.send("imageSelect", args.imagePath);
+    }else{
+        editWindow.webContents.send("imageSelect", args.imagePath);
+    }
+})
+
 ipcMain.on("chooseExecFile", (event) => {
     // console.log("choose shortcut file")
     dialog
@@ -820,7 +828,7 @@ ipcMain.on("searchImage", (ev, args) => {
         imageSearchWindow.setIcon(iconpath);
 
         ipcMain.on("returnSource", () =>
-            imageSearchWindow.webContents.send("returnSource", args.source)
+            imageSearchWindow.webContents.send("returnSource", {source: args.source, query: args?.query})
         );
 
         imageSearchWindow.on("closed", () => {

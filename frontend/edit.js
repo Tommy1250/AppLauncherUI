@@ -64,7 +64,7 @@ ipcRenderer.on("appname", (ev, args) => {
             argsDiv.style.display = "grid";
             appArgsInput.value = saveFile[appName].args ?? "";
             appTypeSelect.selectedIndex = 0;
-            if(saveFile[appName].shellMode){
+            if (saveFile[appName].shellMode) {
                 toggleShell.classList.remove("inactive");
                 shellMode = true;
             }
@@ -106,10 +106,10 @@ appTypeSelect.oninput = () => {
 };
 
 toggleShell.onclick = () => {
-    if(shellMode) {
+    if (shellMode) {
         shellMode = false;
         toggleShell.classList.add("inactive");
-    }else{
+    } else {
         ipcRenderer.send("showShellMsg");
         shellMode = true;
         toggleShell.classList.remove("inactive");
@@ -127,7 +127,7 @@ saveButton.onclick = () => {
         delete saveFile[appName].args;
     }
 
-    if(shellMode) {
+    if (shellMode) {
         saveFile[appName].shellMode = shellMode;
     } else {
         delete saveFile[appName].shellMode;
@@ -137,6 +137,8 @@ saveButton.onclick = () => {
 
     if (imageUpdated) {
         fs.copyFileSync(newImagePath, path.join(imagesPath, `${appName}.png`));
+        if (newImagePath.startsWith(path.join(savePath, "temp")))
+            fs.rmSync(newImagePath);
     }
 
     ipcRenderer.send("closeAndSave");
@@ -159,6 +161,9 @@ ipcRenderer.on("dirSelect", (ev, dirLocation) => {
 });
 
 cancelButton.onclick = () => {
+    if (imageUpdated)
+        if (newImagePath.startsWith(path.join(savePath, "temp")))
+            fs.rmSync(newImagePath);
     window.close();
 };
 
@@ -173,9 +178,5 @@ ipcRenderer.on("imageSelect", (ev, fileLocation) => {
 });
 
 imageSearchButton.onclick = () => {
-    shell.openExternal(
-        `https://www.steamgriddb.com/search/grids?term=${encodeURIComponent(
-            saveFile[appName].gridName
-        )}`
-    );
+    ipcRenderer.send("searchImage", { source: "edit", query: saveFile[appName].gridName });
 };
