@@ -302,15 +302,12 @@ function search(query) {
  */
 function addItemToGrid(key, index) {
     const appDiv = document.createElement("div");
-    const background = document.createElement("div");
     const appImg = document.createElement("img");
     const appName = document.createElement("p");
     const optionsButton = document.createElement("button");
     const bottomHolder = document.createElement("div");
 
     appDiv.className = "app-div";
-
-    background.className = "app-bg";
 
     appImg.className = "app-img";
     let imagePath = path.join(imagesPath, `${key}.png`);
@@ -358,7 +355,6 @@ function addItemToGrid(key, index) {
     bottomHolder.appendChild(optionsButton);
     bottomHolder.className = "bottom-holder";
 
-    appDiv.appendChild(background);
     appDiv.appendChild(appImg);
     appDiv.appendChild(bottomHolder);
 

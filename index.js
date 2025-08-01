@@ -34,6 +34,11 @@ let addWindow;
  */
 let msStoreWindow;
 
+/**
+ * @type {BrowserWindow}
+ */
+let imageSearchWindow;
+
 const savePath = path.join(app.getPath("userData"), "saves");
 const shortcutsPath = path.join(savePath, "shortcuts.json");
 const latestGamesPath = path.join(savePath, "latest.json");
@@ -478,6 +483,9 @@ ipcMain.on("contextMenu", (ev, args) => {
                         editWindow.destroy();
                         editWindow = null;
                         ipcMain.removeAllListeners("appName");
+                        if (imageSearchWindow) {
+                            imageSearchWindow.close();
+                        }
                     });
                 } else {
                     editWindow.focus();
@@ -695,6 +703,9 @@ ipcMain.on("addWindow", () => {
             if (msStoreWindow) {
                 msStoreWindow.close();
             }
+            if (imageSearchWindow) {
+                imageSearchWindow.close();
+            }
         });
     } else {
         addWindow.focus();
@@ -784,6 +795,43 @@ ipcMain.on("updateSave", (ev, args) => {
 
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 });
+
+ipcMain.on("searchImage", (ev, args) => {
+    if (!imageSearchWindow) {
+        imageSearchWindow = new BrowserWindow({
+            width: 900,
+            height: 600,
+            webPreferences: {
+                nodeIntegration: true,
+                nodeIntegrationInWorker: true,
+                contextIsolation: false,
+            },
+        });
+
+        if (!app.isPackaged) {
+            imageSearchWindow.webContents.openDevTools();
+        }
+
+        imageSearchWindow.loadFile(
+            path.join(__dirname, "frontend", "imageSearch.html")
+        );
+        imageSearchWindow.setTitle("Image Downloader");
+        imageSearchWindow.menuBarVisible = false;
+        imageSearchWindow.setIcon(iconpath);
+
+        ipcMain.on("returnSource", () =>
+            imageSearchWindow.webContents.send("returnSource", args.source)
+        );
+
+        imageSearchWindow.on("closed", () => {
+            imageSearchWindow.destroy();
+            imageSearchWindow = null;
+            ipcMain.removeAllListeners("returnSource");
+        });
+    } else {
+        imageSearchWindow.focus();
+    }
+})
 
 ipcMain.on("showShellMsg", (ev, args) => {
     if (settingsFile.dontWarnShell)

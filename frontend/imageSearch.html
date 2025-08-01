@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download app image</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="imageSearch.js" defer></script>
+    <style>
+        .search-box>button#clearSearch {
+            border-top-right-radius: 0px;
+            border-bottom-right-radius: 0px;
+        }
+         .search-box>input {
+            width: 80%;
+        }
+
+        #clearSearch:disabled {
+            background-color: rgba(239, 239, 239, 0.3);
+            color: white;
+        }
+        #submitSearch:disabled {
+            background-color: rgba(239, 239, 239, 0.3);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main scroll-alone" id="mainContent">
+        <div class="search-div">
+            <form id="searchForm" class="search-box">
+                <input type="text" id="search" placeholder="Search Images...">
+                <button type="button" id="clearSearch">clear</button>
+                <button type="button" id="submitSearch">search</button>
+            </form>
+        </div>
+        <div id="appgrid" class="app-grid scroll-alone"></div>
+    </div>
+</body>
+
+</html>

@@ -1,4 +1,4 @@
-const { ipcRenderer, shell } = require("electron");
+const { ipcRenderer } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { generateId } = require("./functions/appAddUtil");
@@ -33,7 +33,7 @@ let savePath = "";
 let imagesPath = "";
 let orderPath = "";
 let categoriesPath = "";
-    
+
 /**
  * @type {{appname: {type: "url" | "exe", location: string, args?: string, gridName: string, shellMode?: boolean}}}
  */
@@ -69,14 +69,14 @@ if (shortcutsFile === "") {
 }
 
 appTypeSelect.oninput = () => {
-    if(appTypeSelect.selectedIndex === 0){
+    if (appTypeSelect.selectedIndex === 0) {
         argsDiv.style.display = "grid";
     } else {
         argsDiv.style.display = "none";
     }
 
-    if(!imageUpdated)
-        if(appTypeSelect[appTypeSelect.selectedIndex].value === "dir")
+    if (!imageUpdated)
+        if (appTypeSelect[appTypeSelect.selectedIndex].value === "dir")
             appImg.src = "./missingdir.png"
         else
             appImg.src = "./missing.png"
@@ -89,10 +89,10 @@ ipcRenderer.on("inputdata", (ev, args) => {
 })
 
 toggleShell.onclick = () => {
-    if(shellMode) {
+    if (shellMode) {
         shellMode = false;
         toggleShell.classList.add("inactive");
-    }else{
+    } else {
         ipcRenderer.send("showShellMsg");
         shellMode = true;
         toggleShell.classList.remove("inactive");
@@ -100,17 +100,17 @@ toggleShell.onclick = () => {
 }
 
 saveButton.onclick = () => {
-    if(appIdInput.value.trim() === "")
+    if (appIdInput.value.trim() === "")
         return appIdInput.value === "You can't have an empty app id";
-    if(appIdInput.value === "You can't have an empty app id")
+    if (appIdInput.value === "You can't have an empty app id")
         return null;
 
-    if(appIdInput.value === "This ID already exists please choose a different ID")
+    if (appIdInput.value === "This ID already exists please choose a different ID")
         return null;
-    if(Object.keys(saveFile).includes(appIdInput.value))
+    if (Object.keys(saveFile).includes(appIdInput.value))
         return appIdInput.value = "This ID already exists please choose a different ID";
 
-    if(appArgsInput.value !== ""){
+    if (appArgsInput.value !== "") {
         saveFile[appIdInput.value] = {
             "type": appTypeSelect[appTypeSelect.selectedIndex].value,
             "location": appPathInput.value,
@@ -127,16 +127,16 @@ saveButton.onclick = () => {
         }
     }
 
-    if(shellMode) {
+    if (shellMode) {
         saveFile[appIdInput.value].shellMode = shellMode;
     }
 
     orderFile.push(appIdInput.value);
-    
+
     fs.writeFileSync(shortcutsFile, JSON.stringify(saveFile, null, 4));
     fs.writeFileSync(orderPath, JSON.stringify(orderFile));
 
-    if(imageUpdated) {
+    if (imageUpdated) {
         fs.copyFileSync(newImagePath, path.join(imagesPath, `${appIdInput.value}.png`));
     }
 
@@ -144,18 +144,18 @@ saveButton.onclick = () => {
 }
 
 genRandomIdButton.onclick = () => {
-    if(appTypeSelect[appTypeSelect.selectedIndex].value !== "dir"){
+    if (appTypeSelect[appTypeSelect.selectedIndex].value !== "dir") {
         if (appIdInput.value.startsWith("ms"))
             appIdInput.value = `ms-${generateId(25)}`
         else
             appIdInput.value = `app-${generateId(25)}`
-    }else{
+    } else {
         appIdInput.value = `dir-${generateId(10)}`
     }
 }
 
 selectFileButton.onclick = () => {
-    if(appTypeSelect[appTypeSelect.selectedIndex].value !== "dir")
+    if (appTypeSelect[appTypeSelect.selectedIndex].value !== "dir")
         ipcRenderer.send("chooseExecFile");
     else
         ipcRenderer.send("cooseDirectory")
@@ -168,7 +168,7 @@ ipcRenderer.on("execSelect", (ev, fileLocation) => {
 ipcRenderer.on("dirSelect", (ev, dirLocation) => {
     appPathInput.value = dirLocation;
     appIdInput.value = `dir-${generateId(10)}`
-    if(appNameInput.value.length == 0)
+    if (appNameInput.value.length == 0)
         appNameInput.value = path.basename(dirLocation)
 })
 
@@ -187,10 +187,11 @@ ipcRenderer.on("imageSelect", (ev, fileLocation) => {
 })
 
 imageSearchButton.onclick = () => {
-    shell.openExternal(`https://www.steamgriddb.com/`)
+    // shell.openExternal(`https://www.steamgriddb.com/`)
+    ipcRenderer.send("searchImage", { source: "add" });
 }
 
-if(process.platform !== "win32"){
+if (process.platform !== "win32") {
     msStoreButton.style.display = "none"
 }
 
