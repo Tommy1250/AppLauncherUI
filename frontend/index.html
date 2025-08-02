@@ -61,6 +61,10 @@
                 <label for="serverPass" class="setting-label">Server password:</label>
                 <input type="text" id="serverPass" class="setting-input">
             </div>
+            <div>
+                <label for="serverIp" class="setting-label">server address:</label>
+                <input type="text" id="serverIp" class="setting-input" disabled>
+            </div>
             <hr>
             <div class="controls">
                 <button id="cancel">Cancel</button>
@@ -83,6 +87,14 @@
         </div>
         <input type="number" min="1" id="toinput">
         <button id="moveperm">Move</button>
+    </dialog>
+    <dialog class="categories-dialog" id="infoMessage">
+        <div class="title-bar">
+            <h3>Important Info</h3>
+            <button id="closeMessage" class="fa-solid fa-xmark fa-lg iconbtn"></button>
+        </div>
+        <hr>
+        <div id="message" style="color: white; line-height: 1.6;"></div>
     </dialog>
     <dialog class="categories-dialog" id="categoriesManager">
         <div class="title-bar">

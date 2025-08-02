@@ -229,6 +229,11 @@ body {
     border: none;
 }
 
+.setting-input:disabled {
+    background-color: white;
+    color: black;
+}
+
 .controls {
     display: flex;
     justify-content: flex-end;

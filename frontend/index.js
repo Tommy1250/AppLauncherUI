@@ -3,6 +3,7 @@ const { ipcRenderer, shell, webFrame } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { queueBanner } = require("./functions/steamGrid");
+const ip = require("ip");
 
 let shortcutsFile = "";
 let savePath = "";
@@ -52,6 +53,7 @@ const startWithPcCheckBox = document.getElementById("startWithPc");
 const serverCheckBox = document.getElementById("enableServer");
 const serverPortInput = document.getElementById("serverPort");
 const serverPassInput = document.getElementById("serverPass");
+const serverIpInput = document.getElementById("serverIp");
 
 /**
  * @type {HTMLDialogElement}
@@ -67,6 +69,10 @@ const filterButton = document.getElementById("filter");
 const cancelBtnCategories = document.getElementById("cancelBtnCategories");
 const addCategoryForm = document.getElementById("addCategoryForm");
 const categoryNameInput = document.getElementById("categoryName");
+
+const infoMessage = document.getElementById("infoMessage");
+const messageHolder = document.getElementById("message");
+const closeMessage = document.getElementById("closeMessage");
 
 let currentScroll = 0;
 
@@ -93,11 +99,40 @@ ipcRenderer.on("savePath", (ev, args) => {
     serverCheckBox.checked = settingsFile.enableServer;
     serverPortInput.value = settingsFile.serverPort;
     serverPassInput.value = settingsFile.serverPassword;
-
+    
+    try {
+        const userIp = ip.address("Ethernet");
+        serverIpInput.value = `http://${userIp}:${settingsFile.serverPort}`;
+    } catch {
+        const userIp = ip.address();
+        serverIpInput.value = `http://${userIp}:${settingsFile.serverPort}`;
+    }
+    
     makeAppGrid(orderFile);
 
     if (!fs.existsSync(imagesPath)) {
         fs.mkdirSync(imagesPath);
+    }
+
+    if(!fs.existsSync(path.join(savePath, "notFirstTime.txt"))){
+        fs.writeFileSync(path.join(savePath, "notFirstTime.txt"), "This is not the first time the user opens the app")
+
+        messageHolder.innerHTML = "";
+        const messageText = document.createElement("h3");
+        messageText.innerText = `Welcome to AppLauncher.
+        You can add games/apps by using either drag and drop or the add window.
+        you can access the add window by clicking the plus icon on the top right corner.
+        I also recommend getting a steamGridDB token by clicking the \"Sign up for a token\" button in the settings.
+        The token is used for fetching images for the games you add.
+        You can also make filters for your games by clicking the filter icon in the top right.
+        When you make a filter you can add apps to it by right clicking them and assigning the categories you want.
+        You can add apps to multiple categories and show multiple categories at once.
+        You can add folder shorcuts from the add window.
+        The app runs in the background when you launch games.
+        You can access the app when it's in the background by using the tray icon.
+        You can access the tray icon by clicking the little arrow on the bottom right of your taskbar.`;
+        messageHolder.appendChild(messageText);
+        infoMessage.showModal();
     }
 });
 
@@ -452,6 +487,10 @@ document.onpointermove = () => {
 addButton.onclick = () => {
     ipcRenderer.send("addWindow");
 };
+
+closeMessage.onclick = () => {
+    infoMessage.close();
+}
 
 Controller.search();
 
