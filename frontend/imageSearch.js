@@ -39,7 +39,7 @@ ipcRenderer.on("savePath", (ev, args) => {
         searchBar.setAttribute("disabled", true);
         clearSearch.setAttribute("disabled", true);
         submitSearch.setAttribute("disabled", true);
-    
+
         messageHolder.innerHTML = "";
         const messageText = document.createElement("h2");
         messageText.innerText = "Please put a SteamGridDB token in the app settings first.\n1. Press on the settings icon (the little gear on the top right).\n2. Click the \"Sign up for a token\" button in the \"App Icons\" section.\n3. login with steam on steam grid db.\n4. Copy the token and paste it in the \"Steam grid Token\" input field.";
@@ -54,16 +54,32 @@ if (savePath === "") {
 
 searchForm.addEventListener("submit", async (ev) => {
     ev.preventDefault();
+
     const searchResults = await searchGame(searchBar.value, settingsFile.steamGridToken);
+
     if (
         !searchResults.data ||
         !searchResults.success ||
         !searchResults.data[0]
     ) {
+        messageHolder.innerHTML = "";
+        const messageText = document.createElement("h2");
+        messageText.innerText = "Can't find any matches for the searched criteria.";
+        messageHolder.appendChild(messageText);
+        infoMessage.showModal();
+
         return appGrid.innerHTML = "";
     }
+
     const banners = await getBanners(searchResults.data[0].id, settingsFile.steamGridToken)
+
     if (!banners.success || banners.data.length === 0) {
+        messageHolder.innerHTML = "";
+        const messageText = document.createElement("h2");
+        messageText.innerText = "Can't find banners for the searched criteria.";
+        messageHolder.appendChild(messageText);
+        infoMessage.showModal();
+
         return appGrid.innerHTML = "";
     }
 
@@ -76,7 +92,7 @@ searchForm.addEventListener("submit", async (ev) => {
 
 ipcRenderer.on("returnSource", (ev, args) => {
     returnSource = args.source;
-    if(args.query) {
+    if (args.query) {
         searchBar.value = args.query;
         submitSearch.click();
     }
@@ -97,16 +113,22 @@ async function searchGame(gameName, token) {
         },
     };
 
-    const result = await fetch(
-        `https://www.steamgriddb.com/api/v2/search/autocomplete/${encodeURIComponent(
-            gameName
-        )}`,
-        options
-    );
+    try {
+        const result = await fetch(
+            `https://www.steamgriddb.com/api/v2/search/autocomplete/${encodeURIComponent(
+                gameName
+            )}`,
+            options
+        );
 
-    const body = await result.json();
+        const body = await result.json();
 
-    return body;
+        return body;
+    } catch (error) {
+        return {
+            success: false
+        }
+    }
 }
 
 async function getBanners(gameId, token) {
@@ -117,12 +139,18 @@ async function getBanners(gameId, token) {
         },
     };
 
-    const result = await fetch(
-        `https://www.steamgriddb.com/api/v2/grids/game/${gameId}?types=static&dimensions=600x900&nsfw=false&limit=15`,
-        options
-    );
-    const body = await result.json();
-    return body;
+    try {
+        const result = await fetch(
+            `https://www.steamgriddb.com/api/v2/grids/game/${gameId}?types=static&dimensions=600x900&nsfw=false&limit=15`,
+            options
+        );
+        const body = await result.json();
+        return body;
+    } catch (error) {
+        return {
+            success: false
+        }
+    }
 }
 
 /**
