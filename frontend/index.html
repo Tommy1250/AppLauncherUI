@@ -13,6 +13,7 @@
 </head>
 
 <body>
+    <div id="background" class="hide"></div>
     <div class="main scroll-alone" id="mainContent">
         <div class="search-div">
             <form id="searchForm" class="search-box">
@@ -21,6 +22,7 @@
             </form>
             <button id="add" class="fa-solid fa-plus fa-lg iconbtn"></button>
             <button id="filter" class="fa-solid fa-filter fa-lg iconbtn"></button>
+            <button id="multiSelect" class="fa-solid fa-lg fa-list-check iconbtn"></button>
             <button id="settings" class="fa-solid fa-gear fa-lg iconbtn"></button>
         </div>
         <div id="appgrid" class="app-grid scroll-alone"></div>
@@ -101,6 +103,29 @@
             <button type="submit" id="addCategory">Add</button>
         </form>
     </dialog>
+    <div class="context-menu" id="contextMenu">
+        <ul>
+            <li id="startAppButton">Start</li>
+            <li id="editShortcutButton">Edit shortcut</li>
+            <li id="showInFolderButton">Show in folder</li>
+            <li id="changePossitionButton">Change possition</li>
+            <li class="has-submenu" id="categoriesDivContext">Manage categories
+                <ul class="submenu" id="categoriesHolderSubmenu"></ul>
+            </li>
+            <li id="removeAppButton">Remove</li>
+        </ul>
+    </div>
+    <div class="context-menu" id="contextMenuMultiSelect">
+        <ul>
+            <li class="has-submenu">Add Category
+                <ul class="submenu" id="categoriesAddHolderSubmenu"></ul>
+            </li>
+            <li class="has-submenu">Remove Category
+                <ul class="submenu" id="categoriesRemoveHolderSubmenu"></ul>
+            </li>
+            <li id="removeMultiSelectButton">Remove</li>
+        </ul>
+    </div>
     <div id="tooltip" class="tooltip"></div>
 </body>
 

@@ -439,119 +439,92 @@ ipcMain.on("launch", (ev, gameName) => {
     addToLatestAndLaunch(gameName, ev.sender);
 });
 
-ipcMain.on("contextMenu", (ev, args) => {
-    const gameName = args.key;
-    const index = args.index;
-    const template = [
-        {
-            label: "Start",
-            click: () => {
-                addToLatestAndLaunch(gameName, mainWindow);
-            },
-        },
-        {
-            label: "Edit shortcut",
-            click: () => {
-                //launch a new window and do magic
-                if (!editWindow) {
-                    editWindow = new BrowserWindow({
-                        width: 530,
-                        height: 360,
-                        webPreferences: {
-                            nodeIntegration: true,
-                            nodeIntegrationInWorker: true,
-                            contextIsolation: false,
-                        },
-                    });
-
-                    if (!app.isPackaged) {
-                        editWindow.webContents.openDevTools();
-                    }
-
-                    editWindow.loadFile(
-                        path.join(__dirname, "frontend", "edit.html")
-                    );
-                    editWindow.setTitle("Edit shortcut");
-                    editWindow.menuBarVisible = false;
-                    editWindow.setIcon(iconpath);
-
-                    ipcMain.on("appName", () =>
-                        editWindow.webContents.send("appname", gameName)
-                    );
-
-                    editWindow.on("closed", () => {
-                        editWindow.destroy();
-                        editWindow = null;
-                        ipcMain.removeAllListeners("appName");
-                        if (imageSearchWindow) {
-                            imageSearchWindow.close();
-                        }
-                    });
-                } else {
-                    editWindow.focus();
-                }
-            },
-        },
-        {
-            label: "Change possition",
-            click: () => {
-                mainWindow.webContents.send("showMovePopup", index);
-            },
-        },
-        {
-            label: "Manage categories",
-            submenu: categoriesFile.categories.map(category => {
-                const gameCategories = saveFile[gameName].categories ?? [];
-
-                return {
-                    label: category,
-                    type: 'checkbox',
-                    checked: saveFile[gameName].categories?.includes(category),
-                    click: () => {
-                        if (gameCategories.includes(category)) {
-                            gameCategories.splice(gameCategories.indexOf(category), 1);
-                        } else {
-                            gameCategories.push(category);
-                        }
-
-                        saveFile[gameName].categories = gameCategories;
-
-                        fs.writeFileSync(
-                            path.join(savePath, "shortcuts.json"),
-                            JSON.stringify(saveFile)
-                        );
-                        mainWindow.webContents.send("updateSave");
-                    }
-                }
-
-            })
-        },
-        {
-            label: "Remove",
-            click: () => {
-                delete saveFile[gameName];
-                fs.writeFileSync(
-                    path.join(savePath, "shortcuts.json"),
-                    JSON.stringify(saveFile)
-                );
-                removeFromLatest(gameName);
-                removeFromOrderList(gameName);
-                mainWindow.webContents.send("updateSave");
-            },
-        },
-    ];
-
-    if (saveFile[gameName].type === "exe") {
-        template.splice(2, 0, {
-            label: "Show in folder",
-            click: () => {
-                shell.showItemInFolder(saveFile[gameName].location);
+function launchEditWindow(gameName) {
+    if (!editWindow) {
+        editWindow = new BrowserWindow({
+            width: 530,
+            height: 360,
+            webPreferences: {
+                nodeIntegration: true,
+                nodeIntegrationInWorker: true,
+                contextIsolation: false,
             },
         });
+
+        if (!app.isPackaged) {
+            editWindow.webContents.openDevTools();
+        }
+
+        editWindow.loadFile(
+            path.join(__dirname, "frontend", "edit.html")
+        );
+        editWindow.setTitle("Edit shortcut");
+        editWindow.menuBarVisible = false;
+        editWindow.setIcon(iconpath);
+
+        ipcMain.on("appName", () =>
+            editWindow.webContents.send("appname", gameName)
+        );
+
+        editWindow.on("closed", () => {
+            editWindow.destroy();
+            editWindow = null;
+            ipcMain.removeAllListeners("appName");
+            if (imageSearchWindow) {
+                imageSearchWindow.close();
+            }
+        });
+    } else {
+        editWindow.focus();
+    }
+}
+
+ipcMain.on("editShortcut", (ev, args) => {
+    const gameName = args;
+    launchEditWindow(gameName)
+})
+
+function removeShortcut(gameName) {
+    delete saveFile[gameName];
+    fs.writeFileSync(
+        path.join(savePath, "shortcuts.json"),
+        JSON.stringify(saveFile)
+    );
+    removeFromLatest(gameName);
+    removeFromOrderList(gameName);
+    mainWindow.webContents.send("updateSaveNoReload");
+}
+
+function removeMultipleApps(appArray) {
+    for (let i = 0; i < appArray.length; i++) {
+        const gameName = appArray[i];
+        delete saveFile[gameName];
+        
+        const itemLocation = orderFile.indexOf(gameName);
+        orderFile.splice(itemLocation, 1);
+        
+        if(latestLaunchedGames.includes(gameName))
+            removeFromLatest(gameName);
     }
 
-    Menu.buildFromTemplate(template).popup();
-});
+    fs.writeFileSync(
+        path.join(savePath, "shortcuts.json"),
+        JSON.stringify(saveFile)
+    );
+    fs.writeFileSync(orderPath, JSON.stringify(orderFile));
+
+    mainWindow.webContents.send("updateSaveNoReload");
+}
+
+ipcMain.on("removeMultiple", (ev, args) => {
+    const apps = args.apps;
+    removeMultipleApps(apps);
+})
+
+ipcMain.on("removeShortcut", (ev, args) => {
+    const gameName = args;
+    removeShortcut(gameName);
+})
 
 ipcMain.on("updateCategoriesMain", () => {
     updateCategoriesFile();
@@ -634,9 +607,9 @@ ipcMain.on("chooseImage", (event) => {
 });
 
 ipcMain.on("updateImageInWindow", (ev, args) => {
-    if(args.source === "add") {
+    if (args.source === "add") {
         addWindow.webContents.send("imageSelect", args.imagePath);
-    }else{
+    } else {
         editWindow.webContents.send("imageSelect", args.imagePath);
     }
 })
@@ -828,7 +801,7 @@ ipcMain.on("searchImage", (ev, args) => {
         imageSearchWindow.setIcon(iconpath);
 
         ipcMain.on("returnSource", () =>
-            imageSearchWindow.webContents.send("returnSource", {source: args.source, query: args?.query})
+            imageSearchWindow.webContents.send("returnSource", { source: args.source, query: args?.query })
         );
 
         imageSearchWindow.on("closed", () => {

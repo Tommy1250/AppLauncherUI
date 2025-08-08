@@ -11,6 +11,12 @@ let imagesPath = "";
 let orderPath = "";
 let categoriesPath = "";
 
+let managedAppId = "";
+let managedAppIndex = 0;
+
+let selectedApps = [];
+let inMultiSelect = false;
+
 /**
  * @type {{[appname: string]: {type: "url" | "exe" | "dir", location: string, args?: string, gridName: string, shellMode?: boolean, categories?: string[]}}}
  */
@@ -31,6 +37,20 @@ let orderFile = [];
  */
 let categoriesFile = {}
 
+const menu = document.getElementById('contextMenu');
+const menuBackground = document.getElementById("background");
+const startAppButton = document.getElementById("startAppButton");
+const editShortcutButton = document.getElementById("editShortcutButton");
+const changePossitionButton = document.getElementById("changePossitionButton");
+const showInFolderButton = document.getElementById("showInFolderButton");
+const categoriesHolderSubmenu = document.getElementById("categoriesHolderSubmenu");
+const removeAppButton = document.getElementById("removeAppButton");
+
+const contextMenuMultiSelect = document.getElementById("contextMenuMultiSelect");
+const categoriesAddHolderSubmenu = document.getElementById("categoriesAddHolderSubmenu");
+const categoriesRemoveHolderSubmenu = document.getElementById("categoriesRemoveHolderSubmenu");
+const removeMultiSelectButton = document.getElementById("removeMultiSelectButton");
+
 const tooltip = document.getElementById("tooltip");
 
 const appGrid = document.getElementById("appgrid");
@@ -40,6 +60,7 @@ const clearSearch = document.getElementById("clearSearch");
 
 const addButton = document.getElementById("add");
 const settingsButton = document.getElementById("settings");
+const multiSelectButton = document.getElementById("multiSelect");
 
 const mainDiv = document.getElementById("mainContent");
 const settingsDiv = document.getElementById("settingsDiv");
@@ -85,7 +106,7 @@ ipcRenderer.on("savePath", (ev, args) => {
     imagesPath = path.join(savePath, "images");
     orderPath = path.join(savePath, "order.json");
     categoriesPath = path.join(savePath, "categories.json");
-    
+
     categoriesFile = JSON.parse(fs.readFileSync(categoriesPath, "utf-8"));
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
     settingsFile = JSON.parse(
@@ -99,7 +120,7 @@ ipcRenderer.on("savePath", (ev, args) => {
     serverCheckBox.checked = settingsFile.enableServer;
     serverPortInput.value = settingsFile.serverPort;
     serverPassInput.value = settingsFile.serverPassword;
-    
+
     try {
         const userIp = ip.address("Ethernet");
         serverIpInput.value = `http://${userIp}:${settingsFile.serverPort}`;
@@ -107,14 +128,14 @@ ipcRenderer.on("savePath", (ev, args) => {
         const userIp = ip.address();
         serverIpInput.value = `http://${userIp}:${settingsFile.serverPort}`;
     }
-    
+
     makeAppGrid(orderFile);
 
     if (!fs.existsSync(imagesPath)) {
         fs.mkdirSync(imagesPath);
     }
 
-    if(!fs.existsSync(path.join(savePath, "notFirstTime.txt"))){
+    if (!fs.existsSync(path.join(savePath, "notFirstTime.txt"))) {
         fs.writeFileSync(path.join(savePath, "notFirstTime.txt"), "This is not the first time the user opens the app")
 
         messageHolder.innerHTML = "";
@@ -143,18 +164,18 @@ if (shortcutsFile === "") {
 function makeAppGrid(entries) {
     currentScroll = appGrid.scrollTop;
     appGrid.innerHTML = "";
-    if(categoriesFile.selected.length === 0){
+    if (categoriesFile.selected.length === 0) {
         for (let i = 0; i < entries.length; i++) {
             const key = entries[i];
-    
+
             addItemToGrid(key, i);
         }
 
         appGrid.scrollTop = currentScroll;
-    }else{
+    } else {
         for (let i = 0; i < entries.length; i++) {
             const key = entries[i];
-            if(saveFile[key].categories?.some(cat => categoriesFile.selected.includes(cat))) {
+            if (saveFile[key].categories?.some(cat => categoriesFile.selected.includes(cat))) {
                 addItemToGrid(key, i);
             }
         }
@@ -163,16 +184,29 @@ function makeAppGrid(entries) {
     }
 }
 
-function updateSaveFile() {
+function updateSaveFile(reload = false) {
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
     orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
-    webFrame.clearCache();
-    if (searchBar.value !== "") search(searchBar.value);
-    else makeAppGrid(orderFile);
-    // filterGrid(activeCategory);
+
+    if (reload)
+        webFrame.clearCache();
+
+    if (!reload) {
+        if (inMultiSelect) {
+            multiSelectButton.click();
+        }
+        else {
+            if (searchBar.value !== "") search(searchBar.value);
+            else makeAppGrid(orderFile);
+        }
+    } else {
+        if (searchBar.value !== "") search(searchBar.value);
+        else makeAppGrid(orderFile);
+    }
 }
 
-ipcRenderer.on("updateSave", () => updateSaveFile());
+ipcRenderer.on("updateSave", () => updateSaveFile(true));
+ipcRenderer.on("updateSaveNoReload", () => updateSaveFile(false));
 
 //drag and drop methods
 document.addEventListener("dragover", (e) => {
@@ -332,6 +366,42 @@ function search(query) {
     }
 }
 
+function mouseX(evt) {
+    if (evt.pageX) {
+        return evt.pageX;
+    } else if (evt.clientX) {
+        return evt.clientX + (document.documentElement.scrollLeft ?
+            document.documentElement.scrollLeft :
+            document.body.scrollLeft);
+    } else {
+        return null;
+    }
+}
+
+function mouseY(evt) {
+    if (evt.pageY) {
+        return evt.pageY;
+    } else if (evt.clientY) {
+        return evt.clientY + (document.documentElement.scrollTop ?
+            document.documentElement.scrollTop :
+            document.body.scrollTop);
+    } else {
+        return null;
+    }
+}
+
+multiSelectButton.onclick = () => {
+    if (inMultiSelect) {
+        multiSelectButton.classList.remove("active-item");
+        selectedApps = [];
+        if (searchBar.value !== "") search(searchBar.value);
+        else makeAppGrid(orderFile);
+    } else {
+        multiSelectButton.classList.add("active-item");
+    }
+    inMultiSelect = !inMultiSelect;
+}
+
 /**
  *
  * @param {string} key
@@ -359,19 +429,45 @@ function addItemToGrid(key, index) {
 
     appImg.onclick = () => {
         console.log(`running game ${key}`);
-
-        ipcRenderer.send("launch", key);
+        if (inMultiSelect) {
+            if (selectedApps.includes(key)) {
+                selectedApps.splice(selectedApps.indexOf(key), 1);
+                appDiv.style.removeProperty("background-color");
+            } else {
+                selectedApps.push(key);
+                appDiv.style.backgroundColor = "#e5e2e245";
+            }
+        } else {
+            ipcRenderer.send("launch", key);
+        }
     };
 
-    optionsButton.onclick = () => {
+    optionsButton.onclick = (ev) => {
         console.log(`options click on ${key} ${index}`);
-        ipcRenderer.send("contextMenu", { key, index });
+        // ipcRenderer.send("contextMenu", { key, index });
+
+        /*const rect = optionsButton.getBoundingClientRect();
+        const appImgRect = appImg.getBoundingClientRect();
+        {
+            pageY: saveFile[key].type === "exe" ? rect.top - 220 : rect.top - 185,
+            pageX: appImgRect.left - 25
+        }*/
+        if (inMultiSelect) {
+            showMenuMultiSelect(ev);
+        } else {
+            showMenu(ev, key, index);
+        }
     };
 
-    appDiv.oncontextmenu = () => {
+    appDiv.oncontextmenu = (ev) => {
         console.log(`right click on ${key} ${index}`);
-        ipcRenderer.send("contextMenu", { key, index });
-    };
+        // ipcRenderer.send("contextMenu", { key, index });
+        if (inMultiSelect) {
+            showMenuMultiSelect(ev);
+        } else {
+            showMenu(ev, key, index);
+        }
+    }
 
     appName.innerText = saveFile[key].gridName;
 
@@ -396,6 +492,180 @@ function addItemToGrid(key, index) {
     appDiv.appendChild(bottomHolder);
 
     appGrid.appendChild(appDiv);
+}
+
+function showMenu(ev, appId, appIndex) {
+    managedAppId = appId;
+    managedAppIndex = appIndex;
+
+    const managedAppData = saveFile[appId];
+
+    if (managedAppData.type === "exe") {
+        showInFolderButton.style.display = "block";
+    } else {
+        showInFolderButton.style.display = "none";
+    }
+
+    const gameCategories = managedAppData.categories ?? [];
+
+    categoriesHolderSubmenu.innerHTML = "";
+
+    for (let i = 0; i < categoriesFile.categories.length; i++) {
+        const category = categoriesFile.categories[i];
+
+        const listItem = document.createElement("li");
+        const label = document.createElement("label");
+
+        label.classList.add("checkbox-item")
+
+        const checkBox = document.createElement("input");
+        checkBox.type = "checkbox";
+
+        checkBox.checked = gameCategories.includes(category)
+
+        checkBox.onchange = () => {
+            if (gameCategories.includes(category)) {
+                gameCategories.splice(gameCategories.indexOf(category), 1);
+            } else {
+                gameCategories.push(category);
+            }
+
+            saveFile[appId].categories = gameCategories;
+            fs.writeFileSync(
+                path.join(savePath, "shortcuts.json"),
+                JSON.stringify(saveFile)
+            );
+
+            if (searchBar.value !== "") search(searchBar.value);
+            else makeAppGrid(orderFile);
+        }
+
+        const span = document.createElement("span");
+        span.classList.add("checkmark");
+
+        const text = document.createTextNode(category.toString());
+
+        label.appendChild(checkBox);
+        label.appendChild(span);
+        label.appendChild(text);
+
+        listItem.appendChild(label)
+
+        categoriesHolderSubmenu.appendChild(listItem);
+    }
+
+    menu.style.top = `${mouseY(ev) > window.innerHeight - 200 ? mouseY(ev) - 200 : mouseY(ev)}px`;
+    menu.style.left = `${mouseX(ev) > appGrid.clientWidth - 200 ? mouseX(ev) - 200 : mouseX(ev)}px`;
+    menu.style.display = 'block';
+    menuBackground.className = "background";
+}
+
+function showMenuMultiSelect(ev) {
+    categoriesAddHolderSubmenu.innerHTML = "";
+    categoriesRemoveHolderSubmenu.innerHTML = "";
+
+    for (let i = 0; i < categoriesFile.categories.length; i++) {
+        const category = categoriesFile.categories[i];
+
+        const listItemAdd = document.createElement("li");
+
+        listItemAdd.onclick = () => {
+            for (let i = 0; i < selectedApps.length; i++) {
+                const appKey = selectedApps[i];
+                if (!saveFile[appKey].categories.includes(category))
+                    saveFile[appKey].categories.push(category)
+            }
+
+            fs.writeFileSync(
+                path.join(savePath, "shortcuts.json"),
+                JSON.stringify(saveFile)
+            );
+
+            hideContextMenu();
+            multiSelectButton.click();
+        }
+
+        listItemAdd.innerText = category;
+        categoriesAddHolderSubmenu.appendChild(listItemAdd);
+
+        // remove items submenu
+        const listItemRemove = document.createElement("li");
+
+        listItemRemove.onclick = () => {
+            for (let i = 0; i < selectedApps.length; i++) {
+                const appKey = selectedApps[i];
+                if (saveFile[appKey].categories.includes(category))
+                    saveFile[appKey].categories.splice(saveFile[appKey].categories.indexOf(category), 1);
+            }
+
+            fs.writeFileSync(
+                path.join(savePath, "shortcuts.json"),
+                JSON.stringify(saveFile)
+            );
+
+            hideContextMenu();
+            multiSelectButton.click();
+        }
+
+        listItemRemove.innerText = category;
+        categoriesRemoveHolderSubmenu.appendChild(listItemRemove);
+    }
+
+    contextMenuMultiSelect.style.top = `${mouseY(ev) > window.innerHeight - 120 ? mouseY(ev) - 120 : mouseY(ev)}px`;
+    contextMenuMultiSelect.style.left = `${mouseX(ev) > appGrid.clientWidth - 200 ? mouseX(ev) - 200 : mouseX(ev)}px`;
+    contextMenuMultiSelect.style.display = 'block';
+    menuBackground.className = "background";
+}
+
+document.querySelectorAll('.has-submenu').forEach(parent => {
+    /**
+     * @type {HTMLUListElement}
+     */
+    const submenu = parent.querySelector('.submenu');
+    parent.addEventListener('mouseenter', () => {
+        submenu.style.display = 'block';
+        const submenuRect = submenu.getBoundingClientRect();
+
+        if (submenuRect.right > window.innerWidth) {
+            submenu.style.left = 'auto';
+            submenu.style.right = '100%';
+            submenu.style.marginRight = "-1px";
+            submenu.style.marginLeft = "0px";
+        }
+
+        if (submenuRect.bottom > window.innerHeight) {
+            submenu.style.top = 'auto';
+            submenu.style.bottom = '-6px';
+        }
+    });
+
+    parent.addEventListener('mouseleave', () => {
+        submenu.style.left = '';
+        submenu.style.right = '';
+        submenu.style.top = '';
+        submenu.style.bottom = '';
+        submenu.style.display = 'none'
+        submenu.style.marginLeft = "-1px";
+        submenu.style.marginRight = "0px";
+    });
+});
+
+function hideContextMenu() {
+    menu.style.display = 'none';
+    contextMenuMultiSelect.style.display = "none";
+    menuBackground.className = "hide";
+}
+
+menuBackground.onclick = () => {
+    hideContextMenu();
+}
+
+menuBackground.oncontextmenu = () => {
+    hideContextMenu();
+}
+
+menuBackground.onwheel = () => {
+    hideContextMenu();
 }
 
 let focusedItem = 0;
@@ -472,17 +742,26 @@ function focusItem() {
     app.style.backgroundColor = "#e5e2e245";
     previousItem = focusedItem;
     useMouse = false;
-    document.body.style.cursor = "none";
+    removeCursor();
+    document.addEventListener("pointermove", removeUseMouse, { once: true })
 }
 
-document.onpointermove = () => {
+function removeCursor() {
+    document.documentElement.classList.add("hide-cursor");
+}
+
+function restoreCursor() {
+    document.documentElement.classList.remove("hide-cursor");
+}
+
+function removeUseMouse() {
     if (!useMouse) {
         const previousApp = appGrid.childNodes.item(previousItem);
         previousApp.style.removeProperty("background-color");
-        document.body.style.removeProperty("cursor");
+        restoreCursor();
         useMouse = true;
     }
-};
+}
 
 addButton.onclick = () => {
     ipcRenderer.send("addWindow");
@@ -653,17 +932,16 @@ settingsSaveBtn.onclick = () => {
     ipcRenderer.send("updateSave", settingsFile);
 };
 
-ipcRenderer.on("showMovePopup", (ev, index) => {
+function showMovePopup(index) {
     moveItem = index;
     toinput.value = index + 1;
     movetomenu.showModal();
     movetomenu.classList.add("showmove")
-});
+}
 
 closeButton.onclick = () => {
     movetomenu.close();
     movetomenu.classList.remove("showmove")
-
 };
 
 moveButton.onclick = () => {
@@ -700,7 +978,7 @@ addCategoryForm.onsubmit = (ev) => {
     ev.preventDefault();
     const category = categoryNameInput.value.trim();
 
-    if (!categoriesFile.categories.includes(category)){
+    if (!categoriesFile.categories.includes(category)) {
         categoriesFile.categories.push(category);
         updateCategoriesFile();
         makeCategorySelector();
@@ -721,17 +999,17 @@ function makeCategorySelector() {
         div.classList.add("category-div")
 
         label.classList.add("custom-checkbox")
-        
+
         const checkBox = document.createElement("input");
         checkBox.type = "checkbox";
-        
-        if(categoriesFile.selected.includes(category))
+
+        if (categoriesFile.selected.includes(category))
             checkBox.checked = true;
-        
+
         checkBox.onchange = () => {
-            if(checkBox.checked){
+            if (checkBox.checked) {
                 categoriesFile.selected.push(category.toString());
-            }else{
+            } else {
                 categoriesFile.selected.splice(categoriesFile.selected.indexOf(category.toString()), 1);
             }
             makeAppGrid(orderFile);
@@ -739,7 +1017,7 @@ function makeCategorySelector() {
 
         const span = document.createElement("span");
         span.classList.add("checkmark");
-        
+
         const text = document.createTextNode(category.toString());
 
         button.classList.add("fa-solid", "fa-trash", "fa-lg", "iconbtn");
@@ -747,7 +1025,7 @@ function makeCategorySelector() {
         button.onclick = () => {
             deleteCategory(category.toString());
         }
-        
+
         label.appendChild(checkBox);
         label.appendChild(span);
         label.appendChild(text);
@@ -771,10 +1049,43 @@ function deleteCategory(categoryName) {
     if (categoriesFile.categories.includes(categoryName)) {
         categoriesFile.categories.splice(categoriesFile.categories.indexOf(categoryName), 1);
     }
-    if(categoriesFile.selected.includes(categoryName)) {
+    if (categoriesFile.selected.includes(categoryName)) {
         categoriesFile.selected.splice(categoriesFile.selected.indexOf(categoryName.toString()), 1);
         makeAppGrid(orderFile);
     }
     updateCategoriesFile();
     makeCategorySelector();
+}
+
+// Stuff for the context menu
+startAppButton.onclick = () => {
+    hideContextMenu();
+    ipcRenderer.send("launch", managedAppId);
+}
+
+editShortcutButton.onclick = () => {
+    hideContextMenu();
+    ipcRenderer.send("editShortcut", managedAppId);
+}
+
+showInFolderButton.onclick = () => {
+    hideContextMenu();
+    shell.showItemInFolder(saveFile[managedAppId].location);
+}
+
+changePossitionButton.onclick = () => {
+    hideContextMenu();
+    showMovePopup(managedAppIndex);
+}
+
+removeAppButton.onclick = () => {
+    hideContextMenu();
+    ipcRenderer.send("removeShortcut", managedAppId);
+}
+
+removeMultiSelectButton.onclick = () => {
+    hideContextMenu();
+    ipcRenderer.send("removeMultiple", {
+        apps: selectedApps
+    });
 }
