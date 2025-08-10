@@ -161,14 +161,19 @@ if (shortcutsFile === "") {
     ipcRenderer.send("getSavePath");
 }
 
-function makeAppGrid(entries) {
+/**
+ * 
+ * @param {string[]} entries 
+ * @param {boolean} showCat 
+ */
+function makeAppGrid(entries, showCat = false) {
     currentScroll = appGrid.scrollTop;
     appGrid.innerHTML = "";
     if (categoriesFile.selected.length === 0) {
         for (let i = 0; i < entries.length; i++) {
             const key = entries[i];
 
-            addItemToGrid(key, i);
+            addItemToGrid(key, i, showCat);
         }
 
         appGrid.scrollTop = currentScroll;
@@ -176,7 +181,7 @@ function makeAppGrid(entries) {
         for (let i = 0; i < entries.length; i++) {
             const key = entries[i];
             if (saveFile[key].categories?.some(cat => categoriesFile.selected.includes(cat))) {
-                addItemToGrid(key, i);
+                addItemToGrid(key, i, showCat);
             }
         }
 
@@ -361,7 +366,7 @@ function search(query) {
             key.toLowerCase().includes(query.toLowerCase()) ||
             saveFile[key].gridName.toLowerCase().includes(query.toLowerCase())
         ) {
-            addItemToGrid(key, i);
+            addItemToGrid(key, i, inMultiSelect);
         }
     }
 }
@@ -398,6 +403,8 @@ multiSelectButton.onclick = () => {
         else makeAppGrid(orderFile);
     } else {
         multiSelectButton.classList.add("active-item");
+        if (searchBar.value !== "") search(searchBar.value);
+        else makeAppGrid(orderFile, true);
     }
     inMultiSelect = !inMultiSelect;
 }
@@ -407,16 +414,19 @@ multiSelectButton.onclick = () => {
  * @param {string} key
  * @param {number} index
  */
-function addItemToGrid(key, index) {
+function addItemToGrid(key, index, showCat = false) {
     const appDiv = document.createElement("div");
     const appImg = document.createElement("img");
     const appName = document.createElement("p");
     const optionsButton = document.createElement("button");
     const bottomHolder = document.createElement("div");
 
+    const imageAndCatsHolder = document.createElement("div");
+
     appDiv.className = "app-div";
 
     appImg.className = "app-img";
+    imageAndCatsHolder.classList.add("app-img");
     let imagePath = path.join(imagesPath, `${key}.png`);
     if (!fs.existsSync(imagePath)) {
         if (saveFile[key].type === "dir")
@@ -441,6 +451,41 @@ function addItemToGrid(key, index) {
             ipcRenderer.send("launch", key);
         }
     };
+
+    imageAndCatsHolder.appendChild(appImg);
+
+    if (showCat) {
+        const catsList = document.createElement("ul");
+        for (let i = 0; i < saveFile[key].categories.length; i++) {
+            const itemcat = saveFile[key].categories[i];
+            const li = document.createElement("li");
+            li.innerText = itemcat;
+            catsList.appendChild(li);
+        }
+
+        // Make it overlay visually
+
+        catsList.style.listStyle = "none";
+        catsList.style.padding = "4px";
+        catsList.style.margin = "0";
+        catsList.style.background = "rgba(0, 0, 0, 0.7)";
+        catsList.style.color = "#fff";
+        catsList.style.borderRadius = "6px";
+        catsList.style.fontSize = "0.9em";
+        catsList.style.zIndex = "2"; // above image
+        catsList.style.pointerEvents = "none"; // optional
+        catsList.style.height = "fit-content";
+        catsList.style.bottom = "100%";
+        catsList.style.alignSelf = "end";
+
+        // Grid stacking
+        imageAndCatsHolder.style.display = "grid";
+        imageAndCatsHolder.style.gridTemplateAreas = "stack";
+        appImg.style.gridArea = "stack";
+        catsList.style.gridArea = "stack";
+
+        imageAndCatsHolder.appendChild(catsList);
+    }
 
     optionsButton.onclick = (ev) => {
         console.log(`options click on ${key} ${index}`);
@@ -488,7 +533,7 @@ function addItemToGrid(key, index) {
     bottomHolder.appendChild(optionsButton);
     bottomHolder.className = "bottom-holder";
 
-    appDiv.appendChild(appImg);
+    appDiv.appendChild(imageAndCatsHolder);
     appDiv.appendChild(bottomHolder);
 
     appGrid.appendChild(appDiv);
@@ -536,6 +581,8 @@ function showMenu(ev, appId, appIndex) {
                 JSON.stringify(saveFile)
             );
 
+            ipcRenderer.send("updateSaveMain");
+
             if (searchBar.value !== "") search(searchBar.value);
             else makeAppGrid(orderFile);
         }
@@ -580,6 +627,7 @@ function showMenuMultiSelect(ev) {
                 path.join(savePath, "shortcuts.json"),
                 JSON.stringify(saveFile)
             );
+            ipcRenderer.send("updateSaveMain");
 
             hideContextMenu();
             multiSelectButton.click();
@@ -602,6 +650,7 @@ function showMenuMultiSelect(ev) {
                 path.join(savePath, "shortcuts.json"),
                 JSON.stringify(saveFile)
             );
+            ipcRenderer.send("updateSaveMain");
 
             hideContextMenu();
             multiSelectButton.click();
@@ -1038,7 +1087,6 @@ function makeCategorySelector() {
 
 function updateCategoriesFile() {
     fs.writeFileSync(categoriesPath, JSON.stringify(categoriesFile));
-    ipcRenderer.send("updateCategoriesMain");
 }
 
 /**

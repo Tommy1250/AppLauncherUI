@@ -135,11 +135,6 @@ if (settingsFile.dontWarnShell === undefined) {
  */
 let orderFile = [];
 
-/**
- * @type {{selected: string[], categories: string[]}}
- */
-let categoriesFile = JSON.parse(fs.readFileSync(categoriesPath, "utf-8"));
-
 if (!fs.existsSync(orderPath)) {
     const keys = Object.keys(saveFile);
     orderFile.push(...keys);
@@ -526,14 +521,6 @@ ipcMain.on("removeShortcut", (ev, args) => {
     removeShortcut(gameName);
 })
 
-ipcMain.on("updateCategoriesMain", () => {
-    updateCategoriesFile();
-})
-
-function updateCategoriesFile() {
-    categoriesFile = JSON.parse(fs.readFileSync(categoriesPath, "utf-8"));
-}
-
 function removeFromOrderList(location) {
     const itemLocation = orderFile.indexOf(location);
     orderFile.splice(itemLocation, 1);
@@ -559,7 +546,7 @@ function changeOrderList(from, to) {
     }
     orderFile.splice(to, 0, orderFile.splice(from, 1)[0]);
     fs.writeFileSync(orderPath, JSON.stringify(orderFile));
-    mainWindow.webContents.send("updateSave");
+    mainWindow.webContents.send("updateSaveNoReload");
 }
 
 ipcMain.on("changeOrder", (ev, args) => {
