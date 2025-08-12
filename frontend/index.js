@@ -263,7 +263,7 @@ document.addEventListener("drop", async (e) => {
                         imagesPath,
                         settingsFile.steamGridToken
                     );
-            } else makeAppGrid(orderFile);
+            } else makeAppGrid(orderFile, inMultiSelect);
         } else if (file.name.endsWith(".lnk")) {
             console.log("realSortcut");
             const shortcutData =
@@ -290,7 +290,7 @@ document.addEventListener("drop", async (e) => {
                         imagesPath,
                         settingsFile.steamGridToken
                     );
-            } else makeAppGrid(orderFile);
+            } else makeAppGrid(orderFile, inMultiSelect);
         } else if (file.name.endsWith(".exe")) {
             console.log("exe file");
 
@@ -310,7 +310,7 @@ document.addEventListener("drop", async (e) => {
                         imagesPath,
                         settingsFile.steamGridToken
                     );
-            } else makeAppGrid(orderFile);
+            } else makeAppGrid(orderFile, inMultiSelect);
         }
     }
     saveTheFile();
@@ -346,17 +346,17 @@ function saveTheFile() {
 searchForm.onsubmit = (ev) => {
     ev.preventDefault();
     if (searchBar.value !== "") search(searchBar.value);
-    else makeAppGrid(orderFile);
+    else makeAppGrid(orderFile, inMultiSelect);
 };
 
 searchBar.oninput = () => {
     if (searchBar.value !== "") search(searchBar.value);
-    else makeAppGrid(orderFile);
+    else makeAppGrid(orderFile, inMultiSelect);
 };
 
 clearSearch.onclick = () => {
     searchBar.value = "";
-    makeAppGrid(orderFile);
+    makeAppGrid(orderFile, inMultiSelect);
 };
 
 function search(query) {
@@ -401,16 +401,17 @@ function mouseY(evt) {
 
 multiSelectButton.onclick = () => {
     if (inMultiSelect) {
+        inMultiSelect = false;
         multiSelectButton.classList.remove("active-item");
         selectedApps = [];
         if (searchBar.value !== "") search(searchBar.value);
         else makeAppGrid(orderFile);
     } else {
+        inMultiSelect = true;
         multiSelectButton.classList.add("active-item");
         if (searchBar.value !== "") search(searchBar.value);
         else makeAppGrid(orderFile, true);
     }
-    inMultiSelect = !inMultiSelect;
 }
 
 /**
@@ -460,9 +461,10 @@ function addItemToGrid(key, index, showCat = false) {
         }
     };
 
-    if (showCat) {
+    if (inMultiSelect) {
         checkbox.type = "checkbox";
         checkbox.classList.add("app-checkbox");
+        checkbox.checked = selectedApps.includes(key);
         imageAndCatsHolder.appendChild(checkbox);
     }
 
@@ -658,7 +660,7 @@ function showMenuMultiSelect(ev) {
         categoriesRemoveHolderSubmenu.appendChild(listItemRemove);
     }
 
-    contextMenuMultiSelect.style.top = `${mouseY(ev) > window.innerHeight - 120 ? mouseY(ev) - 120 : mouseY(ev)}px`;
+    contextMenuMultiSelect.style.top = `${mouseY(ev) > window.innerHeight - 150 ? mouseY(ev) - 150 : mouseY(ev)}px`;
     contextMenuMultiSelect.style.left = `${mouseX(ev) > appGrid.clientWidth - 200 ? mouseX(ev) - 200 : mouseX(ev)}px`;
     contextMenuMultiSelect.style.display = 'block';
     menuBackground.className = "background";
@@ -1059,7 +1061,7 @@ function makeCategorySelector() {
             } else {
                 categoriesFile.selected.splice(categoriesFile.selected.indexOf(category.toString()), 1);
             }
-            makeAppGrid(orderFile);
+            makeAppGrid(orderFile, inMultiSelect);
         }
 
         const span = document.createElement("span");
@@ -1097,7 +1099,7 @@ function deleteCategory(categoryName) {
     }
     if (categoriesFile.selected.includes(categoryName)) {
         categoriesFile.selected.splice(categoriesFile.selected.indexOf(categoryName.toString()), 1);
-        makeAppGrid(orderFile);
+        makeAppGrid(orderFile, inMultiSelect);
     }
     updateCategoriesFile();
     makeCategorySelector();
