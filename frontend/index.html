@@ -84,7 +84,7 @@
     </dialog>
     <dialog class="categories-dialog" id="infoMessage">
         <div class="title-bar">
-            <h3>Important Info</h3>
+            <h3 id="infoMessageTitle">Important Info</h3>
             <button id="closeMessage" class="fa-solid fa-xmark fa-lg iconbtn"></button>
         </div>
         <hr>
@@ -117,6 +117,7 @@
     </div>
     <div class="context-menu" id="contextMenuMultiSelect">
         <ul>
+            <li id="showSelectionButton">Show selection</li>
             <li class="has-submenu">Add Category
                 <ul class="submenu" id="categoriesAddHolderSubmenu"></ul>
             </li>

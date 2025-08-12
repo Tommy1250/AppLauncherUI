@@ -16,7 +16,6 @@ body {
     overflow: hidden;
 }
 
-
 .center {
     display: grid;
     place-items: center;
@@ -590,17 +589,10 @@ hr {
 .checkbox-item .checkmark {
     height: 18px;
     width: 18px;
-    background-color: #eee;
-    border: 2px solid #ccc;
     border-radius: 4px;
     margin-right: 5px;
     position: relative;
     transition: background-color 0.2s, border-color 0.2s;
-}
-
-.checkbox-item input:checked + .checkmark {
-    background-color: #4caf50;
-    border-color: #4caf50;
 }
 
 .checkbox-item .checkmark::after {
@@ -641,4 +633,51 @@ hr {
 
 .active-item:active {
     color: #225224;
+}
+
+.app-checkbox {
+    z-index: 2;
+    pointer-events: none;
+    appearance: none;
+    grid-area: stack;
+    align-self: start;
+    justify-self: start;
+    border-radius: 10px;
+    border: 2px solid #555;
+    vertical-align: middle;
+    outline: none;
+    width: 20px;
+    height: 20px;
+    display: grid;
+}
+
+.app-checkbox::before {
+    font-size: 12px;
+    align-self: center;
+    justify-self: center;
+}
+
+.app-checkbox:checked {
+    background-color: #4caf50;
+}
+
+.app-checkbox:checked::before {
+    content: "\f00c";
+    color: white;
+    font-family: FontAwesome;
+}
+
+.cats-list {
+    list-style: none;
+    padding: 4px;
+    margin: 0;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 0.9em;
+    z-index: 2;
+    pointer-events: none;
+    height: fit-content;
+    align-self: end;
+    grid-area: stack;
 }

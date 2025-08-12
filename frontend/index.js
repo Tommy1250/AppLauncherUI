@@ -46,6 +46,7 @@ const showInFolderButton = document.getElementById("showInFolderButton");
 const categoriesHolderSubmenu = document.getElementById("categoriesHolderSubmenu");
 const removeAppButton = document.getElementById("removeAppButton");
 
+const showSelectionButton = document.getElementById("showSelectionButton");
 const contextMenuMultiSelect = document.getElementById("contextMenuMultiSelect");
 const categoriesAddHolderSubmenu = document.getElementById("categoriesAddHolderSubmenu");
 const categoriesRemoveHolderSubmenu = document.getElementById("categoriesRemoveHolderSubmenu");
@@ -92,6 +93,7 @@ const addCategoryForm = document.getElementById("addCategoryForm");
 const categoryNameInput = document.getElementById("categoryName");
 
 const infoMessage = document.getElementById("infoMessage");
+const infoMessageTitle = document.getElementById("infoMessageTitle");
 const messageHolder = document.getElementById("message");
 const closeMessage = document.getElementById("closeMessage");
 
@@ -139,6 +141,8 @@ ipcRenderer.on("savePath", (ev, args) => {
         fs.writeFileSync(path.join(savePath, "notFirstTime.txt"), "This is not the first time the user opens the app")
 
         messageHolder.innerHTML = "";
+        infoMessageTitle.innerText = "Important Info";
+
         const messageText = document.createElement("h3");
         messageText.innerText = `Welcome to AppLauncher.
         You can add games/apps by using either drag and drop or the add window.
@@ -427,30 +431,40 @@ function addItemToGrid(key, index, showCat = false) {
 
     appImg.className = "app-img";
     imageAndCatsHolder.classList.add("app-img");
+
     let imagePath = path.join(imagesPath, `${key}.png`);
+
     if (!fs.existsSync(imagePath)) {
         if (saveFile[key].type === "dir")
             imagePath = path.join(__dirname, "missingdir.png");
         else
             imagePath = path.join(__dirname, "missing.png");
     }
+
     appImg.src = imagePath;
     appImg.setAttribute("draggable", false);
 
+    const checkbox = document.createElement("input");
+
     appImg.onclick = () => {
-        console.log(`running game ${key}`);
         if (inMultiSelect) {
             if (selectedApps.includes(key)) {
                 selectedApps.splice(selectedApps.indexOf(key), 1);
-                appDiv.style.removeProperty("background-color");
+                checkbox.checked = false;
             } else {
                 selectedApps.push(key);
-                appDiv.style.backgroundColor = "#e5e2e245";
+                checkbox.checked = true;
             }
         } else {
             ipcRenderer.send("launch", key);
         }
     };
+
+    if (showCat) {
+        checkbox.type = "checkbox";
+        checkbox.classList.add("app-checkbox");
+        imageAndCatsHolder.appendChild(checkbox);
+    }
 
     imageAndCatsHolder.appendChild(appImg);
 
@@ -463,32 +477,17 @@ function addItemToGrid(key, index, showCat = false) {
             catsList.appendChild(li);
         }
 
-        // Make it overlay visually
-
-        catsList.style.listStyle = "none";
-        catsList.style.padding = "4px";
-        catsList.style.margin = "0";
-        catsList.style.background = "rgba(0, 0, 0, 0.7)";
-        catsList.style.color = "#fff";
-        catsList.style.borderRadius = "6px";
-        catsList.style.fontSize = "0.9em";
-        catsList.style.zIndex = "2"; // above image
-        catsList.style.pointerEvents = "none"; // optional
-        catsList.style.height = "fit-content";
-        catsList.style.bottom = "100%";
-        catsList.style.alignSelf = "end";
+        catsList.classList.add("cats-list");
 
         // Grid stacking
         imageAndCatsHolder.style.display = "grid";
         imageAndCatsHolder.style.gridTemplateAreas = "stack";
         appImg.style.gridArea = "stack";
-        catsList.style.gridArea = "stack";
 
         imageAndCatsHolder.appendChild(catsList);
     }
 
     optionsButton.onclick = (ev) => {
-        console.log(`options click on ${key} ${index}`);
         // ipcRenderer.send("contextMenu", { key, index });
 
         /*const rect = optionsButton.getBoundingClientRect();
@@ -505,7 +504,6 @@ function addItemToGrid(key, index, showCat = false) {
     };
 
     appDiv.oncontextmenu = (ev) => {
-        console.log(`right click on ${key} ${index}`);
         // ipcRenderer.send("contextMenu", { key, index });
         if (inMultiSelect) {
             showMenuMultiSelect(ev);
@@ -1129,6 +1127,29 @@ changePossitionButton.onclick = () => {
 removeAppButton.onclick = () => {
     hideContextMenu();
     ipcRenderer.send("removeShortcut", managedAppId);
+}
+
+showSelectionButton.onclick = () => {
+    hideContextMenu();
+    messageHolder.innerHTML = "";
+
+    infoMessageTitle.innerText = "Selected Apps...";
+
+    const appsNameList = document.createElement("ul");
+
+    appsNameList.style.listStyle = "decimal-leading-zero";
+    appsNameList.style.fontSize = "1.2em";
+
+    for (let i = 0; i < selectedApps.length; i++) {
+        const appId = selectedApps[i];
+        
+        const listItem = document.createElement("li");
+        listItem.innerText = saveFile[appId].gridName;
+        appsNameList.appendChild(listItem);
+    }
+
+    messageHolder.appendChild(appsNameList);
+    infoMessage.showModal();
 }
 
 removeMultiSelectButton.onclick = () => {
