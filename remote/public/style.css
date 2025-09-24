@@ -171,6 +171,61 @@ body {
     color: rgb(122, 122, 122);
 }
 
+.categories-dialog {
+    background-color: #181717;
+    box-shadow: 0 2px 4px rgba(232, 232, 232, 0.234);
+    border: none;
+    border-radius: 10px;
+    width: 50%;
+    max-width: 465px;
+    min-width: 190px;
+}
+
+@media (max-width: 711px) {
+    .categories-dialog {
+        width: 90%;
+    }
+}
+
+.categories-dialog::backdrop {
+    background-color: #00000050;
+}
+
+.title-bar {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5px;
+    margin-bottom: 8px;
+}
+
+.title-bar > h3 {
+    color: whitesmoke;
+    font-size: 25px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.bottom-bar {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 5px;
+    margin-bottom: 8px;
+}
+
+.bottom-bar > button {
+    padding: 3px;
+    font-size: 1.2rem;
+    background-color: rgb(236, 236, 236);
+    color: black;
+    border: none;
+    border-radius: 5px;
+    font-weight: 700;
+}
+
 ::-webkit-scrollbar {
     width: 5px;
     height: 5px;

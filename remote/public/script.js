@@ -3,6 +3,10 @@ const searchForm = document.getElementById("searchForm");
 const searchBar = document.getElementById("search");
 const clearSearch = document.getElementById("clearSearch");
 
+const infoMessage = document.getElementById("infoMessage");
+const messageHolder = document.getElementById("message");
+const closeMessage = document.getElementById("closeMessage");
+
 /**
  * @type {{[appName: string]: {gridName: string}}}
  */
@@ -61,6 +65,15 @@ function addItemToGrid(game) {
             headers: {
                 "Content-Type": "Application/json",
             },
+        }).then(res => {
+            if (res.ok) {
+                messageHolder.innerHTML = "";
+
+                const messageText = document.createElement("h3");
+                messageText.innerText = `Launched app: ${game.gridName}`;
+                messageHolder.appendChild(messageText);
+                infoMessage.showModal();
+            }
         });
     };
 
@@ -77,10 +90,7 @@ function addItemToGrid(game) {
         tooltip.style.display = "none";
     };
 
-    // optionsButton.className = "fa-solid fa-ellipsis";
-
     bottomHolder.appendChild(appName);
-    // bottomHolder.appendChild(optionsButton);
     bottomHolder.className = "bottom-holder";
 
     appDiv.appendChild(background);
@@ -90,22 +100,9 @@ function addItemToGrid(game) {
     appGrid.appendChild(appDiv);
 }
 
-let gridColumnCount = 0;
-
-window.onresize = () => {
-    computeGridSize();
-};
-
-function computeGridSize() {
-    const gridComputedStyle = window.getComputedStyle(appGrid);
-
-    // get number of grid columns
-    gridColumnCount = gridComputedStyle
-        .getPropertyValue("grid-template-columns")
-        .split(" ").length;
+closeMessage.onclick = () => {
+    infoMessage.close();
 }
-
-computeGridSize();
 
 searchForm.onsubmit = (ev) => {
     ev.preventDefault();

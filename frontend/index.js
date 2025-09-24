@@ -16,6 +16,7 @@ let managedAppIndex = 0;
 
 let selectedApps = [];
 let inMultiSelect = false;
+let rearrangingItem = false;
 
 /**
  * @type {{[appname: string]: {type: "url" | "exe" | "dir", location: string, args?: string, gridName: string, shellMode?: boolean, categories?: string[]}}}
@@ -165,12 +166,16 @@ if (shortcutsFile === "") {
     ipcRenderer.send("getSavePath");
 }
 
+let filteredApps = [];
+
 /**
  * 
  * @param {string[]} entries 
  * @param {boolean} showCat 
  */
 function makeAppGrid(entries, showCat = false) {
+    filteredApps = [];
+
     currentScroll = appGrid.scrollTop;
     appGrid.innerHTML = "";
     if (categoriesFile.selected.length === 0) {
@@ -185,6 +190,7 @@ function makeAppGrid(entries, showCat = false) {
         for (let i = 0; i < entries.length; i++) {
             const key = entries[i];
             if (saveFile[key].categories?.some(cat => categoriesFile.selected.includes(cat))) {
+                filteredApps.push(key);
                 addItemToGrid(key, i, showCat);
             }
         }
@@ -200,22 +206,40 @@ function updateSaveFile(reload = false) {
     if (reload)
         webFrame.clearCache();
 
-    if (!reload) {
-        if (inMultiSelect) {
-            multiSelectButton.click();
-        }
-        else {
-            if (searchBar.value !== "") search(searchBar.value);
-            else makeAppGrid(orderFile);
-        }
-    } else {
-        if (searchBar.value !== "") search(searchBar.value);
-        else makeAppGrid(orderFile);
-    }
+    if (searchBar.value !== "") search(searchBar.value);
+    else makeAppGrid(orderFile, inMultiSelect);
 }
 
 ipcRenderer.on("updateSave", () => updateSaveFile(true));
 ipcRenderer.on("updateSaveNoReload", () => updateSaveFile(false));
+
+// Add event listeners for drag-and-drop
+appGrid.addEventListener('dragstart', (ev) => {
+    ev.target.classList.add('dragging');
+    rearrangingItem = true;
+});
+
+appGrid.addEventListener('dragend', (ev) => {
+    ev.target.classList.remove('dragging');
+    rearrangingItem = false;
+});
+
+appGrid.addEventListener('dragover', (ev) => {
+    ev.preventDefault();
+});
+
+appGrid.addEventListener('drop', (ev) => {
+    ev.preventDefault();
+    const draggedItem = document.querySelector('.dragging');
+    const targetItem = ev.target.closest('div.app-div');
+    if (draggedItem && targetItem && draggedItem !== targetItem) {
+        console.log(parseInt(draggedItem.getAttribute("index")), parseInt(targetItem.getAttribute("index")));
+        ipcRenderer.send("changeOrder", {
+            from: parseInt(draggedItem.getAttribute("index")),
+            to: parseInt(targetItem.getAttribute("index")),
+        });
+    }
+});
 
 //drag and drop methods
 document.addEventListener("dragover", (e) => {
@@ -224,6 +248,7 @@ document.addEventListener("dragover", (e) => {
 });
 
 document.addEventListener("drop", async (e) => {
+    if (rearrangingItem) return;
     e.stopPropagation();
     e.preventDefault();
 
@@ -444,6 +469,11 @@ function addItemToGrid(key, index, showCat = false) {
 
     appImg.src = imagePath;
     appImg.setAttribute("draggable", false);
+
+    if (inMultiSelect) {
+        appDiv.setAttribute("index", index);
+        appDiv.setAttribute("draggable", true);
+    }
 
     const checkbox = document.createElement("input");
 
@@ -774,7 +804,11 @@ document.onkeydown = (ev) => {
         if (document.activeElement === searchBar) {
             focusItem();
         } else {
-            ipcRenderer.send("launch", orderFile[focusedItem]);
+            if (categoriesFile.selected.length === 0) {
+                ipcRenderer.send("launch", orderFile[focusedItem]);
+            } else {
+                ipcRenderer.send("launch", filteredApps[focusedItem]);
+            }
         }
     }
 };
@@ -793,6 +827,7 @@ function focusItem() {
     useMouse = false;
     removeCursor();
     document.addEventListener("pointermove", removeUseMouse, { once: true })
+    appGrid.childNodes[focusedItem].focus();
 }
 
 function removeCursor() {
@@ -870,7 +905,11 @@ window.addEventListener(
                 focusItem();
             }
         } else if (button.name === "FACE_1") {
-            ipcRenderer.send("launch", orderFile[focusedItem]);
+            if (categoriesFile.selected.length === 0) {
+                ipcRenderer.send("launch", orderFile[focusedItem]);
+            } else {
+                ipcRenderer.send("launch", filteredApps[focusedItem]);
+            }
         }
     },
     false
@@ -1144,7 +1183,7 @@ showSelectionButton.onclick = () => {
 
     for (let i = 0; i < selectedApps.length; i++) {
         const appId = selectedApps[i];
-        
+
         const listItem = document.createElement("li");
         listItem.innerText = saveFile[appId].gridName;
         appsNameList.appendChild(listItem);
