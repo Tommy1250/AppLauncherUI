@@ -20,6 +20,7 @@
                 <input type="text" id="search" placeholder="Search library...">
                 <button type="button" id="clearSearch">clear</button>
             </form>
+            <button id="disconnectBT" class="fa-solid fa-gamepad fa-lg iconbtn"></button> 
             <button id="add" class="fa-solid fa-plus fa-lg iconbtn"></button>
             <button id="filter" class="fa-solid fa-filter fa-lg iconbtn"></button>
             <button id="multiSelect" class="fa-solid fa-lg fa-list-check iconbtn"></button>
@@ -102,6 +103,14 @@
             <input type="text" id="categoryName" placeholder="Add new category...">
             <button type="submit" id="addCategory">Add</button>
         </form>
+    </dialog>
+    <dialog class="categories-dialog" id="controllerManager">
+        <div class="title-bar">
+            <h3>Manage Controllers</h3>
+            <button id="cancelBtnControllers" class="fa-solid fa-xmark fa-lg iconbtn"></button>
+        </div>
+        <hr>
+        <div class="categories-list" id="controllersList"></div>
     </dialog>
     <div class="context-menu" id="contextMenu">
         <ul>

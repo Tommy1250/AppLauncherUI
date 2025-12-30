@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { queueBanner } = require("./functions/steamGrid");
 const ip = require("ip");
+const HID = require('node-hid');
 
 let shortcutsFile = "";
 let savePath = "";
@@ -60,6 +61,8 @@ const searchForm = document.getElementById("searchForm");
 const searchBar = document.getElementById("search");
 const clearSearch = document.getElementById("clearSearch");
 
+const controllerButton = document.getElementById("disconnectBT");
+controllerButton.style.display = "none";
 const addButton = document.getElementById("add");
 const settingsButton = document.getElementById("settings");
 const multiSelectButton = document.getElementById("multiSelect");
@@ -92,6 +95,10 @@ const filterButton = document.getElementById("filter");
 const cancelBtnCategories = document.getElementById("cancelBtnCategories");
 const addCategoryForm = document.getElementById("addCategoryForm");
 const categoryNameInput = document.getElementById("categoryName");
+
+const controllerManager = document.getElementById("controllerManager");
+const controllersList = document.getElementById("controllersList");
+const cancelBtnControllers = document.getElementById("cancelBtnControllers");
 
 const infoMessage = document.getElementById("infoMessage");
 const infoMessageTitle = document.getElementById("infoMessageTitle");
@@ -856,6 +863,38 @@ closeMessage.onclick = () => {
 }
 
 Controller.search();
+/**
+ * @type {Map<number, {serial: string, wireless: boolean}}
+ */
+const controllersMap = new Map();
+
+function extractVidPid(id) {
+    const m = id.match(/Vendor:\s*([0-9a-fA-F]{4}).*Product:\s*([0-9a-fA-F]{4})/);
+    if (!m) return null;
+    return {
+        vid: parseInt(m[1].toLowerCase(), 16),
+        pid: parseInt(m[2].toLowerCase(), 16)
+    };
+}
+
+function splitEveryTwo(str) {
+    return str.match(/.{1,2}/g) ?? [];
+}
+
+function getMacAdress(vid, pid) {
+    const coltrollerDevices = HID.devices().filter(device => device.vendorId === vid && device.productId === pid);
+
+    const controller = coltrollerDevices[0]
+
+    if (!controller)
+        return console.log("No controller found aborting");
+
+    const serialArray = splitEveryTwo(controller.serialNumber);
+    return {
+        serial: serialArray.join(":"),
+        wireless: controller.interface === -1
+    }
+}
 
 window.addEventListener(
     "gc.controller.found",
@@ -863,6 +902,13 @@ window.addEventListener(
         let controller = event.detail.controller;
         console.log("Controller found at index " + controller.index + ".");
         console.log("'" + controller.name + "' is ready!");
+
+        controllerButton.style.display = "initial";
+        
+        const controllerVidPid = extractVidPid(controller.id);
+        controllersMap.set(controller.index, getMacAdress(controllerVidPid.vid, controllerVidPid.pid));
+        
+        makeControllerMenu();
     },
     false
 );
@@ -911,6 +957,17 @@ window.addEventListener(
                 ipcRenderer.send("launch", filteredApps[focusedItem]);
             }
         }
+
+        // if(pressedButtons.has("HOME") && pressedButtons.has("LEFT_SHOULDER") && pressedButtons.has("RIGHT_SHOULDER")){
+        //     const controllerInfo = controllersMap.get(event.detail.controllerIndex);
+        //     if(!controllerInfo.wired){
+        //         console.log(`Trying to disconnect ${event.detail.controllerIndex} mac ${controllerInfo.serial}`);
+        //         ipcRenderer.send("disconnectController", controllerInfo.serial);
+        //         pressedButtons.clear();
+        //     }else{
+        //         console.log("Wired controller can't disconnect");
+        //     }
+        // }
     },
     false
 );
@@ -984,6 +1041,80 @@ window.addEventListener("gc.analog.hold", (ev) => {
         }
     }
 })
+
+window.addEventListener('gc.controller.lost', function (event) {
+    console.log("The controller at index " + event.detail.index + " has been disconnected.");
+    controllersMap.delete(event.detail.index)
+    makeControllerMenu();
+    const controllers = Controller.controllers;
+    if (!controllers || Object.keys(controllers).length === 0) {
+        controllerButton.style.display = "none";
+    }
+}, false);
+
+function makeControllerMenu() {
+    controllersList.innerHTML = "";
+    const controllers = Controller.controllers;
+    if (controllers && Object.keys(controllers).length > 0) {
+        for (let i = 0; i < Object.keys(controllers).length; i++) {
+            const controller = Object.values(controllers)[i];
+
+            const controllerObject = document.createElement("div");
+            const controllerInfoDiv = document.createElement("div");
+            const controllerName = document.createElement("p");
+            const controllerMac = document.createElement("p");
+            const controllerState = document.createElement("p");
+            const controllerActions = document.createElement("div");
+            const disconnectAction = document.createElement("button");
+
+            controllerObject.classList.add("controller");
+
+            const connectionInfo = controllersMap.get(controller.index);
+
+            controllerName.innerText = `Name: ${controller.name}`;
+
+            controllerMac.innerText = `Mac: ${connectionInfo.serial}`;
+
+            controllerState.innerText = `Connection Type: ${connectionInfo.wireless ? "Bluetooth" : "Wired"}`;
+
+            controllerActions.classList.add("controller-actions");
+
+            if (connectionInfo.wireless) {
+                disconnectAction.classList.add("fa-solid", "fa-link-slash", "fa-lg", "iconbtn");
+
+                disconnectAction.onclick = () => {
+                    ipcRenderer.send("disconnectController", connectionInfo.serial);
+                    setTimeout(() => 
+                        makeControllerMenu()
+                    , 200);
+                }
+
+                controllerActions.appendChild(disconnectAction);
+
+            }
+            controllerInfoDiv.appendChild(controllerName);
+
+            if (connectionInfo.wireless)
+                controllerInfoDiv.appendChild(controllerMac);
+            controllerInfoDiv.appendChild(controllerState);
+
+            controllerObject.appendChild(controllerInfoDiv);
+            controllerObject.appendChild(controllerActions);
+            controllersList.appendChild(controllerObject);
+        }
+    }else{
+        controllerManager.close();
+    }
+}
+
+controllerButton.onclick = () => {
+    makeControllerMenu();
+    controllerManager.showModal();
+}
+
+cancelBtnControllers.onclick = () => {
+    controllerManager.close();
+}
 
 settingsButton.onclick = () => {
     mainDiv.style.display = "none";

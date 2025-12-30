@@ -163,7 +163,7 @@ body {
     margin-right: 1px;
     margin-bottom: 5px;
     display: grid;
-    grid-template-columns: 1fr auto auto auto auto;
+    grid-template-columns: 1fr auto auto auto auto auto;
     gap: 10px;
 }
 
@@ -680,4 +680,20 @@ hr {
     height: fit-content;
     align-self: end;
     grid-area: stack;
+}
+
+.controller {
+    padding: 5px;
+    background-color: #141414;
+    border-radius: 10px;
+    color: #ffffff;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.controller-actions {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
