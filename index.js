@@ -13,7 +13,6 @@ const gotTheLock = app.requestSingleInstanceLock();
 const fs = require("fs");
 const launchApp = require("./frontend/functions/launchApp");
 const { generateId } = require("./frontend/functions/appAddUtil");
-const disconnectBT = require("controllermanager");
 
 /**
  * @type {BrowserWindow}
@@ -513,7 +512,10 @@ function removeMultipleApps(appArray) {
 }
 
 ipcMain.on("disconnectController", (ev, args) => {
-    disconnectBT(args);
+    if(process.platform === "win32"){
+        const disconnectBT = require("controllermanager");
+        disconnectBT(args);
+    }
 })
 
 ipcMain.on("removeMultiple", (ev, args) => {

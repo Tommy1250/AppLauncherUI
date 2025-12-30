@@ -1079,7 +1079,7 @@ function makeControllerMenu() {
 
             controllerActions.classList.add("controller-actions");
 
-            if (connectionInfo.wireless) {
+            if (connectionInfo.wireless && process.platform === "win32") {
                 disconnectAction.classList.add("fa-solid", "fa-link-slash", "fa-lg", "iconbtn");
 
                 disconnectAction.onclick = () => {
