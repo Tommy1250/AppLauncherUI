@@ -39,8 +39,8 @@ __The app doesn't fully support/untested on Linux and macOS if you want to try t
 | Folder Adding and Editing | Done |
 | Shell-mode for some apps | Done |
 | Remote interface | Done |
-| Playtime tracking | Planning |
-| Better controller support | Undecided |
+| Playtime tracking | On-hold |
+| Better controller support | Ongoing |
 # Compiling the app:
 1. download the source code
 ```bash
