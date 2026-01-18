@@ -448,10 +448,16 @@ function addItemToGrid(key, index, showCat = false) {
 
     if (showCat) {
         const catsList = document.createElement("ul");
-        for (let i = 0; i < saveFile[key].categories.length; i++) {
-            const itemcat = saveFile[key].categories[i];
+        if(saveFile[key].categories){
+            for (let i = 0; i < saveFile[key].categories.length; i++) {
+                const itemcat = saveFile[key].categories[i];
+                const li = document.createElement("li");
+                li.innerText = itemcat;
+                catsList.appendChild(li);
+            }
+        }else{
             const li = document.createElement("li");
-            li.innerText = itemcat;
+            li.innerText = "Uncategorized";
             catsList.appendChild(li);
         }
 
