@@ -1,10 +1,10 @@
-const getWindowsShortcutProperties = require("get-windows-shortcut-properties");
 const { ipcRenderer, shell, webFrame } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { queueBanner } = require("./functions/steamGrid");
 const ip = require("ip");
 const HID = require('node-hid');
+const {readShortcut} = require("./functions/appAddUtil");
 
 let shortcutsFile = "";
 let savePath = "";
@@ -267,83 +267,22 @@ document.addEventListener("drop", async (e) => {
         const file = files[i];
         const shortcutPath = file.path;
 
-        if (file.name.endsWith(".url")) {
-            console.log("urlFile");
-            const fileData = fs.readFileSync(file.path, "utf-8");
-            const parsed = fileData.split("\n");
-            const itemObj = {};
+        const shortcutData = await readShortcut(file.name, shortcutPath);
+        
+        editSaveObj(shortcutData.id, shortcutData.location, shortcutData.type, shortcutData.args);
 
-            for (let j = 0; j < parsed.length; j++) {
-                const ele = parsed[j];
-                const item = ele.replace("=", "▓").replace("\r", "").split("▓");
-                itemObj[item[0]] = item[1];
-            }
-
-            let fileNameArr = file.name.split(".");
-            fileNameArr.pop();
-
-            editSaveObj(fileNameArr.join("."), itemObj.URL, "url");
-
-            if (
-                !fs.existsSync(
-                    path.join(imagesPath, `${fileNameArr.join(".")}.png`)
-                )
-            ) {
-                if (settingsFile.steamGridToken !== "")
-                    await queueBanner(
-                        fileNameArr.join("."),
-                        imagesPath,
-                        settingsFile.steamGridToken
-                    );
-            } else makeAppGrid(orderFile, inMultiSelect);
-        } else if (file.name.endsWith(".lnk")) {
-            console.log("realSortcut");
-            const shortcutData =
-                getWindowsShortcutProperties.sync(shortcutPath)[0];
-
-            let fileNameArr = file.name.split(".");
-            fileNameArr.pop();
-
-            editSaveObj(
-                fileNameArr.join("."),
-                shortcutData.TargetPath,
-                "exe",
-                shortcutData.Arguments ? shortcutData.Arguments : null
-            );
-
-            if (
-                !fs.existsSync(
-                    path.join(imagesPath, `${fileNameArr.join(".")}.png`)
-                )
-            ) {
-                if (settingsFile.steamGridToken !== "")
-                    await queueBanner(
-                        fileNameArr.join("."),
-                        imagesPath,
-                        settingsFile.steamGridToken
-                    );
-            } else makeAppGrid(orderFile, inMultiSelect);
-        } else if (file.name.endsWith(".exe")) {
-            console.log("exe file");
-
-            let fileNameArr = file.name.split(".");
-            fileNameArr.pop();
-
-            editSaveObj(fileNameArr.join("."), file.path, "exe");
-
-            if (
-                !fs.existsSync(
-                    path.join(imagesPath, `${fileNameArr.join(".")}.png`)
-                )
-            ) {
-                if (settingsFile.steamGridToken !== "")
-                    await queueBanner(
-                        fileNameArr.join("."),
-                        imagesPath,
-                        settingsFile.steamGridToken
-                    );
-            } else makeAppGrid(orderFile, inMultiSelect);
-        }
+        if (
+            !fs.existsSync(
+                path.join(imagesPath, `${shortcutData.id}.png`)
+            )
+        ) {
+            if (settingsFile.steamGridToken !== "")
+                await queueBanner(
+                    shortcutData.id,
+                    imagesPath,
+                    settingsFile.steamGridToken
+                );
+        } else makeAppGrid(orderFile, inMultiSelect);
     }
     saveTheFile();
 });
@@ -904,10 +843,10 @@ window.addEventListener(
         console.log("'" + controller.name + "' is ready!");
 
         controllerButton.style.display = "initial";
-        
+
         const controllerVidPid = extractVidPid(controller.id);
         controllersMap.set(controller.index, getMacAdress(controllerVidPid.vid, controllerVidPid.pid));
-        
+
         makeControllerMenu();
     },
     false
@@ -1084,9 +1023,9 @@ function makeControllerMenu() {
 
                 disconnectAction.onclick = () => {
                     ipcRenderer.send("disconnectController", connectionInfo.serial);
-                    setTimeout(() => 
+                    setTimeout(() =>
                         makeControllerMenu()
-                    , 200);
+                        , 200);
                 }
 
                 controllerActions.appendChild(disconnectAction);
@@ -1102,7 +1041,7 @@ function makeControllerMenu() {
             controllerObject.appendChild(controllerActions);
             controllersList.appendChild(controllerObject);
         }
-    }else{
+    } else {
         controllerManager.close();
     }
 }

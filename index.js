@@ -617,7 +617,7 @@ ipcMain.on("chooseExecFile", (event) => {
             filters: [
                 {
                     name: "Executable file",
-                    extensions: ["exe", "bat", "sh", "cmd"],
+                    extensions: ["exe", "bat", "sh", "cmd", "lnk", "url"],
                 },
                 {
                     name: "All files",

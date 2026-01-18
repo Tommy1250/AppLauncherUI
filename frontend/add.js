@@ -1,7 +1,7 @@
 const { ipcRenderer } = require("electron");
 const fs = require("fs");
 const path = require("path");
-const { generateId } = require("./functions/appAddUtil");
+const { generateId, readShortcut } = require("./functions/appAddUtil");
 
 const appImg = document.getElementById("appImg");
 const imageSearchButton = document.getElementById("imageSearch");
@@ -161,8 +161,18 @@ selectFileButton.onclick = () => {
         ipcRenderer.send("cooseDirectory")
 }
 
-ipcRenderer.on("execSelect", (ev, fileLocation) => {
-    appPathInput.value = fileLocation
+ipcRenderer.on("execSelect", async (ev, fileLocation) => {
+    if (fileLocation.endsWith(".lnk") || fileLocation.endsWith(".url")) {
+        const shortcutData = await readShortcut(path.basename(fileLocation), fileLocation);
+        appPathInput.value = shortcutData.location;
+        appArgsInput.value = shortcutData.args;
+        appNameInput.value = shortcutData.id;
+
+        appTypeSelect.selectedIndex = shortcutData.type === "exe" ? 0 : 1;
+        appTypeSelect.dispatchEvent(new Event("input"));
+    } else {
+        appPathInput.value = fileLocation
+    }
 })
 
 ipcRenderer.on("dirSelect", (ev, dirLocation) => {

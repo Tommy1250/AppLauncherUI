@@ -72,6 +72,7 @@ async function queueBanner(gameName, savePath, token) {
             try {
                 const banner = await getBanner(gameName, savePath, token);
                 if (banner) itemsQueue.shift();
+                ipcRenderer.send("updateSaveNoClose");
             } catch {
                 itemsQueue.shift();
                 ipcRenderer.send("updateSaveNoClose");
@@ -82,6 +83,7 @@ async function queueBanner(gameName, savePath, token) {
         try {
             const banner = await getBanner(gameName, savePath, token);
             if (banner) itemsQueue.shift();
+            ipcRenderer.send("updateSaveNoClose");
         } catch {
             itemsQueue.shift();
             ipcRenderer.send("updateSaveNoClose");
