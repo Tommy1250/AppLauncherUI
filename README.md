@@ -69,6 +69,5 @@ npm run build-macos
 ```
 You can make a .deb installer using the electron-installer-debian package
 ```bash
-npm install -g electron-installer-debian
 npm run deb64
 ```
