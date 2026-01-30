@@ -64,7 +64,7 @@ async function readShortcut(fileName, shortcutPath) {
 
         return {
             id: fileNameArr.join("."),
-            location: file.path,
+            location: shortcutPath,
             type: "exe",
             args: null
         }
