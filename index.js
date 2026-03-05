@@ -91,6 +91,7 @@ if (!fs.existsSync(settingsPath)) {
             enableServer: false,
             serverPort: 7080,
             serverPassword: "1234",
+            dontWarnShell: false
         })
     );
 }
@@ -115,13 +116,11 @@ let settingsFile = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
 exports.settingsFile = settingsFile;
 
 if (!settingsFile.serverPort) {
-    settingsFile = {
-        startWithPc: settingsFile.startWithPc,
-        steamGridToken: settingsFile.steamGridToken,
-        enableServer: settingsFile.enableServer ?? false,
-        serverPort: 7080,
-        serverPassword: settingsFile.serverPassword ?? "1234",
-    };
+    
+    settingsFile.enableServer = settingsFile.enableServer ?? false;
+    settingsFile.serverPort = 7080;
+    settingsFile.serverPassword = settingsFile.serverPassword ?? "1234";
+    
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 }
 
@@ -494,11 +493,11 @@ function removeMultipleApps(appArray) {
     for (let i = 0; i < appArray.length; i++) {
         const gameName = appArray[i];
         delete saveFile[gameName];
-        
+
         const itemLocation = orderFile.indexOf(gameName);
         orderFile.splice(itemLocation, 1);
-        
-        if(latestLaunchedGames.includes(gameName))
+
+        if (latestLaunchedGames.includes(gameName))
             removeFromLatest(gameName);
     }
 
@@ -512,7 +511,7 @@ function removeMultipleApps(appArray) {
 }
 
 ipcMain.on("disconnectController", (ev, args) => {
-    if(process.platform === "win32"){
+    if (process.platform === "win32") {
         const disconnectBT = require("controllermanager");
         disconnectBT(args);
     }

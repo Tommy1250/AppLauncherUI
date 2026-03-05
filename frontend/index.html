@@ -42,7 +42,10 @@
             <h1 class="center">App Icons</h1>
             <div>
                 <label for="steamGridToken" class="setting-label">Steam grid Token:</label>
-                <input type="text" id="steamGridToken" class="setting-input">
+                <div class="util-action">
+                    <input type="password" id="steamGridToken" class="setting-input">
+                    <button type="button" class="fa-solid fa-eye-slash" id="showTokenBtn"></button>
+                </div>
                 <div class="controls">
                     <button id="goToSteamGirdBtn" class="setting-button">Sign up for a token</button>
                 </div>
@@ -58,15 +61,24 @@
             </div>
             <div>
                 <label for="serverPort" class="setting-label">Server port:</label>
-                <input type="text" id="serverPort" class="setting-input">
+                <div class="util-action">
+                    <input type="password" id="serverPort" class="setting-input">
+                    <button class="fa-solid fa-eye-slash" id="showServerPort"></button>
+                </div>
             </div>
             <div>
                 <label for="serverPass" class="setting-label">Server password:</label>
-                <input type="text" id="serverPass" class="setting-input">
+                <div class="util-action">
+                    <input type="password" id="serverPass" class="setting-input">
+                    <button class="fa-solid fa-eye-slash" id="showServerPassword"></button>
+                </div>
             </div>
             <div>
                 <label for="serverIp" class="setting-label">server address:</label>
-                <input type="text" id="serverIp" class="setting-input" disabled>
+                <div class="util-action">
+                    <input type="password" id="serverIp" class="setting-input" disabled>
+                    <button class="fa-solid fa-eye-slash" id="showServerIp"></button>
+                </div>
             </div>
             <hr>
             <div class="controls">

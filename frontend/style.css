@@ -223,6 +223,7 @@ body {
     margin-top: 16px;
 }
 
+.util-action > input,
 .setting-input {
     margin-top: 4px;
     margin-bottom: 4px;
@@ -237,6 +238,40 @@ body {
 .setting-input:disabled {
     background-color: white;
     color: black;
+}
+
+.util-action {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+}
+
+.util-action > input {
+    flex-grow: 0;
+    border-bottom-left-radius: 5px;
+    border-top-left-radius: 5px;
+    border-bottom-right-radius: 0px;
+    border-top-right-radius: 0px;
+    width: 100%;
+    border-right: none;
+}
+
+.util-action > button {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    background-color: rgb(255, 255, 255);
+    border: none;
+    color: rgb(0, 0, 0);
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-left: none;
+    cursor: pointer;
+}
+
+.util-action > button:hover {
+    color: rgb(92, 92, 92);
 }
 
 .controls {

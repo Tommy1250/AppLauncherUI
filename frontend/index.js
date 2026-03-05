@@ -4,7 +4,7 @@ const path = require("path");
 const { queueBanner } = require("./functions/steamGrid");
 const ip = require("ip");
 const HID = require('node-hid');
-const {readShortcut} = require("./functions/appAddUtil");
+const { readShortcut } = require("./functions/appAddUtil");
 
 let shortcutsFile = "";
 let savePath = "";
@@ -25,7 +25,7 @@ let rearrangingItem = false;
 let saveFile = {};
 
 /**
- * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string}}
+ * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean}}
  */
 let settingsFile = {};
 
@@ -80,6 +80,11 @@ const serverCheckBox = document.getElementById("enableServer");
 const serverPortInput = document.getElementById("serverPort");
 const serverPassInput = document.getElementById("serverPass");
 const serverIpInput = document.getElementById("serverIp");
+
+const showTokenButton = document.getElementById("showTokenBtn");
+const showServerPortButton = document.getElementById("showServerPort");
+const showServerPasswordButton = document.getElementById("showServerPassword");
+const showServerIpButton = document.getElementById("showServerIp");
 
 /**
  * @type {HTMLDialogElement}
@@ -189,14 +194,15 @@ function makeAppGrid(entries, showCat = false) {
         for (let i = 0; i < entries.length; i++) {
             const key = entries[i];
 
-            addItemToGrid(key, i, showCat);
+            if (saveFile[key])
+                addItemToGrid(key, i, showCat);
         }
 
         appGrid.scrollTop = currentScroll;
     } else {
         for (let i = 0; i < entries.length; i++) {
             const key = entries[i];
-            if (saveFile[key].categories?.some(cat => categoriesFile.selected.includes(cat))) {
+            if (saveFile[key] && saveFile[key].categories?.some(cat => categoriesFile.selected.includes(cat))) {
                 filteredApps.push(key);
                 addItemToGrid(key, i, showCat);
             }
@@ -268,7 +274,7 @@ document.addEventListener("drop", async (e) => {
         const shortcutPath = file.path;
 
         const shortcutData = await readShortcut(file.name, shortcutPath);
-        
+
         editSaveObj(shortcutData.id, shortcutData.location, shortcutData.type, shortcutData.args);
 
         if (
@@ -448,14 +454,14 @@ function addItemToGrid(key, index, showCat = false) {
 
     if (showCat) {
         const catsList = document.createElement("ul");
-        if(saveFile[key].categories){
+        if (saveFile[key].categories) {
             for (let i = 0; i < saveFile[key].categories.length; i++) {
                 const itemcat = saveFile[key].categories[i];
                 const li = document.createElement("li");
                 li.innerText = itemcat;
                 catsList.appendChild(li);
             }
-        }else{
+        } else {
             const li = document.createElement("li");
             li.innerText = "Uncategorized";
             catsList.appendChild(li);
@@ -481,6 +487,10 @@ function addItemToGrid(key, index, showCat = false) {
             pageX: appImgRect.left - 25
         }*/
         if (inMultiSelect) {
+            if (!selectedApps.includes(key)) {
+                selectedApps.push(key);
+                checkbox.checked = true;
+            }
             showMenuMultiSelect(ev);
         } else {
             showMenu(ev, key, index);
@@ -490,6 +500,10 @@ function addItemToGrid(key, index, showCat = false) {
     appDiv.oncontextmenu = (ev) => {
         // ipcRenderer.send("contextMenu", { key, index });
         if (inMultiSelect) {
+            if (!selectedApps.includes(key)) {
+                selectedApps.push(key);
+                checkbox.checked = true;
+            }
             showMenuMultiSelect(ev);
         } else {
             showMenu(ev, key, index);
@@ -902,17 +916,6 @@ window.addEventListener(
                 ipcRenderer.send("launch", filteredApps[focusedItem]);
             }
         }
-
-        // if(pressedButtons.has("HOME") && pressedButtons.has("LEFT_SHOULDER") && pressedButtons.has("RIGHT_SHOULDER")){
-        //     const controllerInfo = controllersMap.get(event.detail.controllerIndex);
-        //     if(!controllerInfo.wired){
-        //         console.log(`Trying to disconnect ${event.detail.controllerIndex} mac ${controllerInfo.serial}`);
-        //         ipcRenderer.send("disconnectController", controllerInfo.serial);
-        //         pressedButtons.clear();
-        //     }else{
-        //         console.log("Wired controller can't disconnect");
-        //     }
-        // }
     },
     false
 );
@@ -1081,16 +1084,49 @@ goToSteamGirdBtn.onclick = () => {
     shell.openExternal("https://www.steamgriddb.com/profile/preferences/api");
 };
 
+showTokenButton.onclick = () => {
+    toggleVisibilityInput(steamGridTokenInput, showTokenButton);
+}
+
+showServerPortButton.onclick = () => {
+    toggleVisibilityInput(serverPortInput, showServerPortButton);
+}
+
+showServerIpButton.onclick = () => {
+    toggleVisibilityInput(serverIpInput, showServerIpButton);
+}
+
+showServerPasswordButton.onclick = () => {
+    toggleVisibilityInput(serverPassInput, showServerPasswordButton);
+}
+
+/**
+ * 
+ * @param {HTMLInputElement} input 
+ * @param {HTMLButtonElement} button 
+ */
+function toggleVisibilityInput(input, button) {
+    if(input.type === 'password') {
+        input.type = "text";
+        button.classList.remove("fa-eye-slash");
+        button.classList.add("fa-eye");
+    }else{
+        input.type = "password";
+        button.classList.remove("fa-eye");
+        button.classList.add("fa-eye-slash");
+    }
+}
+
 settingsSaveBtn.onclick = () => {
     if (serverPortInput.value === "")
         return serverPortInput.value = settingsFile.serverPort
-    settingsFile = {
-        startWithPc: startWithPcCheckBox.checked,
-        steamGridToken: steamGridTokenInput.value,
-        enableServer: serverCheckBox.checked,
-        serverPort: serverPortInput.value,
-        serverPassword: serverPassInput.value
-    };
+    
+    settingsFile.startWithPc = startWithPcCheckBox.checked;
+    settingsFile.steamGridToken = steamGridTokenInput.value;
+    settingsFile.enableServer = serverCheckBox.checked;
+    settingsFile.serverPort = serverPortInput.value;
+    settingsFile.serverPassword = serverPassInput.value;
+
     mainDiv.style.display = "grid";
     settingsDiv.style.display = "none";
     ipcRenderer.send("updateSave", settingsFile);
