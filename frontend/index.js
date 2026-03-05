@@ -4,7 +4,7 @@ const path = require("path");
 const { queueBanner } = require("./functions/steamGrid");
 const ip = require("ip");
 const HID = require('node-hid');
-const {readShortcut} = require("./functions/appAddUtil");
+const { readShortcut } = require("./functions/appAddUtil");
 
 let shortcutsFile = "";
 let savePath = "";
@@ -25,7 +25,7 @@ let rearrangingItem = false;
 let saveFile = {};
 
 /**
- * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string}}
+ * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean, importSteam: boolean, steamFolders: string[]}}
  */
 let settingsFile = {};
 
@@ -81,6 +81,9 @@ const serverPortInput = document.getElementById("serverPort");
 const serverPassInput = document.getElementById("serverPass");
 const serverIpInput = document.getElementById("serverIp");
 
+const steamReadSwitch = document.getElementById("switchSteam");
+const manageSteamLocationsBtn = document.getElementById("manageSteamLocationsBtn");
+
 /**
  * @type {HTMLDialogElement}
  */
@@ -104,6 +107,11 @@ const infoMessage = document.getElementById("infoMessage");
 const infoMessageTitle = document.getElementById("infoMessageTitle");
 const messageHolder = document.getElementById("message");
 const closeMessage = document.getElementById("closeMessage");
+
+const steamDirsManager = document.getElementById("steamDirsManager");
+const cancelBtnSteamDir = document.getElementById("cancelBtnSteamDir");
+const addDirctorySteamBtn = document.getElementById("addDirctorySteam");
+const directoriesListSteam = document.getElementById("DirectoriesList");
 
 let currentScroll = 0;
 
@@ -130,6 +138,11 @@ ipcRenderer.on("savePath", (ev, args) => {
     serverCheckBox.checked = settingsFile.enableServer;
     serverPortInput.value = settingsFile.serverPort;
     serverPassInput.value = settingsFile.serverPassword;
+    steamReadSwitch.checked = settingsFile.importSteam;
+
+    if (settingsFile.importSteam) {
+        require("./functions/steamUtil").scanSteamFiles(settingsFile.steamFolders, savePath);
+    }
 
     try {
         const userIp = ip.address("Ethernet");
@@ -189,14 +202,15 @@ function makeAppGrid(entries, showCat = false) {
         for (let i = 0; i < entries.length; i++) {
             const key = entries[i];
 
-            addItemToGrid(key, i, showCat);
+            if (saveFile[key])
+                addItemToGrid(key, i, showCat);
         }
 
         appGrid.scrollTop = currentScroll;
     } else {
         for (let i = 0; i < entries.length; i++) {
             const key = entries[i];
-            if (saveFile[key].categories?.some(cat => categoriesFile.selected.includes(cat))) {
+            if (saveFile[key] && saveFile[key].categories?.some(cat => categoriesFile.selected.includes(cat))) {
                 filteredApps.push(key);
                 addItemToGrid(key, i, showCat);
             }
@@ -268,7 +282,7 @@ document.addEventListener("drop", async (e) => {
         const shortcutPath = file.path;
 
         const shortcutData = await readShortcut(file.name, shortcutPath);
-        
+
         editSaveObj(shortcutData.id, shortcutData.location, shortcutData.type, shortcutData.args);
 
         if (
@@ -448,14 +462,14 @@ function addItemToGrid(key, index, showCat = false) {
 
     if (showCat) {
         const catsList = document.createElement("ul");
-        if(saveFile[key].categories){
+        if (saveFile[key].categories) {
             for (let i = 0; i < saveFile[key].categories.length; i++) {
                 const itemcat = saveFile[key].categories[i];
                 const li = document.createElement("li");
                 li.innerText = itemcat;
                 catsList.appendChild(li);
             }
-        }else{
+        } else {
             const li = document.createElement("li");
             li.innerText = "Uncategorized";
             catsList.appendChild(li);
@@ -481,6 +495,10 @@ function addItemToGrid(key, index, showCat = false) {
             pageX: appImgRect.left - 25
         }*/
         if (inMultiSelect) {
+            if (!selectedApps.includes(key)) {
+                selectedApps.push(key);
+                checkbox.checked = true;
+            }
             showMenuMultiSelect(ev);
         } else {
             showMenu(ev, key, index);
@@ -490,6 +508,10 @@ function addItemToGrid(key, index, showCat = false) {
     appDiv.oncontextmenu = (ev) => {
         // ipcRenderer.send("contextMenu", { key, index });
         if (inMultiSelect) {
+            if (!selectedApps.includes(key)) {
+                selectedApps.push(key);
+                checkbox.checked = true;
+            }
             showMenuMultiSelect(ev);
         } else {
             showMenu(ev, key, index);
@@ -1066,6 +1088,26 @@ settingsButton.onclick = () => {
     settingsDiv.style.display = "flex";
 };
 
+function listSteamDirectories() {
+    
+}
+
+manageSteamLocationsBtn.onclick = () => {
+    steamDirsManager.showModal();
+}
+
+cancelBtnSteamDir.onclick = () => {
+    steamDirsManager.close();
+}
+
+addDirctorySteamBtn.onclick = () => {
+    ipcRenderer.send("cooseDirectory");
+}
+
+ipcRenderer.on("dirSelect", (ev, dirLocation) => {
+    settingsFile.steamFolders.push(dirLocation);
+})
+
 settingsCancelBtn.onclick = () => {
     mainDiv.style.display = "grid";
     settingsDiv.style.display = "none";
@@ -1075,6 +1117,7 @@ settingsCancelBtn.onclick = () => {
     serverCheckBox.checked = settingsFile.enableServer;
     serverPortInput.value = settingsFile.serverPort;
     serverPassInput.value = settingsFile.serverPassword;
+    steamReadSwitch.value = settingsFile.importSteam;
 };
 
 goToSteamGirdBtn.onclick = () => {
@@ -1084,13 +1127,14 @@ goToSteamGirdBtn.onclick = () => {
 settingsSaveBtn.onclick = () => {
     if (serverPortInput.value === "")
         return serverPortInput.value = settingsFile.serverPort
-    settingsFile = {
-        startWithPc: startWithPcCheckBox.checked,
-        steamGridToken: steamGridTokenInput.value,
-        enableServer: serverCheckBox.checked,
-        serverPort: serverPortInput.value,
-        serverPassword: serverPassInput.value
-    };
+
+    settingsFile.startWithPc = startWithPcCheckBox.checked;
+    settingsFile.steamGridToken = steamGridTokenInput.value;
+    settingsFile.enableServer = serverCheckBox.checked;
+    settingsFile.serverPort = serverPortInput.value;
+    settingsFile.serverPassword = serverPassInput.value;
+    settingsFile.importSteam = steamReadSwitch.checked;
+
     mainDiv.style.display = "grid";
     settingsDiv.style.display = "none";
     ipcRenderer.send("updateSave", settingsFile);

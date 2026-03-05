@@ -69,6 +69,20 @@
                 <input type="text" id="serverIp" class="setting-input" disabled>
             </div>
             <hr>
+            <h1 class="center">Game Library</h1>
+            <div class="switch-div">
+                <label for="switchSteam" class="setting-label">Auto import steam games:</label>
+                <label class="switch">
+                    <input type="checkbox" id="switchSteam">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div>
+                <div class="controls">
+                    <button id="manageSteamLocationsBtn" class="setting-button">Manage Library Locations</button>
+                </div>
+            </div>
+            <hr>
             <div class="controls">
                 <button id="cancel">Cancel</button>
                 <button id="save">Save changes</button>
@@ -103,6 +117,18 @@
             <input type="text" id="categoryName" placeholder="Add new category...">
             <button type="submit" id="addCategory">Add</button>
         </form>
+    </dialog>
+    <dialog class="categories-dialog" id="steamDirsManager">
+        <div class="title-bar">
+            <h3>Steam Library Directories</h3>
+            <button id="cancelBtnSteamDir" class="fa-solid fa-xmark fa-lg iconbtn"></button>
+        </div>
+        <hr>
+        <div class="categories-list" id="DirectoriesList"></div>
+        <br>
+        <div id="addDirctoryDiv" class="controls">
+            <button id="addDirctorySteam">Add New Location</button>
+        </div>
     </dialog>
     <dialog class="categories-dialog" id="controllerManager">
         <div class="title-bar">

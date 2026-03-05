@@ -219,8 +219,9 @@ body {
     width: 60%;
     display: grid;
     gap: 7px;
-    margin-bottom: 22px;
-    margin-top: 16px;
+    margin-bottom: 16px;
+    /* margin-top: 16px; */
+    padding: 20px;
 }
 
 .setting-input {

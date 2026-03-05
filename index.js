@@ -91,6 +91,9 @@ if (!fs.existsSync(settingsPath)) {
             enableServer: false,
             serverPort: 7080,
             serverPassword: "1234",
+            importSteam: false,
+            steamFolders: [],
+            dontWarnShell: false
         })
     );
 }
@@ -109,24 +112,26 @@ exports.shortcutsPath = shortcutsPath;
 let latestLaunchedGames = JSON.parse(fs.readFileSync(latestGamesPath, "utf-8"));
 
 /**
- * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean}}
+ * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean, importSteam: boolean, steamFolders: string[]}}
  */
 let settingsFile = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
 exports.settingsFile = settingsFile;
 
 if (!settingsFile.serverPort) {
-    settingsFile = {
-        startWithPc: settingsFile.startWithPc,
-        steamGridToken: settingsFile.steamGridToken,
-        enableServer: settingsFile.enableServer ?? false,
-        serverPort: 7080,
-        serverPassword: settingsFile.serverPassword ?? "1234",
-    };
+    settingsFile.enableServer = settingsFile.enableServer ?? false;
+    settingsFile.serverPort = 7080;
+    settingsFile.serverPassword = settingsFile.serverPassword ?? "1234";
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 }
 
 if (settingsFile.dontWarnShell === undefined) {
     settingsFile.dontWarnShell = false;
+    fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
+}
+
+if(!settingsFile.steamFolders) {
+    settingsFile.importSteam = false;
+    settingsFile.steamFolders = [];
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 }
 
@@ -765,7 +770,7 @@ ipcMain.on("updateSave", (ev, args) => {
                 }
             });
     }
-
+    
     settingsFile = args;
 
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
