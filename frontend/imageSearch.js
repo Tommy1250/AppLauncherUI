@@ -14,8 +14,15 @@ const infoMessage = document.getElementById("infoMessage");
 const messageHolder = document.getElementById("message");
 const closeMessage = document.getElementById("closeMessage");
 
+const loadMoreButton = document.getElementById("loadMore");
+const pageNumberHolder = document.getElementById("pageNumber");
+
 let savePath = "";
 let tempPath = "";
+let page = 0;
+let imageLimit = 15;
+let currentGameId = 0;
+let bannersTotal = 0;
 
 /**
  * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string}}
@@ -71,6 +78,9 @@ searchForm.addEventListener("submit", async (ev) => {
         return appGrid.innerHTML = "";
     }
 
+    currentGameId = searchResults.data[0].id;
+    page = 0;
+
     const banners = await getBanners(searchResults.data[0].id, settingsFile.steamGridToken)
 
     if (!banners.success || banners.data.length === 0) {
@@ -83,12 +93,44 @@ searchForm.addEventListener("submit", async (ev) => {
         return appGrid.innerHTML = "";
     }
 
+    bannersTotal = banners.total;
+
     appGrid.innerHTML = "";
     for (let i = 0; i < banners.data.length; i++) {
         const gridBanner = banners.data[i];
         addItemToGrid(gridBanner.thumb, gridBanner.url)
     }
+
+    pageNumberHolder.innerText = `Page: ${page + 1} of ${Math.ceil(banners.total / imageLimit)}`;
+    
+    if((page + 1) >= (banners.total / imageLimit)) {
+        loadMoreButton.setAttribute("disabled", true);
+    }else{
+        loadMoreButton.removeAttribute("disabled");
+    }
 })
+
+loadMoreButton.onclick = async() => {
+    if(currentGameId === 0) return;
+    if((page + 1) >= (bannersTotal / imageLimit)) return;
+    
+    page++;
+    console.log(page);
+
+    const banners = await getBanners(currentGameId, settingsFile.steamGridToken);
+    
+    for (let i = 0; i < banners.data.length; i++) {
+        const gridBanner = banners.data[i];
+        addItemToGrid(gridBanner.thumb, gridBanner.url)
+    }
+    
+    pageNumberHolder.innerText = `Page: ${page + 1} of ${Math.ceil(banners.total / imageLimit)}`;
+    
+    if((page + 1) >= (banners.total / imageLimit)) {
+        loadMoreButton.setAttribute("disabled", true);
+    }
+
+}
 
 ipcRenderer.on("returnSource", (ev, args) => {
     returnSource = args.source;
@@ -141,7 +183,7 @@ async function getBanners(gameId, token) {
 
     try {
         const result = await fetch(
-            `https://www.steamgriddb.com/api/v2/grids/game/${gameId}?types=static&dimensions=600x900&nsfw=false&limit=15`,
+            `https://www.steamgriddb.com/api/v2/grids/game/${gameId}?types=static&dimensions=600x900&nsfw=false&limit=${imageLimit}&page=${page}`,
             options
         );
         const body = await result.json();

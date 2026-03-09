@@ -282,7 +282,7 @@ document.addEventListener("drop", async (e) => {
                 path.join(imagesPath, `${shortcutData.id}.png`)
             )
         ) {
-            if (settingsFile.steamGridToken !== "")
+            if (settingsFile.steamGridToken.trim() !== "")
                 await queueBanner(
                     shortcutData.id,
                     imagesPath,

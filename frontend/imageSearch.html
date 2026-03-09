@@ -39,6 +39,28 @@
         #closeMessage:focus {
             border: 0.1px white;
         }
+
+        .main {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            box-sizing: border-box;
+            height: 100%;
+        }
+
+        .app-grid {
+            margin-bottom: 0px;
+        }
+
+        .controls {
+            margin-top: 4px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .controls>button {
+            height: fit-content;
+            padding: 5px;
+        }
     </style>
 </head>
 
@@ -60,6 +82,10 @@
             </form>
         </div>
         <div id="appgrid" class="app-grid scroll-alone"></div>
+        <div class="controls">
+            <p id="pageNumber">Page: 1 of 1</p>
+            <button id="loadMore" class="setting-button">Load More</button>
+        </div>
     </div>
 </body>
 
