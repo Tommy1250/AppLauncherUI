@@ -489,7 +489,7 @@ function removeShortcut(gameName) {
     mainWindow.webContents.send("updateSaveNoReload");
 }
 
-function removeMultipleApps(appArray) {
+function removeMultipleShortcuts(appArray) {
     for (let i = 0; i < appArray.length; i++) {
         const gameName = appArray[i];
         delete saveFile[gameName];
@@ -519,7 +519,7 @@ ipcMain.on("disconnectController", (ev, args) => {
 
 ipcMain.on("removeMultiple", (ev, args) => {
     const apps = args.apps;
-    removeMultipleApps(apps);
+    removeMultipleShortcuts(apps);
 })
 
 ipcMain.on("removeShortcut", (ev, args) => {
