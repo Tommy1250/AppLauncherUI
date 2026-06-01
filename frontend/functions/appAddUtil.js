@@ -19,6 +19,7 @@ function generateId(length){
 /**
  * 
  * @param {string} fileName 
+ * @param {string} shortcutPath 
  */
 async function readShortcut(fileName, shortcutPath) {
     if (fileName.endsWith(".url")) {

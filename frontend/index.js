@@ -1,4 +1,4 @@
-const { ipcRenderer, shell, webFrame } = require("electron");
+const { ipcRenderer, shell, webFrame, webUtils } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { queueBanner } = require("./functions/steamGrid");
@@ -271,7 +271,7 @@ document.addEventListener("drop", async (e) => {
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const shortcutPath = file.path;
+        const shortcutPath = webUtils.getPathForFile(file);
 
         const shortcutData = await readShortcut(file.name, shortcutPath);
 
