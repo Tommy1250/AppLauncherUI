@@ -19,56 +19,38 @@ function launchApp(appConfig, theWindow) {
         shell.openExternal(appConfig.location);
         if (theWindow) theWindow.close();
     } else if (appConfig.type === "exe") {
+        const location = appConfig.location;
+        const cwd = path.parse(location).dir;
+        const args = appConfig.args
+            ? parseArgsStringToArgv(appConfig.args)
+            : [];
+
+        const ext = path.extname(location).toLowerCase();
+
+        let command = location;
+        let spawnArgs = args;
+        let options = {
+            detached: true,
+            stdio: "ignore",
+            cwd
+        };
+
+        // .bat and .cmd files need to be executed through cmd.exe
+        if (ext === ".bat" || ext === ".cmd") {
+            command = process.env.ComSpec || "cmd.exe";
+            spawnArgs = ["/c", location, ...args];
+        }
+        
         if (appConfig.shellMode) {
-            if (appConfig.args) {
-                const child = spawn(
-                    `${appConfig.location}`,
-                    parseArgsStringToArgv(appConfig.args),
-                    {
-                        detached: true,
-                        stdio: "ignore",
-                        cwd: `${path.parse(appConfig.location).dir}`,
-                        shell: true
-                    }
-                );
+            options.shell = true;
+        }
 
-                child.unref();
-                if (theWindow) theWindow.close();
-            } else {
-                const child = spawn(`${appConfig.location}`, {
-                    detached: true,
-                    stdio: "ignore",
-                    cwd: `${path.parse(appConfig.location).dir}`,
-                    shell: true
-                });
+        const child = spawn(command, spawnArgs, options);
 
-                child.unref();
-                if (theWindow) theWindow.close();
-            }
-        } else {
-            if (appConfig.args) {
-                const child = spawn(
-                    `${appConfig.location}`,
-                    parseArgsStringToArgv(appConfig.args),
-                    {
-                        detached: true,
-                        stdio: "ignore",
-                        cwd: `${path.parse(appConfig.location).dir}`,
-                    }
-                );
+        child.unref();
 
-                child.unref();
-                if (theWindow) theWindow.close();
-            } else {
-                const child = spawn(`${appConfig.location}`, {
-                    detached: true,
-                    stdio: "ignore",
-                    cwd: `${path.parse(appConfig.location).dir}`,
-                });
-
-                child.unref();
-                if (theWindow) theWindow.close();
-            }
+        if (theWindow) {
+            theWindow.close();
         }
     } else if (appConfig.type === "dir") {
         shell.openPath(appConfig.location);

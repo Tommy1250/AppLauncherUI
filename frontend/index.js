@@ -275,7 +275,7 @@ document.addEventListener("drop", async (e) => {
 
         const shortcutData = await readShortcut(file.name, shortcutPath);
 
-        editSaveObj(shortcutData.id, shortcutData.location, shortcutData.type, shortcutData.args);
+        editSaveObj(shortcutData.id, shortcutData.location, shortcutData.type, shortcutData.args, shortcutData.shellMode);
 
         if (
             !fs.existsSync(
@@ -293,7 +293,7 @@ document.addEventListener("drop", async (e) => {
     saveTheFile();
 });
 
-function editSaveObj(fileName, location, type, args = null) {
+function editSaveObj(fileName, location, type, args = null, shellMode = null) {
     if (!args) {
         saveFile[fileName] = {
             type: type,
@@ -310,6 +310,9 @@ function editSaveObj(fileName, location, type, args = null) {
             categories: [...categoriesFile.selected]
         };
     }
+
+    if(shellMode)
+        saveFile[fileName].shellMode = shellMode
 
     if (!orderFile.includes(fileName)) orderFile.push(fileName);
 }
@@ -841,7 +844,7 @@ function splitEveryTwo(str) {
 }
 
 function getMacAdress(vid, pid) {
-    const coltrollerDevices = HID.devices().filter(device => device.vendorId === vid && device.productId === pid);
+    const coltrollerDevices = HID.devices(vid, pid);
 
     const controller = coltrollerDevices[0]
 

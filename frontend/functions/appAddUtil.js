@@ -41,7 +41,8 @@ async function readShortcut(fileName, shortcutPath) {
             id: fileNameArr.join("."),
             location: itemObj.URL,
             type: "url",
-            args: null
+            args: null,
+            shellMode: null
         }
     } else if (fileName.endsWith(".lnk")) {
         console.log("realSortcut");
@@ -55,9 +56,10 @@ async function readShortcut(fileName, shortcutPath) {
             id: fileNameArr.join("."),
             location: shortcutData.TargetPath,
             type: "exe",
-            args: shortcutData.Arguments ? shortcutData.Arguments : null
+            args: shortcutData.Arguments ? shortcutData.Arguments : null,
+            shellMode: null
         }
-    } else if (fileName.endsWith(".exe")) {
+    } else if (fileName.endsWith(".exe") || fileName.endsWith(".bat") || fileName.endsWith(".cmd") || fileName.endsWith(".sh")) {
         console.log("exe file");
 
         let fileNameArr = fileName.split(".");
@@ -67,7 +69,8 @@ async function readShortcut(fileName, shortcutPath) {
             id: fileNameArr.join("."),
             location: shortcutPath,
             type: "exe",
-            args: null
+            args: null,
+            shellMode: null
         }
     }
 }
