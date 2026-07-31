@@ -2,7 +2,7 @@ const { ipcRenderer } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
-const { generateId } = require("./functions/appAddUtil")
+const { generateId } = require("./functions/appAddUtil");
 
 const appGrid = document.getElementById("appgrid");
 const searchForm = document.getElementById("searchForm");
@@ -102,31 +102,31 @@ searchForm.addEventListener("submit", async (ev) => {
     }
 
     pageNumberHolder.innerText = `Page: ${page + 1} of ${Math.ceil(banners.total / imageLimit)}`;
-    
-    if((page + 1) >= (banners.total / imageLimit)) {
+
+    if ((page + 1) >= (banners.total / imageLimit)) {
         loadMoreButton.setAttribute("disabled", true);
-    }else{
+    } else {
         loadMoreButton.removeAttribute("disabled");
     }
 })
 
-loadMoreButton.onclick = async() => {
-    if(currentGameId === 0) return;
-    if((page + 1) >= (bannersTotal / imageLimit)) return;
-    
+loadMoreButton.onclick = async () => {
+    if (currentGameId === 0) return;
+    if ((page + 1) >= (bannersTotal / imageLimit)) return;
+
     page++;
     console.log(page);
 
     const banners = await getBanners(currentGameId, settingsFile.steamGridToken);
-    
+
     for (let i = 0; i < banners.data.length; i++) {
         const gridBanner = banners.data[i];
         addItemToGrid(gridBanner.thumb, gridBanner.url)
     }
-    
+
     pageNumberHolder.innerText = `Page: ${page + 1} of ${Math.ceil(banners.total / imageLimit)}`;
-    
-    if((page + 1) >= (banners.total / imageLimit)) {
+
+    if ((page + 1) >= (banners.total / imageLimit)) {
         loadMoreButton.setAttribute("disabled", true);
     }
 
@@ -209,8 +209,8 @@ function addItemToGrid(thumbnail, imageLink) {
     appImg.src = thumbnail;
     appImg.setAttribute("draggable", false);
 
-    appImg.onclick = () => {
-        downloadImage(imageLink);
+    appImg.onclick = async () => {
+        await downloadImage(imageLink);
     };
 
     appDiv.appendChild(appImg);
@@ -221,7 +221,7 @@ function addItemToGrid(thumbnail, imageLink) {
  * 
  * @param {string} imageLink 
  */
-function downloadImage(imageLink) {
+async function downloadImage(imageLink) {
     messageHolder.innerHTML = "";
     const messageText = document.createElement("h2");
     messageText.innerText = "Downloading...";
@@ -231,22 +231,26 @@ function downloadImage(imageLink) {
     const imageId = generateId(10);
 
     const file = fs.createWriteStream(path.join(tempPath, `${imageId}.png`));
-    https.get(
-        imageLink,
-        function (response) {
-            response.pipe(file);
+    const response = await fetch(imageLink);
 
-            // after download completed close filestream
-            file.on("finish", () => {
-                file.close();
-                ipcRenderer.send("updateImageInWindow", {
-                    imagePath: path.join(tempPath, `${imageId}.png`),
-                    source: returnSource
-                });
-                window.close();
-            });
-        }
-    );
+    if (!response.ok) {
+        messageHolder.innerHTML = "";
+        const messageText = document.createElement("h2");
+        messageText.innerText = "Error while downloading image.";
+        messageHolder.appendChild(messageText);
+        infoMessage.showModal();
+    }
+
+    for await (const chunk of response.body) {
+        file.write(chunk);
+    }
+
+    file.end();
+    ipcRenderer.send("updateImageInWindow", {
+        imagePath: path.join(tempPath, `${imageId}.png`),
+        source: returnSource
+    });
+    window.close();
 }
 
 clearSearch.onclick = () => {
