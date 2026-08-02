@@ -8,6 +8,7 @@
     <script src="./plugins/Controller.min.js"></script>
     <script src="index.js" defer></script>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" id="themeSheet" href="themes/dark.css">
     <link rel="stylesheet" href="fontawesome/css/all.min.css">
 
 </head>
@@ -20,7 +21,7 @@
                 <input type="text" id="search" placeholder="Search library...">
                 <button type="button" id="clearSearch">clear</button>
             </form>
-            <button id="disconnectBT" class="fa-solid fa-gamepad fa-lg iconbtn"></button> 
+            <button id="disconnectBT" class="fa-solid fa-gamepad fa-lg iconbtn"></button>
             <button id="add" class="fa-solid fa-plus fa-lg iconbtn"></button>
             <button id="filter" class="fa-solid fa-filter fa-lg iconbtn"></button>
             <button id="multiSelect" class="fa-solid fa-lg fa-list-check iconbtn"></button>
@@ -37,6 +38,18 @@
                     <input type="checkbox" id="startWithPc">
                     <span class="slider round"></span>
                 </label>
+            </div>
+            <div>
+                <label for="themeSelector" class="setting-label">Select Theme</label>
+                <div class="select-wrapper">
+                    <select id="themeSelector" class="setting-select">
+                        <option value="Dark">Dark</option>
+                        <option value="Light">Light</option>
+                    </select>
+                </div>
+                <div class="controls">
+                    <button id="openThemesFolder" class="setting-button">Open Themes Folder</button>
+                </div>
             </div>
             <hr>
             <h1 class="center">App Icons</h1>
@@ -101,7 +114,7 @@
             <button id="closeMessage" class="fa-solid fa-xmark fa-lg iconbtn"></button>
         </div>
         <hr>
-        <div id="message" style="color: white; line-height: 1.6;"></div>
+        <div id="message" style="color: var(--body-text-color); line-height: 1.6;"></div>
     </dialog>
     <dialog class="categories-dialog" id="categoriesManager">
         <div class="title-bar">

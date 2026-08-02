@@ -31,6 +31,32 @@ let settingsFile = {};
 
 let returnSource = "";
 
+
+let themes = {};
+
+function remakeThemes(internalThemesPath, externalThemesPath) {
+    const internalThemes = fs.readdirSync(internalThemesPath);
+    for (let i = 0; i < internalThemes.length; i++) {
+        themes[internalThemes[i].replace(".css", "")] = `themes/${internalThemes[i]}`
+    }
+
+    const externalThemes = fs.readdirSync(externalThemesPath);
+    const cssFiles = externalThemes.filter(file => file.endsWith(".css"));
+
+    for (let i = 0; i < cssFiles.length; i++) {
+        const externalTheme = cssFiles[i];
+        themes[externalTheme.replace(".css", "")] = `${path.join(externalThemesPath, externalTheme)}`;
+    }
+}
+
+/**
+ * 
+ * @param {string} themeName 
+ */
+function setTheme(themeName) {
+    document.getElementById('themeSheet').href = themes[themeName];
+}
+
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
     tempPath = path.join(savePath, "temp");
@@ -53,6 +79,11 @@ ipcRenderer.on("savePath", (ev, args) => {
         messageHolder.appendChild(messageText);
         infoMessage.showModal();
     }
+
+    const internalThemespath = path.join(__dirname, "themes");
+    const externalThemesPath = path.join(savePath, "themes");
+    remakeThemes(internalThemespath, externalThemesPath);
+    setTheme(settingsFile.theme);
 });
 
 if (savePath === "") {

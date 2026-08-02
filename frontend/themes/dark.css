@@ -1,0 +1,115 @@
+:root {
+    --body-bg-color: rgb(18, 18, 18);
+    --body-text-color: whitesmoke;
+    --hr-color: #0000009e;
+
+    --appDiv-hover-bg: rgba(229, 226, 226, 0.27);
+    --appDiv-bottom-button-hover-bg: rgba(182, 182, 182, 0.633);
+    --appDiv-bottom-button-color: white;
+
+    --tooltip-bg: #ffffff;
+    --tooltip-text: #141414;
+    --tooltip-border: #000000;
+
+    --search-input-text: black;
+    --search-input-bg: white;
+    --search-button-bg: white;
+    --search-button-border: white;
+    --search-button-text: #374151;
+    --search-button-hover-text: rgb(156 163 175);
+    --search-button-focus-active: gray;
+
+    --iconbtn-color: white;
+    --iconbtn-hover: rgb(162, 162, 162);
+    --iconbtn-active: rgb(122, 122, 122);
+
+    --settings-input-disabled-bg: white;
+    --settings-input-disabled-text: black;
+
+    --utilaction-button-bg: rgb(255, 255, 255);
+    --utilaction-button-text: rgb(0, 0, 0);
+    --utilaction-button-hover-text: rgb(92, 92, 92);
+
+    --controls-button-bg: rgb(157, 157, 157);
+    --controls-button-text: rgb(29, 29, 29);
+    --controls-button-hover-bg: rgb(184, 184, 184);
+    --controls-button-hover-text: rgb(29, 29, 29);
+    --controls-button-active-bg: rgb(132, 132, 132);
+    --controls-button-active-text: rgb(215, 215, 215);
+
+    --switch-slider-bg: #ccc;
+    --switch-slider-before-bg: white;
+    --switch-checked-bg: #2196f3;
+
+    --movemodal-bg: #181717;
+    --movemodal-boder: #404040d1;
+    --movemodal-text: #ececec;
+    --movemodal-backdrop: #22212166;
+    --movemodal-movebutton-bg: #ffffff;
+    --movemodal-movebutton-text: #111827;
+    --movemodal-movebutton-textdecoration: #d1d5db;
+    --movemodal-movebutton-hover-bg: rgb(237, 237, 237);
+
+    --movemodal-head-button-text: #f5f5f5;
+    --movemodal-head-button-hover-text: rgb(174, 174, 174);
+
+    --categories-dialog-bg: #181717;
+    --categories-dialog-box-shadow: rgba(232, 232, 232, 0.234);
+    --categories-dialog-backdrop: #00000050;
+
+    --custom-checkbox-label: whitesmoke;
+    --custom-checkbox-checkmark-bg: #eee;
+    --custom-checkbox-checkmark-border: #ccc;
+    --custom-ckeckbox-checked-checkmark-bg: #4caf50;
+    --custom-ckeckbox-checked-checkmark-border: #4caf50;
+    --custom-ckeckbox-ckeckmark-after-border: white;
+
+    --title-bar-h3-color: whitesmoke;
+
+    /* context menu also applies to submenues */
+    --context-menu-bg: rgb(35, 35, 35);
+    --context-menu-border: rgb(20, 20, 20);
+    --context-menu-box-shadow: rgba(0, 0, 0, 0.2);
+    --context-menu-li-hover-bg: rgb(40, 40, 40);
+    --context-menu-checkbox-label-text: whitesmoke;
+    --context-menu-checkbox-check-border: white;
+
+    /* This is only used on one button */
+    --active-item-color: #4caf50;
+    --active-item-hover-color: #347636;
+    --active-item-active-color: #225224;
+
+    /* Shouldn't be changed because it sits on the app images 
+    only change for hyper custon themes */
+    --app-checkbox-border-color: #555;
+    --app-checkbox-checked-bg: #4caf50;
+
+    /* Appears ontop on the app image and holds the apps categories as a list */
+    --app-category-overlay-bg: rgba(0, 0, 0, 0.7);
+    --app-category-overlay-text: #fff;
+
+    --controller-info-bg: #141414;
+    --controller-info-text: #ffffff;
+
+    --scrollbar-track: #292929;
+    --scrollbar-thumb: #888;
+    --scrollbar-thumb-hover: #555;
+
+    --ms-button-text: #cecece;
+    --ms-button-hover-text: white;
+    --ms-button-hover-bg: rgba(255, 255, 255, 0.20);
+    --ms-hr-color: #393939;
+    --ms-p-border: white;
+    --ms-p-hover: rgb(51, 51, 51);
+
+    --add-util-action-input-border: rgb(216, 216, 216);
+    --add-util-action-input-bg: rgb(68, 68, 68);
+    --add-util-action-input-text: whitesmoke;
+    --add-util-action-button-text: rgb(207, 207, 207);
+    --add-util-action-button-inactive: #a20101;
+    --add-util-action-button-hover: rgb(240, 240, 240);
+    --add-util-action-button-inactive-hover: #e50000;
+
+    --image-search-disabled: rgba(239, 239, 239, 0.3);
+    --image-search-diabled-text: white;
+}

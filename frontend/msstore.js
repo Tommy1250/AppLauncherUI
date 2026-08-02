@@ -113,7 +113,7 @@ function makeGrid() {
 
 function filterGrid(query) {
     appsGrid.innerHTML = "";
-    if(query === "")
+    if (query === "")
         return makeGrid()
     for (let i = 0; i < Object.keys(cacheFile).length; i++) {
         const appKey = Object.keys(cacheFile)[i];
@@ -143,9 +143,42 @@ searchbar.oninput = () => {
     filterGrid(searchbar.value);
 };
 
+let themes = {};
+
+function remakeThemes(internalThemesPath, externalThemesPath) {
+    const internalThemes = fs.readdirSync(internalThemesPath);
+    for (let i = 0; i < internalThemes.length; i++) {
+        themes[internalThemes[i].replace(".css", "")] = `themes/${internalThemes[i]}`
+    }
+
+    const externalThemes = fs.readdirSync(externalThemesPath);
+    const cssFiles = externalThemes.filter(file => file.endsWith(".css"));
+
+    for (let i = 0; i < cssFiles.length; i++) {
+        const externalTheme = cssFiles[i];
+        themes[externalTheme.replace(".css", "")] = `${path.join(externalThemesPath, externalTheme)}`;
+    }
+}
+
+/**
+ * 
+ * @param {string} themeName 
+ */
+function setTheme(themeName) {
+    document.getElementById('themeSheet').href = themes[themeName];
+}
+
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
     cachePath = path.join(savePath, "mscache.json");
+    const settingsFile = JSON.parse(
+        fs.readFileSync(path.join(savePath, "settings.json"), "utf-8")
+    );
+
+    const internalThemespath = path.join(__dirname, "themes");
+    const externalThemesPath = path.join(savePath, "themes");
+    remakeThemes(internalThemespath, externalThemesPath);
+    setTheme(settingsFile.theme);
 
     if (fs.existsSync(cachePath)) {
         cacheFile = JSON.parse(fs.readFileSync(cachePath, "utf-8"));

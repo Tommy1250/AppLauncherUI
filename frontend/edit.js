@@ -1,7 +1,7 @@
 const { ipcRenderer, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
-const {readShortcut} = require("./functions/appAddUtil");
+const { readShortcut } = require("./functions/appAddUtil");
 
 const appImg = document.getElementById("appImg");
 const imageSearchButton = document.getElementById("imageSearch");
@@ -41,12 +41,46 @@ let newImagePath = "";
 let hasImage = false;
 let shellMode = false;
 
+let themes = {};
+
+function remakeThemes(internalThemesPath, externalThemesPath) {
+    const internalThemes = fs.readdirSync(internalThemesPath);
+    for (let i = 0; i < internalThemes.length; i++) {
+        themes[internalThemes[i].replace(".css", "")] = `themes/${internalThemes[i]}`
+    }
+
+    const externalThemes = fs.readdirSync(externalThemesPath);
+    const cssFiles = externalThemes.filter(file => file.endsWith(".css"));
+
+    for (let i = 0; i < cssFiles.length; i++) {
+        const externalTheme = cssFiles[i];
+        themes[externalTheme.replace(".css", "")] = `${path.join(externalThemesPath, externalTheme)}`;
+    }
+}
+
+/**
+ * 
+ * @param {string} themeName 
+ */
+function setTheme(themeName) {
+    document.getElementById('themeSheet').href = themes[themeName];
+}
+
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
     console.log(savePath);
     shortcutsFile = path.join(savePath, "shortcuts.json");
     imagesPath = path.join(savePath, "images");
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
+
+    const settingsFile = JSON.parse(
+        fs.readFileSync(path.join(savePath, "settings.json"), "utf-8")
+    );
+
+    const internalThemespath = path.join(__dirname, "themes");
+    const externalThemesPath = path.join(savePath, "themes");
+    remakeThemes(internalThemespath, externalThemesPath);
+    setTheme(settingsFile.theme);
 });
 
 ipcRenderer.on("appname", (ev, args) => {
@@ -151,7 +185,7 @@ selectFileButton.onclick = () => {
     else ipcRenderer.send("cooseDirectory");
 };
 
-ipcRenderer.on("execSelect", async(ev, fileLocation) => {
+ipcRenderer.on("execSelect", async (ev, fileLocation) => {
     if (fileLocation.endsWith(".lnk") || fileLocation.endsWith(".url")) {
         const shortcutData = await readShortcut(path.basename(fileLocation), fileLocation);
         appPathInput.value = shortcutData.location;

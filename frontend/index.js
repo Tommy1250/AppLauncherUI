@@ -11,6 +11,7 @@ let savePath = "";
 let imagesPath = "";
 let orderPath = "";
 let categoriesPath = "";
+let externalThemesPath = "";
 
 let managedAppId = "";
 let managedAppIndex = 0;
@@ -25,7 +26,7 @@ let rearrangingItem = false;
 let saveFile = {};
 
 /**
- * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean}}
+ * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean, theme: string}}
  */
 let settingsFile = {};
 
@@ -37,7 +38,15 @@ let orderFile = [];
 /**
  * @type {{selected: string[], categories: string[]}}
  */
-let categoriesFile = {}
+let categoriesFile = {};
+
+/**
+ * @type {{[themeName: string]: string}}
+ */
+let themes = {
+    "dark": "themes/dark.css",
+    "light": "themes/light.css"
+}
 
 const menu = document.getElementById('contextMenu');
 const menuBackground = document.getElementById("background");
@@ -75,6 +84,12 @@ const settingsSaveBtn = document.getElementById("save");
 const goToSteamGirdBtn = document.getElementById("goToSteamGirdBtn");
 const steamGridTokenInput = document.getElementById("steamGridToken");
 const startWithPcCheckBox = document.getElementById("startWithPc");
+/**
+ * @type {HTMLSelectElement}
+ */
+const themeSelect = document.getElementById("themeSelector");
+const openThemesFolderButton = document.getElementById("openThemesFolder");
+const themeSelectorTempelate = document.getElementById("themeSelectorTempelate");
 
 const serverCheckBox = document.getElementById("enableServer");
 const serverPortInput = document.getElementById("serverPort");
@@ -114,11 +129,49 @@ let currentScroll = 0;
 
 let moveItem = -10;
 
+/**
+ * 
+ * @param {string} themeName 
+ */
+function setTheme(themeName) {
+    document.getElementById('themeSheet').href = themes[themeName];
+}
+
+function remakeThemes() {
+    for (const key in themes) {
+        delete themes[key];
+    }
+
+    const internalThemes = fs.readdirSync(path.join(__dirname, "themes"));
+    for (let i = 0; i < internalThemes.length; i++) {
+        themes[internalThemes[i].replace(".css", "")] = `themes/${internalThemes[i]}`
+    }
+
+    const externalThemes = fs.readdirSync(externalThemesPath);
+    const cssFiles = externalThemes.filter(file => file.endsWith(".css"));
+
+    for (let i = 0; i < cssFiles.length; i++) {
+        const externalTheme = cssFiles[i];
+        themes[externalTheme.replace(".css", "")] = `${path.join(externalThemesPath, externalTheme)}`;
+    }
+
+    themeSelect.innerHTML = "";
+    for (let i = 0; i < Object.keys(themes).length; i++) {
+        const theme = Object.keys(themes)[i];
+        const option = document.createElement("option");
+        option.value = theme;
+        option.innerText = theme;
+
+        themeSelect.appendChild(option);
+    }
+}
+
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
     console.log(savePath);
     shortcutsFile = path.join(savePath, "shortcuts.json");
     imagesPath = path.join(savePath, "images");
+    externalThemesPath = path.join(savePath, "themes");
     orderPath = path.join(savePath, "order.json");
     categoriesPath = path.join(savePath, "categories.json");
 
@@ -150,6 +203,47 @@ ipcRenderer.on("savePath", (ev, args) => {
         fs.mkdirSync(imagesPath);
     }
 
+    if (!fs.existsSync(externalThemesPath)) {
+        fs.mkdirSync(externalThemesPath);
+    }
+
+    remakeThemes();
+
+    const watcher = fs.watch(externalThemesPath, (eventType, filename) => {
+        console.log(eventType, filename);
+        if (eventType === "rename") {
+            remakeThemes();
+            if (Object.keys(themes).includes(settingsFile.theme)) {
+                for (let i = 0; i < themeSelect.options.length; i++) {
+                    const option = themeSelect.options[i];
+                    if (option.innerText === settingsFile.theme) {
+                        themeSelect.selectedIndex = option.index;
+                        break;
+                    }
+                }
+            } else {
+                setTheme("dark");
+                settingsFile.theme = "dark";
+                ipcRenderer.send("updateSave", settingsFile);
+            }
+        }
+    });
+
+    if (Object.keys(themes).includes(settingsFile.theme)) {
+        setTheme(settingsFile.theme);
+        for (let i = 0; i < themeSelect.options.length; i++) {
+            const option = themeSelect.options[i];
+            if (option.innerText === settingsFile.theme) {
+                themeSelect.selectedIndex = option.index;
+                break;
+            }
+        }
+    } else {
+        setTheme("dark");
+        settingsFile.theme = "dark";
+        ipcRenderer.send("updateSave", settingsFile);
+    }
+
     if (!fs.existsSync(path.join(savePath, "notFirstTime.txt"))) {
         fs.writeFileSync(path.join(savePath, "notFirstTime.txt"), "This is not the first time the user opens the app")
 
@@ -173,6 +267,15 @@ ipcRenderer.on("savePath", (ev, args) => {
         infoMessage.showModal();
     }
 });
+
+openThemesFolderButton.onclick = () => {
+    shell.openExternal(externalThemesPath);
+}
+
+themeSelect.onchange = () => {
+    let selectedTheme = themeSelect.options[themeSelect.selectedIndex].value;
+    setTheme(selectedTheme);
+}
 
 if (shortcutsFile === "") {
     ipcRenderer.send("getSavePath");
@@ -311,7 +414,7 @@ function editSaveObj(fileName, location, type, args = null, shellMode = null) {
         };
     }
 
-    if(shellMode)
+    if (shellMode)
         saveFile[fileName].shellMode = shellMode
 
     if (!orderFile.includes(fileName)) orderFile.push(fileName);
@@ -1081,6 +1184,14 @@ settingsCancelBtn.onclick = () => {
     serverCheckBox.checked = settingsFile.enableServer;
     serverPortInput.value = settingsFile.serverPort;
     serverPassInput.value = settingsFile.serverPassword;
+    setTheme(settingsFile.theme);
+    for (let i = 0; i < themeSelect.options.length; i++) {
+        const option = themeSelect.options[i];
+        if (option.value === settingsFile.theme) {
+            themeSelect.selectedIndex = i;
+            break;
+        }
+    }
 };
 
 goToSteamGirdBtn.onclick = () => {
@@ -1109,11 +1220,11 @@ showServerPasswordButton.onclick = () => {
  * @param {HTMLButtonElement} button 
  */
 function toggleVisibilityInput(input, button) {
-    if(input.type === 'password') {
+    if (input.type === 'password') {
         input.type = "text";
         button.classList.remove("fa-eye-slash");
         button.classList.add("fa-eye");
-    }else{
+    } else {
         input.type = "password";
         button.classList.remove("fa-eye");
         button.classList.add("fa-eye-slash");
@@ -1123,12 +1234,13 @@ function toggleVisibilityInput(input, button) {
 settingsSaveBtn.onclick = () => {
     if (serverPortInput.value === "")
         return serverPortInput.value = settingsFile.serverPort
-    
+
     settingsFile.startWithPc = startWithPcCheckBox.checked;
     settingsFile.steamGridToken = steamGridTokenInput.value;
     settingsFile.enableServer = serverCheckBox.checked;
     settingsFile.serverPort = serverPortInput.value;
     settingsFile.serverPassword = serverPassInput.value;
+    settingsFile.theme = themeSelect.options[themeSelect.selectedIndex].value;
 
     mainDiv.style.display = "grid";
     settingsDiv.style.display = "none";

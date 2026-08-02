@@ -52,6 +52,31 @@ let imageUpdated = false;
 let newImagePath = "";
 let shellMode = false;
 
+let themes = {};
+
+function remakeThemes(internalThemesPath, externalThemesPath) {
+    const internalThemes = fs.readdirSync(internalThemesPath);
+    for (let i = 0; i < internalThemes.length; i++) {
+        themes[internalThemes[i].replace(".css", "")] = `themes/${internalThemes[i]}`
+    }
+
+    const externalThemes = fs.readdirSync(externalThemesPath);
+    const cssFiles = externalThemes.filter(file => file.endsWith(".css"));
+
+    for (let i = 0; i < cssFiles.length; i++) {
+        const externalTheme = cssFiles[i];
+        themes[externalTheme.replace(".css", "")] = `${path.join(externalThemesPath, externalTheme)}`;
+    }
+}
+
+/**
+ * 
+ * @param {string} themeName 
+ */
+function setTheme(themeName) {
+    document.getElementById('themeSheet').href = themes[themeName];
+}
+
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
     console.log(savePath);
@@ -62,6 +87,15 @@ ipcRenderer.on("savePath", (ev, args) => {
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
     orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
     categoriesFile = JSON.parse(fs.readFileSync(categoriesPath, "utf-8"));
+
+    const settingsFile = JSON.parse(
+        fs.readFileSync(path.join(savePath, "settings.json"), "utf-8")
+    );
+
+    const internalThemespath = path.join(__dirname, "themes");
+    const externalThemesPath = path.join(savePath, "themes");
+    remakeThemes(internalThemespath, externalThemesPath);
+    setTheme(settingsFile.theme);
 });
 
 if (shortcutsFile === "") {

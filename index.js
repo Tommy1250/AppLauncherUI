@@ -110,7 +110,7 @@ exports.shortcutsPath = shortcutsPath;
 let latestLaunchedGames = JSON.parse(fs.readFileSync(latestGamesPath, "utf-8"));
 
 /**
- * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean}}
+ * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean, theme: string}}
  */
 let settingsFile = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
 exports.settingsFile = settingsFile;
@@ -126,6 +126,11 @@ if (!settingsFile.serverPort) {
 
 if (settingsFile.dontWarnShell === undefined) {
     settingsFile.dontWarnShell = false;
+    fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
+}
+
+if (settingsFile.theme === undefined) {
+    settingsFile.theme = "dark";
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 }
 

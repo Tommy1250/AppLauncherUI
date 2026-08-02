@@ -1,11 +1,26 @@
+:root {
+    --body-bg-color: rgb(18, 18, 18);
+    --body-text-color: whitesmoke;
+    --ms-button-text: #cecece;
+    --ms-button-hover-text: white;
+    --ms-button-hover-bg: rgba(255, 255, 255, 0.20);
+    --ms-hr-color: #393939;
+    --ms-p-border: white;
+    --ms-p-hover: rgb(51, 51, 51);
+
+    --scrollbar-track: #292929;
+    --scrollbar-thumb: #888;
+    --scrollbar-thumb-hover: #555;
+}
+
 * {
     box-sizing: border-box;
 }
 
 html,
 body {
-    background-color: rgb(18, 18, 18);
-    color: whitesmoke;
+    background-color: var(--body-bg-color);
+    color: var(--body-text-color);
     font-family: Arial, Helvetica, sans-serif;
     height: 100%;
     overflow: hidden;
@@ -42,7 +57,7 @@ button {
     padding-bottom: 8px;
     width: 98%;
     font-size: 17px;
-    color: #cecece;
+    color: var(--ms-button-text);
     border-radius: 5px;
     background: none;
     border: none;
@@ -50,8 +65,8 @@ button {
 }
 
 button:hover {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.20);
+    color: var(--ms-button-hover-text);
+    background-color: var(--ms-button-hover-bg);
 }
 
 #refresh {
@@ -69,12 +84,12 @@ button:hover {
 }
 
 hr {
-    border-color: #393939;
+    border-color: var(--ms-hr-color);
     width: 90%;
 }
 
 p {
-    border: 1px white solid;
+    border: 1px var(--ms-p-border) solid;
     padding: 5px;
     height: fit-content;
     border-radius: 5px;
@@ -83,7 +98,7 @@ p {
 }
 
 p:hover {
-    background-color: rgb(51, 51, 51);
+    background-color: var(--ms-p-hover);
 }
 
 ::-webkit-scrollbar {
@@ -93,19 +108,19 @@ p:hover {
 
 /* Track */
 ::-webkit-scrollbar-track {
-    background: #292929;
+    background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-track-piece {
-    background: #292929;
+    background: var(--scrollbar-track);
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-    background: #888;
+    background: var(--scrollbar-thumb);
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: var(--scrollbar-thumb-hover);
 }
