@@ -210,7 +210,6 @@ ipcRenderer.on("savePath", (ev, args) => {
     remakeThemes();
 
     const watcher = fs.watch(externalThemesPath, (eventType, filename) => {
-        console.log(eventType, filename);
         if (eventType === "rename") {
             remakeThemes();
             if (Object.keys(themes).includes(settingsFile.theme)) {
