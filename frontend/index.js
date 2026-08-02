@@ -89,7 +89,7 @@ const startWithPcCheckBox = document.getElementById("startWithPc");
  */
 const themeSelect = document.getElementById("themeSelector");
 const openThemesFolderButton = document.getElementById("openThemesFolder");
-const themeSelectorTempelate = document.getElementById("themeSelectorTempelate");
+const openThemesRepo = document.getElementById("openThemesRepo");
 
 const serverCheckBox = document.getElementById("enableServer");
 const serverPortInput = document.getElementById("serverPort");
@@ -269,7 +269,11 @@ ipcRenderer.on("savePath", (ev, args) => {
 });
 
 openThemesFolderButton.onclick = () => {
-    shell.openExternal(externalThemesPath);
+    shell.openPath(externalThemesPath);
+}
+
+openThemesRepo.onclick = () => {
+    shell.openExternal("https://github.com/Tommy1250/ApplauncherUIThemes");
 }
 
 themeSelect.onchange = () => {
