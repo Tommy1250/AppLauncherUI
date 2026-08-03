@@ -13,6 +13,7 @@ const submitSearch = document.getElementById("submitSearch");
 const infoMessage = document.getElementById("infoMessage");
 const messageHolder = document.getElementById("message");
 const closeMessage = document.getElementById("closeMessage");
+const infoMessageTitle = document.querySelector("h3");
 
 const loadMoreButton = document.getElementById("loadMore");
 const pageNumberHolder = document.getElementById("pageNumber");
@@ -109,10 +110,33 @@ searchForm.addEventListener("submit", async (ev) => {
         return appGrid.innerHTML = "";
     }
 
-    currentGameId = searchResults.data[0].id;
+    // currentGameId = searchResults.data[0].id;
     page = 0;
 
-    const banners = await getBanners(searchResults.data[0].id, settingsFile.steamGridToken)
+    messageHolder.innerHTML = "";
+    for (let i = 0; i < searchResults.data.length; i++) {
+        const searchResult = searchResults.data[i];
+        const date = new Date(searchResult.release_date * 1000).getFullYear();
+        const gameName = searchResult.name;
+        const gameId = searchResult.id;
+
+        const gameButton = document.createElement("button");
+        gameButton.innerText = `${gameName} (${searchResult.release_date ? date : "Not released"})`;
+        gameButton.onclick = () => {
+            currentGameId = gameId
+            commitSearch(gameId);
+            infoMessage.close();
+            infoMessageTitle.innerText = "info";
+        }
+        messageHolder.appendChild(gameButton);
+    }
+
+    infoMessageTitle.innerText = "Search Results";
+    infoMessage.showModal();
+})
+
+async function commitSearch(gameId) {
+    const banners = await getBanners(gameId, settingsFile.steamGridToken)
 
     if (!banners.success || banners.data.length === 0) {
         messageHolder.innerHTML = "";
@@ -139,7 +163,7 @@ searchForm.addEventListener("submit", async (ev) => {
     } else {
         loadMoreButton.removeAttribute("disabled");
     }
-})
+}
 
 loadMoreButton.onclick = async () => {
     if (currentGameId === 0) return;
@@ -289,5 +313,6 @@ clearSearch.onclick = () => {
 }
 
 closeMessage.onclick = () => {
+    infoMessageTitle.innerText = "info";
     infoMessage.close();
 }
