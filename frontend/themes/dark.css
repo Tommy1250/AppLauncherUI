@@ -110,6 +110,6 @@
     --add-util-action-button-hover: rgb(240, 240, 240);
     --add-util-action-button-inactive-hover: #e50000;
 
-    --image-search-disabled: rgba(239, 239, 239, 0.3);
+    --image-clear-search-disabled: rgba(239, 239, 239, 0.3);
     --image-search-diabled-text: white;
 }
