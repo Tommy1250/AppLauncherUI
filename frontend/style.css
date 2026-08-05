@@ -23,6 +23,8 @@
     --iconbtn-hover: rgb(162, 162, 162);
     --iconbtn-active: rgb(122, 122, 122);
 
+    --settings-input-bg: white;
+    --settings-input-text: black;
     --settings-input-disabled-bg: white;
     --settings-input-disabled-text: black;
 
@@ -96,7 +98,7 @@
     --scrollbar-thumb-hover: #555;
 
     --image-clear-search-disabled: rgba(239, 239, 239, 0.3);
-    --image-search-diabled-text: white;
+    --image-search-disabled-text: white;
 }
 
 * {
@@ -335,6 +337,8 @@ body {
     font-weight: 600;
     border-radius: 5px;
     border: none;
+    background-color: var(--settings-input-bg);
+    color: var(--settings-input-text);
 }
 
 .setting-input:disabled {
@@ -369,8 +373,8 @@ body {
     font-weight: 600;
     border-radius: 5px;
     border: none;
-    background-color: white;
-    color: black;
+    background-color: var(--settings-input-bg);
+    color: var(--settings-input-text);
     padding: 0 30px 0 10px;
     cursor: pointer;
     appearance: none;
