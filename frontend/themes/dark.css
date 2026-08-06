@@ -23,6 +23,8 @@
     --iconbtn-hover: rgb(162, 162, 162);
     --iconbtn-active: rgb(122, 122, 122);
 
+    --settings-input-bg: white;
+    --settings-input-text: black;
     --settings-input-disabled-bg: white;
     --settings-input-disabled-text: black;
 

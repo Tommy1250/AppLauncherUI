@@ -382,18 +382,14 @@ body {
     transition: box-shadow 0.15s ease;
 }
 
-.setting-select:hover {
-    box-shadow: 0 0 0 1px var(--search-button-focus-active);
-}
-
 .setting-select:focus {
+    border: none;
     outline: none;
-    box-shadow: 0 0 0 2px var(--search-button-focus-active);
 }
 
 .setting-select option {
-    background-color: white;
-    color: black;
+    background-color: var(--settings-input-bg);
+    color: var(--settings-input-text);
     font-weight: 600;
 }
 
