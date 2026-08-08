@@ -40,21 +40,76 @@ function launchApp(appConfig, theWindow) {
             command = process.env.ComSpec || "cmd.exe";
             spawnArgs = ["/c", location, ...args];
         }
-        
+
         if (appConfig.shellMode) {
             options.shell = true;
         }
 
+        let isError = false;
+
         const child = spawn(command, spawnArgs, options);
+
+        child.once("error", (err) => {
+            if (
+                process.platform === "win32" &&
+                !appConfig.shellMode &&
+                (err.code === "EPERM" || err.code === "UNKNOWN" || err.code === "EACCES")
+            ) {
+                // Likely ERROR_ELEVATION_REQUIRED — exe's manifest demands admin.
+                // Retry through UAC instead of failing outright.
+                launchElevated(location, args, cwd);
+            } else {
+                isError = true;
+                dialog.showErrorBox(
+                    "Failed to launch",
+                    `Could not start "${location}": ${err.message}`
+                );
+            }
+        });
 
         child.unref();
 
-        if (theWindow) {
+        if (theWindow && !isError) {
             theWindow.close();
         }
     } else if (appConfig.type === "dir") {
         shell.openPath(appConfig.location);
     }
+}
+
+/**
+ * Launches an exe elevated via UAC, without elevating the launcher itself.
+ * @param {string} location
+ * @param {string[]} args
+ * @param {string} cwd
+ */
+function launchElevated(location, args, cwd) {
+    const escape = (s) => s.replace(/'/g, "''");
+
+    const argList = args.length
+        ? `-ArgumentList @(${args.map((a) => `'${escape(a)}'`).join(",")}) `
+        : "";
+
+    const psCommand =
+        `Start-Process -FilePath '${escape(location)}' ` +
+        `-WorkingDirectory '${escape(cwd)}' ` +
+        argList +
+        `-Verb RunAs`;
+
+    const elevated = spawn(
+        "powershell.exe",
+        ["-NoProfile", "-WindowStyle", "Hidden", "-Command", psCommand],
+        { detached: true, stdio: "ignore", shell: true }
+    );
+
+    elevated.once("error", (err) => {
+        dialog.showErrorBox(
+            "Failed to launch as administrator",
+            `Could not start "${location}" elevated: ${err.message}`
+        );
+    });
+
+    elevated.unref();
 }
 
 module.exports = launchApp;
