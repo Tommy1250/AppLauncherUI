@@ -770,6 +770,8 @@ hr {
     min-width: 180px;
     border-radius: 10px;
     z-index: 1001;
+    overflow-y: auto;
+    max-height: 50dvh;
 }
 
 .checkbox-item {
@@ -878,10 +880,12 @@ hr {
     border-radius: 10px;
     font-size: 0.9em;
     z-index: 2;
-    pointer-events: none;
+    pointer-events: auto;
     height: fit-content;
     align-self: end;
     grid-area: stack;
+    max-height: 60%;
+    overflow: auto;
 }
 
 .controller {

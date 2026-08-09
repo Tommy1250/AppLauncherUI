@@ -563,7 +563,7 @@ function addItemToGrid(key, index, showCat = false) {
 
     if (showCat) {
         const catsList = document.createElement("ul");
-        if (saveFile[key].categories) {
+        if (saveFile[key].categories && saveFile[key].categories.length > 0) {
             for (let i = 0; i < saveFile[key].categories.length; i++) {
                 const itemcat = saveFile[key].categories[i];
                 const li = document.createElement("li");
@@ -577,6 +577,10 @@ function addItemToGrid(key, index, showCat = false) {
         }
 
         catsList.classList.add("cats-list");
+
+        catsList.onclick = () => {
+            appImg.click();
+        }
 
         // Grid stacking
         imageAndCatsHolder.style.display = "grid";
@@ -623,7 +627,10 @@ function addItemToGrid(key, index, showCat = false) {
 
     appName.onpointerenter = (event) => {
         tooltip.textContent = appName.innerText;
-        tooltip.style.left = event.clientX + "px";
+
+        const appNameRect = appName.getBoundingClientRect()
+
+        tooltip.style.left = appNameRect.x + "px";
         tooltip.style.top = event.clientY - 50 + "px";
         tooltip.style.display = "block";
     };
@@ -688,8 +695,8 @@ function showMenu(ev, appId, appIndex) {
 
             ipcRenderer.send("updateSaveMain");
 
-            if (searchBar.value !== "") search(searchBar.value);
-            else makeAppGrid(orderFile);
+            if (searchBar.value === "")
+                makeAppGrid(orderFile);
         }
 
         const span = document.createElement("span");
