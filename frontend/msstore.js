@@ -143,29 +143,12 @@ searchbar.oninput = () => {
     filterGrid(searchbar.value);
 };
 
-let themes = {};
-
-function remakeThemes(internalThemesPath, externalThemesPath) {
-    const internalThemes = fs.readdirSync(internalThemesPath);
-    for (let i = 0; i < internalThemes.length; i++) {
-        themes[internalThemes[i].replace(".css", "")] = `themes/${internalThemes[i]}`
-    }
-
-    const externalThemes = fs.readdirSync(externalThemesPath);
-    const cssFiles = externalThemes.filter(file => file.endsWith(".css"));
-
-    for (let i = 0; i < cssFiles.length; i++) {
-        const externalTheme = cssFiles[i];
-        themes[externalTheme.replace(".css", "")] = `${path.join(externalThemesPath, externalTheme)}`;
-    }
-}
-
 /**
  * 
  * @param {string} themeName 
  */
-function setTheme(themeName) {
-    document.getElementById('themeSheet').href = themes[themeName];
+function setThemePath(themePath) {
+    document.getElementById('themeSheet').href = themePath;
 }
 
 ipcRenderer.on("savePath", (ev, args) => {
@@ -177,8 +160,18 @@ ipcRenderer.on("savePath", (ev, args) => {
 
     const internalThemespath = path.join(__dirname, "themes");
     const externalThemesPath = path.join(savePath, "themes");
-    remakeThemes(internalThemespath, externalThemesPath);
-    setTheme(settingsFile.theme);
+
+    console.log(settingsFile.externalTheme, settingsFile.theme)
+
+    if (settingsFile.externalTheme) {
+        if (fs.existsSync(path.join(externalThemesPath, `${settingsFile.theme}.css`))) {
+            setThemePath(path.join(externalThemesPath, `${settingsFile.theme}.css`))
+        } else {
+            setThemePath("themes/dark.css");
+        }
+    } else {
+        setThemePath(`themes/${settingsFile.theme}.css`);
+    }
 
     if (fs.existsSync(cachePath)) {
         cacheFile = JSON.parse(fs.readFileSync(cachePath, "utf-8"));

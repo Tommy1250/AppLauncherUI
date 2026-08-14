@@ -26,7 +26,7 @@ let rearrangingItem = false;
 let saveFile = {};
 
 /**
- * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean, theme: string}}
+ * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean, theme: string, externalTheme: boolean}}
  */
 let settingsFile = {};
 
@@ -137,6 +137,14 @@ function setTheme(themeName) {
     document.getElementById('themeSheet').href = themes[themeName];
 }
 
+/**
+ * 
+ * @param {string} themeName 
+ */
+function setThemePath(themePath) {
+    document.getElementById('themeSheet').href = themePath;
+}
+
 function remakeThemes() {
     for (const key in themes) {
         delete themes[key];
@@ -161,6 +169,7 @@ function remakeThemes() {
         const option = document.createElement("option");
         option.value = theme;
         option.innerText = theme;
+        option.setAttribute("data-external", internalThemes.includes(`${theme}.css`) ? 0 : 1);
 
         themeSelect.appendChild(option);
     }
@@ -207,6 +216,19 @@ ipcRenderer.on("savePath", (ev, args) => {
         fs.mkdirSync(externalThemesPath);
     }
 
+    if (settingsFile.externalTheme) {
+        if (fs.existsSync(path.join(externalThemesPath, `${settingsFile.theme}.css`))) {
+            setThemePath(path.join(externalThemesPath, `${settingsFile.theme}.css`))
+        } else {
+            setThemePath("themes/dark.css");
+            settingsFile.theme = "dark";
+            settingsFile.externalTheme = true;
+            ipcRenderer.send("updateSave", settingsFile);
+        }
+    } else {
+        setThemePath(`themes/${settingsFile.theme}.css`);
+    }
+
     remakeThemes();
 
     const watcher = fs.watch(externalThemesPath, (eventType, filename) => {
@@ -223,13 +245,13 @@ ipcRenderer.on("savePath", (ev, args) => {
             } else {
                 setTheme("dark");
                 settingsFile.theme = "dark";
+                settingsFile.externalTheme = false;
                 ipcRenderer.send("updateSave", settingsFile);
             }
         }
     });
 
     if (Object.keys(themes).includes(settingsFile.theme)) {
-        setTheme(settingsFile.theme);
         for (let i = 0; i < themeSelect.options.length; i++) {
             const option = themeSelect.options[i];
             if (option.innerText === settingsFile.theme) {
@@ -237,10 +259,6 @@ ipcRenderer.on("savePath", (ev, args) => {
                 break;
             }
         }
-    } else {
-        setTheme("dark");
-        settingsFile.theme = "dark";
-        ipcRenderer.send("updateSave", settingsFile);
     }
 
     if (!fs.existsSync(path.join(savePath, "notFirstTime.txt"))) {
@@ -1251,6 +1269,7 @@ settingsSaveBtn.onclick = () => {
     settingsFile.serverPort = serverPortInput.value;
     settingsFile.serverPassword = serverPassInput.value;
     settingsFile.theme = themeSelect.options[themeSelect.selectedIndex].value;
+    settingsFile.externalTheme = Boolean(parseInt(themeSelect.options[themeSelect.selectedIndex].getAttribute("data-external")));
 
     mainDiv.style.display = "grid";
     settingsDiv.style.display = "none";

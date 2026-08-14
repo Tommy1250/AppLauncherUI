@@ -542,7 +542,7 @@ input:checked + .slider:before {
 }
 
 .showmove > #moveperm {
-    background-color: #ffffff;
+    background-color: var(--movemodal-movebutton-bg);
     border: 0;
     border-radius: 5px;
     box-sizing: border-box;
