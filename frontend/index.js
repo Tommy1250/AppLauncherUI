@@ -922,7 +922,7 @@ function focusItem() {
     appGrid.scrollBy({ behavior: "smooth", top: rect.top - 250 });
 
     previousApp.style.removeProperty("background-color");
-    app.style.backgroundColor = "#e5e2e245";
+    app.style.backgroundColor = "var(--appDiv-hover-bg)";
     previousItem = focusedItem;
     useMouse = false;
     removeCursor();
