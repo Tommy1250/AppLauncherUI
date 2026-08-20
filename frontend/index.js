@@ -837,6 +837,9 @@ function hideContextMenu() {
     contextMenuMultiSelect.style.display = "none";
     menuBackground.className = "hide";
     inOptionsMenu = false;
+    clearMenuFocus();
+    menuStack = [];
+    activeMenuRoot = null;
 }
 
 menuBackground.onclick = () => {
@@ -855,8 +858,19 @@ let focusedItem = 0;
 let previousItem = 0;
 let useMouse = true;
 let gridColumnCount = 0;
-let menuFocusedItem = 0;
-let subMenuFocusedItem = 0;
+
+/**
+ * The context-menu root currently open via controller nav (menu or contextMenuMultiSelect), or null.
+ * @type {HTMLElement|null}
+ */
+let activeMenuRoot = null;
+
+/**
+ * Stack of menu levels. Top of stack is whatever level the user is currently looking at -
+ * the root menu, or a submenu they've drilled into.
+ * @type {{ul: HTMLUListElement, items: HTMLLIElement[], index: number}[]}
+ */
+let menuStack = [];
 
 window.onresize = () => {
     computeGridSize();
@@ -885,8 +899,7 @@ const defaultHints = [
     { badge: "A", cls: "cn-a", label: "Start" },
     { badge: "B", cls: "cn-b", label: "Back" },
     { badge: "X", cls: "cn-x", label: "Options" },
-    { badge: "Y", cls: "cn-y", label: "Filters" },
-    { badge: "LB/RB", cls: "cn-shoulder", label: "Categories" },
+    { badge: "Y", cls: "cn-y", label: "Filters" }
 ];
 setHints(defaultHints);
 
@@ -1014,8 +1027,7 @@ function removeUseMouse() {
     if (!useMouse) {
         const previousApp = appGrid.childNodes.item(previousItem);
         previousApp.classList.remove("controller-focus");
-        if (previousMenuItem)
-            previousMenuItem.classList.remove("controller-focus");
+        clearMenuFocus();
         restoreCursor();
         useMouse = true;
     }
@@ -1089,23 +1101,35 @@ window.addEventListener(
         const now = performance.now();
 
         if (now - lastMoveAt > REPEAT_DELAY_MS) {
-            if (button.name === "DPAD_LEFT" && !inOptionsMenu) {
-                if (focusedItem === 0 || document.activeElement === searchBar)
-                    return;
-                lastMoveAt = now;
-                focusedItem--;
-                focusItem();
-                showBar();
-            } else if (button.name === "DPAD_RIGHT" && !inOptionsMenu) {
-                if (
-                    focusedItem === appGrid.childNodes.length - 1 ||
-                    document.activeElement === searchBar
-                )
-                    return;
-                lastMoveAt = now;
-                focusedItem++;
-                focusItem();
-                showBar();
+            if (button.name === "DPAD_LEFT") {
+                if (inOptionsMenu) {
+                    lastMoveAt = now;
+                    menuGoBack(); // steps into parent level; no-op with a beep-worthy bump at the root
+                    showBar();
+                } else {
+                    if (focusedItem === 0 || document.activeElement === searchBar)
+                        return;
+                    lastMoveAt = now;
+                    focusedItem--;
+                    focusItem();
+                    showBar();
+                }
+            } else if (button.name === "DPAD_RIGHT") {
+                if (inOptionsMenu) {
+                    lastMoveAt = now;
+                    menuEnterSubmenu(); // no-op if focused item has no submenu
+                    showBar();
+                } else {
+                    if (
+                        focusedItem === appGrid.childNodes.length - 1 ||
+                        document.activeElement === searchBar
+                    )
+                        return;
+                    lastMoveAt = now;
+                    focusedItem++;
+                    focusItem();
+                    showBar();
+                }
             } else if (button.name === "DPAD_UP") {
                 if (!inOptionsMenu) {
                     if (focusedItem - gridColumnCount <= 0) {
@@ -1116,11 +1140,7 @@ window.addEventListener(
 
                     focusItem();
                 } else {
-                    menuFocusedItem--;
-                    if (menuFocusedItem < 0)
-                        menuFocusedItem = 0
-
-                    focusMenuItem();
+                    menuNavigate(-1);
                 }
 
                 lastMoveAt = now;
@@ -1137,14 +1157,7 @@ window.addEventListener(
                     }
                     focusItem();
                 } else {
-                    const menuItems = menu.querySelector("ul").querySelectorAll("li");
-
-                    menuFocusedItem++;
-
-                    if (menuFocusedItem >= menuItems.length)
-                        menuFocusedItem = menuItems.length - 1;
-
-                    focusMenuItem();
+                    menuNavigate(1);
                 }
 
                 lastMoveAt = now;
@@ -1157,25 +1170,130 @@ window.addEventListener(
 );
 
 /**
- * @type {HTMLLIElement}
+ * Direct <li> children of a menu/submenu <ul>, skipping hidden ones
+ * (e.g. showInFolderButton when the app is a shortcut, not an exe).
+ * @param {HTMLUListElement} ul
+ * @returns {HTMLLIElement[]}
  */
-let previousMenuItem = null;
+function directMenuItems(ul) {
+    return Array.from(ul.children).filter(
+        (el) => el.tagName === "LI" && getComputedStyle(el).display !== "none"
+    );
+}
 
-function focusMenuItem(submenu = false) {
-    if (!submenu) {
-        const menuItems = menu.querySelector("ul:not(.submenu)").querySelectorAll("li");
-        console.log(menuItems)
-        if (previousMenuItem)
-            previousMenuItem.classList.remove("controller-focus");
-        menuItems.item(menuFocusedItem).classList.add("controller-focus");
-        previousMenuItem = menuItems.item(menuFocusedItem);
-    } else {
-        const menuItems = menu.querySelector("ul.submenu").querySelectorAll("li");
-        if (previousMenuItem)
-            previousMenuItem.classList.remove("controller-focus");
-        menuItems.item(menuFocusedItem).classList.add("controller-focus");
-        previousMenuItem = menuItems.item(menuFocusedItem);
+function clearMenuFocus() {
+    menuStack.forEach((level) =>
+        level.items.forEach((li) => li.classList.remove("controller-focus"))
+    );
+}
+
+/**
+ * Opens controller navigation on a context menu that's already been shown
+ * (i.e. call this right after showMenu()/showMenuMultiSelect()).
+ * @param {HTMLElement} rootEl menu or contextMenuMultiSelect
+ */
+function openControllerMenu(rootEl) {
+    activeMenuRoot = rootEl;
+    const rootUl = rootEl.querySelector(":scope > ul");
+    menuStack = [{ ul: rootUl, items: directMenuItems(rootUl), index: 0 }];
+    focusCurrentMenuLevel();
+}
+
+function focusCurrentMenuLevel() {
+    clearMenuFocus();
+    const level = menuStack[menuStack.length - 1];
+    if (!level || !level.items.length) return;
+    const li = level.items[level.index];
+    li.classList.add("controller-focus");
+    li.scrollIntoView({ block: "nearest" });
+}
+
+function menuNavigate(delta) {
+    const level = menuStack[menuStack.length - 1];
+    if (!level || !level.items.length) return;
+    const next = level.index + delta;
+    if (next < 0 || next >= level.items.length) return; // no wrap
+    level.index = next;
+    focusCurrentMenuLevel();
+}
+
+/**
+ * Enters the submenu of the currently focused item, if it has one.
+ * Mirrors the positioning logic from the existing mouseenter handler
+ * further up so keyboard/controller opens look identical to hover.
+ */
+function menuEnterSubmenu() {
+    const level = menuStack[menuStack.length - 1];
+    if (!level) return;
+    const li = level.items[level.index];
+    if (!li || !li.classList.contains("has-submenu")) return;
+
+    const submenu = li.querySelector(":scope > ul.submenu");
+    if (!submenu || directMenuItems(submenu).length === 0) return;
+
+    submenu.style.display = "block";
+    const submenuRect = submenu.getBoundingClientRect();
+
+    if (submenuRect.right > window.innerWidth) {
+        submenu.style.left = "auto";
+        submenu.style.right = "100%";
+        submenu.style.marginRight = "-1px";
+        submenu.style.marginLeft = "0px";
     }
+
+    if (submenuRect.bottom > window.innerHeight) {
+        submenu.style.top = "auto";
+        submenu.style.bottom = "-6px";
+    }
+
+    menuStack.push({ ul: submenu, items: directMenuItems(submenu), index: 0 });
+    focusCurrentMenuLevel();
+}
+
+/**
+ * Steps back one menu level.
+ * @returns {boolean} true if it stepped back into a parent level, false if it
+ *   was already at the root (caller should close the whole menu in that case).
+ */
+function menuGoBack() {
+    if (menuStack.length <= 1) return false;
+
+    const level = menuStack.pop();
+    level.ul.style.display = "none";
+    level.ul.style.left = "";
+    level.ul.style.right = "";
+    level.ul.style.top = "";
+    level.ul.style.bottom = "";
+    level.ul.style.marginLeft = "-1px";
+    level.ul.style.marginRight = "0px";
+
+    focusCurrentMenuLevel();
+    return true;
+}
+
+/**
+ * Activates whatever is currently focused: opens a submenu, toggles a
+ * category checkbox, or clicks a plain action (Start, Remove, etc.) -
+ * reusing the click/onchange handlers already wired up elsewhere.
+ */
+function menuSelectFocused() {
+    const level = menuStack[menuStack.length - 1];
+    if (!level) return;
+    const li = level.items[level.index];
+    if (!li) return;
+
+    if (li.classList.contains("has-submenu")) {
+        menuEnterSubmenu();
+        return;
+    }
+
+    const checkboxInput = li.querySelector("label.checkbox-item input");
+    if (checkboxInput) {
+        checkboxInput.click();
+        return;
+    }
+
+    li.click();
 }
 
 window.addEventListener("gc.analog.hold", (ev) => {
@@ -1243,6 +1361,38 @@ window.addEventListener("gc.analog.hold", (ev) => {
     }
 })
 
+/**
+ * Toggles a single app's multi-select checkbox state, mirroring appImg.onclick's
+ * multi-select branch so controller and mouse behave identically.
+ * @param {string} key
+ * @param {HTMLElement} appDiv
+ */
+function toggleAppSelection(key, appDiv) {
+    const checkbox = appDiv.querySelector(".app-checkbox");
+    if (selectedApps.includes(key)) {
+        selectedApps.splice(selectedApps.indexOf(key), 1);
+        if (checkbox) checkbox.checked = false;
+    } else {
+        selectedApps.push(key);
+        if (checkbox) checkbox.checked = true;
+    }
+}
+
+/**
+ * Selects an app without deselecting it if already selected - mirrors
+ * appDiv.oncontextmenu's multi-select branch (right-click always selects,
+ * never toggles off, before opening the multi-select context menu).
+ * @param {string} key
+ * @param {HTMLElement} appDiv
+ */
+function ensureAppSelected(key, appDiv) {
+    const checkbox = appDiv.querySelector(".app-checkbox");
+    if (!selectedApps.includes(key)) {
+        selectedApps.push(key);
+        if (checkbox) checkbox.checked = true;
+    }
+}
+
 window.addEventListener(
     "gc.button.press",
     function (event) {
@@ -1253,21 +1403,48 @@ window.addEventListener(
 
         if (button.name === "FACE_1") {
             if (!inOptionsMenu) {
-                ipcRenderer.send("launch", appId);
+                if (inMultiSelect) {
+                    const appDiv = appGrid.childNodes.item(focusedItem);
+                    toggleAppSelection(appId, appDiv);
+                } else {
+                    ipcRenderer.send("launch", appId);
+                }
             } else {
-                previousMenuItem.click();
+                menuSelectFocused();
             }
         } else if (button.name === "FACE_3") {
+            if (inOptionsMenu) return; // menu's already open, ignore
             const rect = appGrid.childNodes.item(focusedItem).getBoundingClientRect();
             // const appImgRect = appGrid.childNodes.item(focusedItem).querySelector("image").getBoundingClientRect();
-            showMenu({
+            const menuPosition = {
                 pageY: saveFile[appId].type === "exe" ? rect.top + 220 : rect.top + 185,
                 pageX: rect.left - 25
-            }, appId, focusedItem)
-            menuFocusedItem = 0;
-            focusMenuItem()
+            };
+
+            if (inMultiSelect) {
+                const appDiv = appGrid.childNodes.item(focusedItem);
+                ensureAppSelected(appId, appDiv);
+                showMenuMultiSelect(menuPosition);
+                openControllerMenu(contextMenuMultiSelect);
+            } else {
+                showMenu(menuPosition, appId, focusedItem);
+                openControllerMenu(menu);
+            }
         } else if (button.name === "FACE_2") {
-            hideContextMenu();
+            if (inOptionsMenu) {
+                if (!menuGoBack()) {
+                    hideContextMenu();
+                }
+            }
+
+            if (infoMessage.open) {
+                infoMessage.close();
+            }
+
+            if (movetomenu.open) {
+                movetomenu.close();
+                movetomenu.classList.remove("showmove");
+            }
         }
     }
 )
