@@ -672,6 +672,7 @@ function addItemToGrid(key, index, showCat = false) {
 function showMenu(ev, appId, appIndex) {
     managedAppId = appId;
     managedAppIndex = appIndex;
+    inOptionsMenu = true;
 
     const managedAppData = saveFile[appId];
 
@@ -740,6 +741,8 @@ function showMenu(ev, appId, appIndex) {
 function showMenuMultiSelect(ev) {
     categoriesAddHolderSubmenu.innerHTML = "";
     categoriesRemoveHolderSubmenu.innerHTML = "";
+
+    inOptionsMenu = true;
 
     for (let i = 0; i < categoriesFile.categories.length; i++) {
         const category = categoriesFile.categories[i];
@@ -833,6 +836,7 @@ function hideContextMenu() {
     menu.style.display = 'none';
     contextMenuMultiSelect.style.display = "none";
     menuBackground.className = "hide";
+    inOptionsMenu = false;
 }
 
 menuBackground.onclick = () => {
@@ -851,6 +855,8 @@ let focusedItem = 0;
 let previousItem = 0;
 let useMouse = true;
 let gridColumnCount = 0;
+let menuFocusedItem = 0;
+let subMenuFocusedItem = 0;
 
 window.onresize = () => {
     computeGridSize();
@@ -867,47 +873,110 @@ function computeGridSize() {
 
 computeGridSize();
 
-document.onkeydown = (ev) => {
-    if (ev.key === "ArrowLeft") {
-        if (focusedItem === 0 || document.activeElement === searchBar) return;
-        focusedItem--;
-        focusItem();
-    } else if (ev.key === "ArrowRight") {
-        if (
-            focusedItem === appGrid.childNodes.length - 1 ||
-            document.activeElement === searchBar
+const REPEAT_DELAY_MS = 220;
+let lastMoveAt = 0;
+let barTimeout = null;
+let inOptionsMenu = false;
+let deadZone = 0.6;
+
+const bar = ensureBar();
+
+const defaultHints = [
+    { badge: "A", cls: "cn-a", label: "Start" },
+    { badge: "B", cls: "cn-b", label: "Back" },
+    { badge: "X", cls: "cn-x", label: "Options" },
+    { badge: "Y", cls: "cn-y", label: "Filters" },
+    { badge: "LB/RB", cls: "cn-shoulder", label: "Categories" },
+];
+setHints(defaultHints);
+
+// ---------- setup ----------
+
+function ensureBar() {
+    let el = document.getElementById("controllerBar");
+    if (!el) {
+        el = document.createElement("div");
+        el.id = "controllerBar";
+        document.body.appendChild(el);
+    }
+    return el;
+}
+
+function setHints(hints) {
+    bar.innerHTML = hints
+        .map(
+            (h) =>
+                `<span class="cn-hint"><span class="cn-badge ${h.cls}">${h.badge}</span>${h.label}</span>`
         )
-            return;
-        focusedItem++;
-        focusItem();
-    } else if (ev.key === "ArrowUp") {
-        ev.preventDefault();
-        if (focusedItem - gridColumnCount <= 0) {
-            focusedItem = 0;
+        .join("");
+}
+
+
+function showBar() {
+    bar.classList.add("cn-visible");
+    clearTimeout(barTimeout);
+}
+
+function hideBarSoon() {
+    // fades out after a few seconds of no controller input, but stays
+    // up while actively navigating
+    clearTimeout(barTimeout);
+    barTimeout = setTimeout(() => {
+        bar.classList.remove("cn-visible");
+    }, 4000);
+}
+
+document.onkeydown = (ev) => {
+    const now = performance.now();
+
+    if (now - lastMoveAt > REPEAT_DELAY_MS) {
+        if (ev.key === "ArrowLeft" && !inOptionsMenu) {
+            if (focusedItem === 0 || document.activeElement === searchBar) return;
+            lastMoveAt = now;
+            focusedItem--;
             focusItem();
-        } else {
-            focusedItem -= gridColumnCount;
+        } else if (ev.key === "ArrowRight" && !inOptionsMenu) {
+            if (
+                focusedItem === appGrid.childNodes.length - 1 ||
+                document.activeElement === searchBar
+            )
+                return;
+            lastMoveAt = now;
+            focusedItem++;
             focusItem();
-        }
-    } else if (ev.key === "ArrowDown") {
-        ev.preventDefault();
-        if (focusedItem + gridColumnCount >= appGrid.childNodes.length - 1) {
-            focusedItem = appGrid.childNodes.length - 1;
-            focusItem();
-        } else {
-            focusedItem += gridColumnCount;
-            focusItem();
-        }
-    } else if (ev.key === "Enter") {
-        if (document.activeElement === toinput) return;
-        if (document.activeElement === categoryNameInput) return;
-        if (document.activeElement === searchBar) {
-            focusItem();
-        } else {
-            if (categoriesFile.selected.length === 0) {
-                ipcRenderer.send("launch", orderFile[focusedItem]);
+        } else if (ev.key === "ArrowUp") {
+            ev.preventDefault();
+            if (focusedItem - gridColumnCount <= 0) {
+                lastMoveAt = now;
+                focusedItem = 0;
+                focusItem();
             } else {
-                ipcRenderer.send("launch", filteredApps[focusedItem]);
+                lastMoveAt = now;
+                focusedItem -= gridColumnCount;
+                focusItem();
+            }
+        } else if (ev.key === "ArrowDown") {
+            ev.preventDefault();
+            if (focusedItem + gridColumnCount >= appGrid.childNodes.length - 1) {
+                lastMoveAt = now;
+                focusedItem = appGrid.childNodes.length - 1;
+                focusItem();
+            } else {
+                focusedItem += gridColumnCount;
+                focusItem();
+            }
+        } else if (ev.key === "Enter") {
+            if (document.activeElement === toinput) return;
+            if (document.activeElement === categoryNameInput) return;
+            if (document.activeElement === searchBar) {
+                lastMoveAt = now;
+                focusItem();
+            } else {
+                if (categoriesFile.selected.length === 0) {
+                    ipcRenderer.send("launch", orderFile[focusedItem]);
+                } else {
+                    ipcRenderer.send("launch", filteredApps[focusedItem]);
+                }
             }
         }
     }
@@ -918,16 +987,19 @@ function focusItem() {
     const app = appGrid.childNodes.item(focusedItem);
     const previousApp = appGrid.childNodes.item(previousItem);
 
+    if (useMouse)
+        document.addEventListener("pointermove", removeUseMouse, { once: true })
+
     const rect = app.getBoundingClientRect();
     appGrid.scrollBy({ behavior: "smooth", top: rect.top - 250 });
 
-    previousApp.style.removeProperty("background-color");
-    app.style.backgroundColor = "var(--appDiv-hover-bg)";
+    previousApp.classList.remove("controller-focus");
+    app.classList.add("controller-focus");
     previousItem = focusedItem;
     useMouse = false;
     removeCursor();
-    document.addEventListener("pointermove", removeUseMouse, { once: true })
-    appGrid.childNodes[focusedItem].focus();
+
+    appGrid.childNodes.item(focusedItem).focus();
 }
 
 function removeCursor() {
@@ -941,7 +1013,9 @@ function restoreCursor() {
 function removeUseMouse() {
     if (!useMouse) {
         const previousApp = appGrid.childNodes.item(previousItem);
-        previousApp.style.removeProperty("background-color");
+        previousApp.classList.remove("controller-focus");
+        if (previousMenuItem)
+            previousMenuItem.classList.remove("controller-focus");
         restoreCursor();
         useMouse = true;
     }
@@ -1007,65 +1081,102 @@ window.addEventListener(
 );
 
 window.addEventListener(
-    "gc.button.press",
+    "gc.button.hold",
     function (event) {
         if (!document.hasFocus()) return;
         let button = event.detail;
-        if (button.name === "DPAD_LEFT") {
-            if (focusedItem === 0 || document.activeElement === searchBar)
-                return;
-            focusedItem--;
-            focusItem();
-        } else if (button.name === "DPAD_RIGHT") {
-            if (
-                focusedItem === appGrid.childNodes.length - 1 ||
-                document.activeElement === searchBar
-            )
-                return;
-            focusedItem++;
-            focusItem();
-        } else if (button.name === "DPAD_UP") {
-            if (focusedItem - gridColumnCount <= 0) {
-                focusedItem = 0;
+
+        const now = performance.now();
+
+        if (now - lastMoveAt > REPEAT_DELAY_MS) {
+            if (button.name === "DPAD_LEFT" && !inOptionsMenu) {
+                if (focusedItem === 0 || document.activeElement === searchBar)
+                    return;
+                lastMoveAt = now;
+                focusedItem--;
                 focusItem();
-            } else {
-                focusedItem -= gridColumnCount;
+                showBar();
+            } else if (button.name === "DPAD_RIGHT" && !inOptionsMenu) {
+                if (
+                    focusedItem === appGrid.childNodes.length - 1 ||
+                    document.activeElement === searchBar
+                )
+                    return;
+                lastMoveAt = now;
+                focusedItem++;
                 focusItem();
+                showBar();
+            } else if (button.name === "DPAD_UP") {
+                if (!inOptionsMenu) {
+                    if (focusedItem - gridColumnCount <= 0) {
+                        focusedItem = 0;
+                    } else {
+                        focusedItem -= gridColumnCount;
+                    }
+
+                    focusItem();
+                } else {
+                    menuFocusedItem--;
+                    if (menuFocusedItem < 0)
+                        menuFocusedItem = 0
+
+                    focusMenuItem();
+                }
+
+                lastMoveAt = now;
+                showBar();
+            } else if (button.name === "DPAD_DOWN") {
+                if (!inOptionsMenu) {
+                    if (
+                        focusedItem + gridColumnCount >=
+                        appGrid.childNodes.length - 1
+                    ) {
+                        focusedItem = appGrid.childNodes.length - 1;
+                    } else {
+                        focusedItem += gridColumnCount;
+                    }
+                    focusItem();
+                } else {
+                    const menuItems = menu.querySelector("ul").querySelectorAll("li");
+
+                    menuFocusedItem++;
+
+                    if (menuFocusedItem >= menuItems.length)
+                        menuFocusedItem = menuItems.length - 1;
+
+                    focusMenuItem();
+                }
+
+                lastMoveAt = now;
+                showBar();
             }
-        } else if (button.name === "DPAD_DOWN") {
-            if (
-                focusedItem + gridColumnCount >=
-                appGrid.childNodes.length - 1
-            ) {
-                focusedItem = appGrid.childNodes.length - 1;
-                focusItem();
-            } else {
-                focusedItem += gridColumnCount;
-                focusItem();
-            }
-        } else if (button.name === "FACE_1") {
-            if (categoriesFile.selected.length === 0) {
-                ipcRenderer.send("launch", orderFile[focusedItem]);
-            } else {
-                ipcRenderer.send("launch", filteredApps[focusedItem]);
-            }
+            hideBarSoon();
         }
     },
     false
 );
 
-let moveCounter = 0;
+/**
+ * @type {HTMLLIElement}
+ */
+let previousMenuItem = null;
 
-// Analog Stick start movement event
-window.addEventListener('gc.analog.start', function (event) {
-    let data = event.detail;
-
-    if (!document.hasFocus()) return;
-    if (data.name !== "LEFT_ANALOG_STICK")
-        return
-
-    moveCounter = 20;
-})
+function focusMenuItem(submenu = false) {
+    if (!submenu) {
+        const menuItems = menu.querySelector("ul:not(.submenu)").querySelectorAll("li");
+        console.log(menuItems)
+        if (previousMenuItem)
+            previousMenuItem.classList.remove("controller-focus");
+        menuItems.item(menuFocusedItem).classList.add("controller-focus");
+        previousMenuItem = menuItems.item(menuFocusedItem);
+    } else {
+        const menuItems = menu.querySelector("ul.submenu").querySelectorAll("li");
+        if (previousMenuItem)
+            previousMenuItem.classList.remove("controller-focus");
+        menuItems.item(menuFocusedItem).classList.add("controller-focus");
+        previousMenuItem = menuItems.item(menuFocusedItem);
+    }
+}
 
 window.addEventListener("gc.analog.hold", (ev) => {
     if (!document.hasFocus()) return;
@@ -1074,55 +1185,92 @@ window.addEventListener("gc.analog.hold", (ev) => {
     if (data.name !== "LEFT_ANALOG_STICK")
         return
 
-    if (data.position.y > 0.8 || data.position.y < -0.8) {
-        moveCounter += 1
-        if (moveCounter > 20) {
-            moveCounter = 0;
+    const now = performance.now();
 
-            if (data.position.y < -0.8) {
+    if (now - lastMoveAt > REPEAT_DELAY_MS) {
+        if (data.position.y < -deadZone) {
+            if (!inOptionsMenu) {
                 if (focusedItem - gridColumnCount <= 0) {
                     focusedItem = 0;
-                    focusItem();
                 } else {
                     focusedItem -= gridColumnCount;
-                    focusItem();
                 }
-            } else if (data.position.y > 0.8) {
+                focusItem();
+            }
+
+            lastMoveAt = now;
+            showBar();
+        } else if (data.position.y > deadZone) {
+            if (!inOptionsMenu) {
                 if (
                     focusedItem + gridColumnCount >=
                     appGrid.childNodes.length - 1
                 ) {
                     focusedItem = appGrid.childNodes.length - 1;
-                    focusItem();
                 } else {
                     focusedItem += gridColumnCount;
-                    focusItem();
                 }
+                focusItem();
             }
-        }
-    }
-    if (data.position.x > 0.8 || data.position.x < -0.8) {
-        moveCounter += 1
-        if (moveCounter > 20) {
-            moveCounter = 0;
 
-            if (data.position.x < -0.8) {
-                if (focusedItem === 0 || document.activeElement === searchBar)
-                    return;
-                focusedItem--;
-                focusItem();
-            } else if (data.position.x > 0.8) {
-                if (
-                    focusedItem === appGrid.childNodes.length - 1 ||
-                    document.activeElement === searchBar
-                )
-                    return;
-                focusedItem++;
-                focusItem();
-            }
+            lastMoveAt = now;
+            showBar();
         }
+        if (data.position.x < -deadZone && !inOptionsMenu) {
+            if (focusedItem === 0 || document.activeElement === searchBar)
+                return;
+            focusedItem--;
+
+            focusItem();
+
+            lastMoveAt = now;
+            showBar();
+        } else if (data.position.x > deadZone && !inOptionsMenu) {
+            if (
+                focusedItem === appGrid.childNodes.length - 1 ||
+                document.activeElement === searchBar
+            )
+                return;
+
+            focusedItem++;
+
+            focusItem();
+
+            lastMoveAt = now;
+            showBar();
+        }
+        hideBarSoon();
     }
 })
+
+window.addEventListener(
+    "gc.button.press",
+    function (event) {
+        if (!document.hasFocus()) return;
+        let button = event.detail;
+
+        const appId = categoriesFile.selected.length === 0 ? orderFile[focusedItem] : filteredApps[focusedItem];
+
+        if (button.name === "FACE_1") {
+            if (!inOptionsMenu) {
+                ipcRenderer.send("launch", appId);
+            } else {
+                previousMenuItem.click();
+            }
+        } else if (button.name === "FACE_3") {
+            const rect = appGrid.childNodes.item(focusedItem).getBoundingClientRect();
+            // const appImgRect = appGrid.childNodes.item(focusedItem).querySelector("image").getBoundingClientRect();
+            showMenu({
+                pageY: saveFile[appId].type === "exe" ? rect.top + 220 : rect.top + 185,
+                pageX: rect.left - 25
+            }, appId, focusedItem)
+            menuFocusedItem = 0;
+            focusMenuItem()
+        } else if (button.name === "FACE_2") {
+            hideContextMenu();
+        }
+    }
+)
 
 window.addEventListener('gc.controller.lost', function (event) {
     console.log("The controller at index " + event.detail.index + " has been disconnected.");

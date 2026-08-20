@@ -99,15 +99,20 @@
 
     --image-clear-search-disabled: rgba(239, 239, 239, 0.3);
     --image-search-disabled-text: white;
+
+    --controller-focus-color: #e1e3e1;
+    --controller-bar-bg: var(--context-menu-bg, rgb(35, 35, 35));
+    --controller-bar-border: var(--context-menu-border, rgb(20, 20, 20));
+    --controller-bar-text: var(--body-text-color, whitesmoke);
+    --controller-bar-shadow: var(--context-menu-box-shadow, rgba(0, 0, 0, 0.2));
+    --controller-btn-a: #4caf50;
+    --controller-btn-b: #e5473f;
+    --controller-btn-x: #2f86eb;
+    --controller-btn-y: #f0c93e;
 }
 
 * {
     box-sizing: border-box;
-}
-
-html.hide-cursor,
-html.hide-cursor * {
-    cursor: none !important;
 }
 
 html,
@@ -751,6 +756,10 @@ hr {
     background-color: var(--context-menu-li-hover-bg);
 }
 
+.context-menu li:focus {
+    background-color: var(--context-menu-li-hover-bg);
+}
+
 .context-menu .has-submenu::after {
     content: "\f105";
     font-family: FontAwesome;
@@ -902,4 +911,90 @@ hr {
     display: flex;
     flex-direction: column;
     justify-content: center;
+}
+
+/* Focus ring for whatever grid item currently has controller focus */
+.app-div.controller-focus {
+    outline: 3px solid var(--controller-focus-color);
+    outline-offset: 2px;
+    background-color: var(--appDiv-hover-bg);
+}
+
+.context-menu .controller-focus {
+    background-color: var(--context-menu-li-hover-bg);
+}
+
+/* Bottom button-prompt bar */
+#controllerBar {
+    position: fixed;
+    left: 50%;
+    bottom: 14px;
+    transform: translate(-50%, 20px);
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 8px 18px;
+    background-color: var(--controller-bar-bg);
+    border: 1px solid var(--controller-bar-border);
+    border-radius: 9999px;
+    box-shadow: 0 2px 8px var(--controller-bar-shadow);
+    color: var(--controller-bar-text);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    z-index: 950;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+}
+
+#controllerBar.cn-visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+#controllerBar .cn-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+#controllerBar .cn-badge {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 12px;
+    color: #fff;
+}
+
+#controllerBar .cn-badge.cn-a {
+    background-color: var(--controller-btn-a);
+}
+#controllerBar .cn-badge.cn-b {
+    background-color: var(--controller-btn-b);
+}
+#controllerBar .cn-badge.cn-x {
+    background-color: var(--controller-btn-x);
+}
+#controllerBar .cn-badge.cn-y {
+    background-color: var(--controller-btn-y);
+    color: #1a1a1a;
+}
+
+#controllerBar .cn-badge.cn-shoulder {
+    border-radius: 5px;
+    width: auto;
+    padding: 0 6px;
+    background-color: transparent;
+    border: 1px solid var(--controller-bar-text);
+}
+
+html.hide-cursor,
+html.hide-cursor * {
+    cursor: none !important;
 }
