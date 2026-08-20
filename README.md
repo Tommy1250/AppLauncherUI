@@ -40,7 +40,7 @@ __The app doesn't fully support/untested on Linux and macOS if you want to try t
 | Shell-mode for some apps | Done |
 | Remote interface | Done |
 | Playtime tracking | On-hold |
-| Better controller support | Ongoing |
+| Better controller support | 90% Done |
 # Compiling the app:
 1. download the source code
 ```bash
