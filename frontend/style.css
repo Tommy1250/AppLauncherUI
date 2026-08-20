@@ -105,10 +105,6 @@
     --controller-bar-border: var(--context-menu-border, rgb(20, 20, 20));
     --controller-bar-text: var(--body-text-color, whitesmoke);
     --controller-bar-shadow: var(--context-menu-box-shadow, rgba(0, 0, 0, 0.2));
-    --controller-btn-a: #4caf50;
-    --controller-btn-b: #e5473f;
-    --controller-btn-x: #2f86eb;
-    --controller-btn-y: #f0c93e;
 }
 
 * {
@@ -924,6 +920,11 @@ hr {
     background-color: var(--context-menu-li-hover-bg);
 }
 
+.category-div.controller-focus {
+    outline: 3px solid var(--controller-focus-color);
+    outline-offset: 2px;
+}
+
 /* Bottom button-prompt bar */
 #controllerBar {
     position: fixed;
@@ -962,36 +963,10 @@ hr {
 }
 
 #controllerBar .cn-badge {
-    display: inline-grid;
+    display: flex;
     place-items: center;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    font-weight: 700;
-    font-size: 12px;
-    color: #fff;
-}
-
-#controllerBar .cn-badge.cn-a {
-    background-color: var(--controller-btn-a);
-}
-#controllerBar .cn-badge.cn-b {
-    background-color: var(--controller-btn-b);
-}
-#controllerBar .cn-badge.cn-x {
-    background-color: var(--controller-btn-x);
-}
-#controllerBar .cn-badge.cn-y {
-    background-color: var(--controller-btn-y);
-    color: #1a1a1a;
-}
-
-#controllerBar .cn-badge.cn-shoulder {
-    border-radius: 5px;
-    width: auto;
-    padding: 0 6px;
-    background-color: transparent;
-    border: 1px solid var(--controller-bar-text);
+    width: 25px;
+    height: 25px;
 }
 
 html.hide-cursor,

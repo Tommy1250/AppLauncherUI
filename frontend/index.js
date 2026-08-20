@@ -26,7 +26,7 @@ let rearrangingItem = false;
 let saveFile = {};
 
 /**
- * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean, theme: string, externalTheme: boolean}}
+ * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean, theme: string, externalTheme: boolean, fullscreen?: boolean, stayOnGame?: boolean, controllerLayout: string}}
  */
 let settingsFile = {};
 
@@ -47,6 +47,8 @@ let themes = {
     "dark": "themes/dark.css",
     "light": "themes/light.css"
 }
+
+let controllerLayout = "ps";
 
 const menu = document.getElementById('contextMenu');
 const menuBackground = document.getElementById("background");
@@ -84,12 +86,20 @@ const settingsSaveBtn = document.getElementById("save");
 const goToSteamGirdBtn = document.getElementById("goToSteamGirdBtn");
 const steamGridTokenInput = document.getElementById("steamGridToken");
 const startWithPcCheckBox = document.getElementById("startWithPc");
+const fullScreenCheckBox = document.getElementById("fullScreen");
+const stayWithGameCheckBox = document.getElementById("stayWithGame");
+
 /**
  * @type {HTMLSelectElement}
  */
 const themeSelect = document.getElementById("themeSelector");
 const openThemesFolderButton = document.getElementById("openThemesFolder");
 const openThemesRepo = document.getElementById("openThemesRepo");
+
+/**
+ * @type {HTMLSelectElement}
+ */
+const controllerLayoutSelect = document.getElementById("controllerLayout");
 
 const serverCheckBox = document.getElementById("enableServer");
 const serverPortInput = document.getElementById("serverPort");
@@ -197,6 +207,19 @@ ipcRenderer.on("savePath", (ev, args) => {
     serverCheckBox.checked = settingsFile.enableServer;
     serverPortInput.value = settingsFile.serverPort;
     serverPassInput.value = settingsFile.serverPassword;
+    fullScreenCheckBox.checked = settingsFile.fullscreen;
+    stayWithGameCheckBox.checked = settingsFile.stayOnGame;
+
+    controllerLayout = settingsFile.controllerLayout;
+    setHints(defaultHints);
+    switch (controllerLayout) {
+        case "xbox":
+            controllerLayoutSelect.selectedIndex = 0;
+            break;
+        case "ps":
+            controllerLayoutSelect.selectedIndex = 1;
+            break;
+    }
 
     try {
         const userIp = ip.address("Ethernet");
@@ -231,7 +254,7 @@ ipcRenderer.on("savePath", (ev, args) => {
 
     remakeThemes();
 
-    const watcher = fs.watch(externalThemesPath, (eventType, filename) => {
+    fs.watch(externalThemesPath, (eventType, filename) => {
         if (eventType === "rename") {
             remakeThemes();
             if (Object.keys(themes).includes(settingsFile.theme)) {
@@ -508,13 +531,32 @@ multiSelectButton.onclick = () => {
         inMultiSelect = false;
         multiSelectButton.classList.remove("active-item");
         selectedApps = [];
+        setHints(defaultHints);
         if (searchBar.value !== "") search(searchBar.value);
         else makeAppGrid(orderFile);
     } else {
         inMultiSelect = true;
         multiSelectButton.classList.add("active-item");
+        setHints(multiSelectHints);
         if (searchBar.value !== "") search(searchBar.value);
         else makeAppGrid(orderFile, true);
+    }
+}
+
+function launchAppInit(appId) {
+    ipcRenderer.send("launch", appId);
+    if (settingsFile.stayOnGame) {
+        messageHolder.innerHTML = "";
+        infoMessageTitle.innerText = "Info";
+
+        const messageText = document.createElement("h3");
+        messageText.innerText = `Launching app ${saveFile[appId].gridName}...`;
+        messageHolder.appendChild(messageText);
+        infoMessage.showModal();
+
+        setTimeout(() => {
+            infoMessage.close();
+        }, 5000);
     }
 }
 
@@ -566,7 +608,7 @@ function addItemToGrid(key, index, showCat = false) {
                 checkbox.checked = true;
             }
         } else {
-            ipcRenderer.send("launch", key);
+            launchAppInit(key);
         }
     };
 
@@ -673,6 +715,7 @@ function showMenu(ev, appId, appIndex) {
     managedAppId = appId;
     managedAppIndex = appIndex;
     inOptionsMenu = true;
+    setHints(menuHints);
 
     const managedAppData = saveFile[appId];
 
@@ -743,6 +786,7 @@ function showMenuMultiSelect(ev) {
     categoriesRemoveHolderSubmenu.innerHTML = "";
 
     inOptionsMenu = true;
+    setHints(menuHints);
 
     for (let i = 0; i < categoriesFile.categories.length; i++) {
         const category = categoriesFile.categories[i];
@@ -837,6 +881,10 @@ function hideContextMenu() {
     contextMenuMultiSelect.style.display = "none";
     menuBackground.className = "hide";
     inOptionsMenu = false;
+    if (inMultiSelect)
+        setHints(multiSelectHints);
+    else
+        setHints(defaultHints);
     clearMenuFocus();
     menuStack = [];
     activeMenuRoot = null;
@@ -891,15 +939,34 @@ const REPEAT_DELAY_MS = 220;
 let lastMoveAt = 0;
 let barTimeout = null;
 let inOptionsMenu = false;
+let inFiltersMenu = false;
 let deadZone = 0.6;
 
 const bar = ensureBar();
 
 const defaultHints = [
-    { badge: "A", cls: "cn-a", label: "Start" },
-    { badge: "B", cls: "cn-b", label: "Back" },
-    { badge: "X", cls: "cn-x", label: "Options" },
-    { badge: "Y", cls: "cn-y", label: "Filters" }
+    { badge: ["l_stick", "dpad"], label: "Navigate" },
+    { badge: ["a"], label: "Start" },
+    { badge: ["x"], label: "Options" },
+    { badge: ["y"], label: "Filters" },
+    { badge: ["menu"], label: "Multi-select" }
+];
+const filterHints = [
+    { badge: ["a"], label: "Toggle filter" },
+    { badge: ["b"], label: "Close" },
+    { badge: ["dpad_up", "dpad_down"], label: "Navigate" },
+];
+const menuHints = [
+    { badge: ["l_stick", "dpad"], label: "Navigate" },
+    { badge: ["a"], label: "Select" },
+    { badge: ["b"], label: "Back" }
+]
+const multiSelectHints = [
+    { badge: ["l_stick", "dpad"], label: "Navigate" },
+    { badge: ["a"], label: "Select" },
+    { badge: ["x"], label: "Options" },
+    { badge: ["y"], label: "Filters" },
+    { badge: ["menu"], label: "Multi-select" }
 ];
 setHints(defaultHints);
 
@@ -919,7 +986,7 @@ function setHints(hints) {
     bar.innerHTML = hints
         .map(
             (h) =>
-                `<span class="cn-hint"><span class="cn-badge ${h.cls}">${h.badge}</span>${h.label}</span>`
+                `<span class="cn-hint">${h.badge.map(badge => `<image class="cn-badge" src="../assets/${controllerLayout}/${badge}.png">`).join("")}${h.label}</span>`
         )
         .join("");
 }
@@ -940,56 +1007,46 @@ function hideBarSoon() {
 }
 
 document.onkeydown = (ev) => {
-    const now = performance.now();
-
-    if (now - lastMoveAt > REPEAT_DELAY_MS) {
-        if (ev.key === "ArrowLeft" && !inOptionsMenu) {
-            if (focusedItem === 0 || document.activeElement === searchBar) return;
-            lastMoveAt = now;
-            focusedItem--;
+    if (ev.key === "ArrowLeft" && !inOptionsMenu) {
+        if (focusedItem === 0 || document.activeElement === searchBar) return;
+        focusedItem--;
+        focusItem();
+    } else if (ev.key === "ArrowRight" && !inOptionsMenu) {
+        if (
+            focusedItem === appGrid.childNodes.length - 1 ||
+            document.activeElement === searchBar
+        )
+            return;
+        focusedItem++;
+        focusItem();
+    } else if (ev.key === "ArrowUp") {
+        ev.preventDefault();
+        if (focusedItem - gridColumnCount <= 0) {
+            focusedItem = 0;
             focusItem();
-        } else if (ev.key === "ArrowRight" && !inOptionsMenu) {
-            if (
-                focusedItem === appGrid.childNodes.length - 1 ||
-                document.activeElement === searchBar
-            )
-                return;
-            lastMoveAt = now;
-            focusedItem++;
+        } else {
+            focusedItem -= gridColumnCount;
             focusItem();
-        } else if (ev.key === "ArrowUp") {
-            ev.preventDefault();
-            if (focusedItem - gridColumnCount <= 0) {
-                lastMoveAt = now;
-                focusedItem = 0;
-                focusItem();
+        }
+    } else if (ev.key === "ArrowDown") {
+        ev.preventDefault();
+        if (focusedItem + gridColumnCount >= appGrid.childNodes.length - 1) {
+            focusedItem = appGrid.childNodes.length - 1;
+            focusItem();
+        } else {
+            focusedItem += gridColumnCount;
+            focusItem();
+        }
+    } else if (ev.key === "Enter") {
+        if (document.activeElement === toinput) return;
+        if (document.activeElement === categoryNameInput) return;
+        if (document.activeElement === searchBar) {
+            focusItem();
+        } else {
+            if (categoriesFile.selected.length === 0) {
+                launchAppInit(orderFile[focusedItem]);
             } else {
-                lastMoveAt = now;
-                focusedItem -= gridColumnCount;
-                focusItem();
-            }
-        } else if (ev.key === "ArrowDown") {
-            ev.preventDefault();
-            if (focusedItem + gridColumnCount >= appGrid.childNodes.length - 1) {
-                lastMoveAt = now;
-                focusedItem = appGrid.childNodes.length - 1;
-                focusItem();
-            } else {
-                focusedItem += gridColumnCount;
-                focusItem();
-            }
-        } else if (ev.key === "Enter") {
-            if (document.activeElement === toinput) return;
-            if (document.activeElement === categoryNameInput) return;
-            if (document.activeElement === searchBar) {
-                lastMoveAt = now;
-                focusItem();
-            } else {
-                if (categoriesFile.selected.length === 0) {
-                    ipcRenderer.send("launch", orderFile[focusedItem]);
-                } else {
-                    ipcRenderer.send("launch", filteredApps[focusedItem]);
-                }
+                launchAppInit(filteredApps[focusedItem]);
             }
         }
     }
@@ -1006,7 +1063,8 @@ function focusItem() {
     const rect = app.getBoundingClientRect();
     appGrid.scrollBy({ behavior: "smooth", top: rect.top - 250 });
 
-    previousApp.classList.remove("controller-focus");
+    if (previousApp)
+        previousApp.classList.remove("controller-focus");
     app.classList.add("controller-focus");
     previousItem = focusedItem;
     useMouse = false;
@@ -1102,7 +1160,9 @@ window.addEventListener(
 
         if (now - lastMoveAt > REPEAT_DELAY_MS) {
             if (button.name === "DPAD_LEFT") {
-                if (inOptionsMenu) {
+                if (inFiltersMenu) {
+                    return; // no horizontal nav inside the filters list
+                } else if (inOptionsMenu) {
                     lastMoveAt = now;
                     menuGoBack(); // steps into parent level; no-op with a beep-worthy bump at the root
                     showBar();
@@ -1115,7 +1175,9 @@ window.addEventListener(
                     showBar();
                 }
             } else if (button.name === "DPAD_RIGHT") {
-                if (inOptionsMenu) {
+                if (inFiltersMenu) {
+                    return; // no horizontal nav inside the filters list
+                } else if (inOptionsMenu) {
                     lastMoveAt = now;
                     menuEnterSubmenu(); // no-op if focused item has no submenu
                     showBar();
@@ -1131,7 +1193,9 @@ window.addEventListener(
                     showBar();
                 }
             } else if (button.name === "DPAD_UP") {
-                if (!inOptionsMenu) {
+                if (inFiltersMenu) {
+                    filterNavigate(-1);
+                } else if (!inOptionsMenu) {
                     if (focusedItem - gridColumnCount <= 0) {
                         focusedItem = 0;
                     } else {
@@ -1146,7 +1210,9 @@ window.addEventListener(
                 lastMoveAt = now;
                 showBar();
             } else if (button.name === "DPAD_DOWN") {
-                if (!inOptionsMenu) {
+                if (inFiltersMenu) {
+                    filterNavigate(1);
+                } else if (!inOptionsMenu) {
                     if (
                         focusedItem + gridColumnCount >=
                         appGrid.childNodes.length - 1
@@ -1296,6 +1362,61 @@ function menuSelectFocused() {
     li.click();
 }
 
+/**
+ * Direct .category-div rows currently focusable in the filters dialog.
+ * @type {HTMLElement[]}
+ */
+let filterItems = [];
+let filterIndex = 0;
+
+function focusFiltersList() {
+    filterItems = Array.from(categoriesDiv.children).filter((el) =>
+        el.classList.contains("category-div")
+    );
+    filterIndex = 0;
+    applyFilterFocus();
+}
+
+function applyFilterFocus() {
+    filterItems.forEach((el, i) =>
+        el.classList.toggle("controller-focus", i === filterIndex)
+    );
+    if (filterItems[filterIndex])
+        filterItems[filterIndex].scrollIntoView({ block: "nearest" });
+}
+
+function filterNavigate(delta) {
+    if (!filterItems.length) return;
+    const next = filterIndex + delta;
+    if (next < 0 || next >= filterItems.length) return; // no wrap
+    filterIndex = next;
+    applyFilterFocus();
+}
+
+function filterToggleFocused() {
+    const div = filterItems[filterIndex];
+    if (!div) return;
+    const checkbox = div.querySelector('input[type="checkbox"]');
+    if (checkbox) checkbox.click(); // reuses the existing onchange handler
+}
+
+/**
+ * Opens the filters dialog (same as clicking the filter icon) and hands
+ * controller focus to the first category checkbox.
+ */
+function openControllerFilters() {
+    makeCategorySelector();
+    categoriesManager.showModal();
+    inFiltersMenu = true;
+    setHints(filterHints);
+    focusFiltersList();
+    showBar();
+}
+
+function closeControllerFilters() {
+    categoriesManager.close(); // fires the dialog's "close" listener below, which resets state
+}
+
 window.addEventListener("gc.analog.hold", (ev) => {
     if (!document.hasFocus()) return;
 
@@ -1307,19 +1428,26 @@ window.addEventListener("gc.analog.hold", (ev) => {
 
     if (now - lastMoveAt > REPEAT_DELAY_MS) {
         if (data.position.y < -deadZone) {
-            if (!inOptionsMenu) {
+            if (inFiltersMenu) {
+                filterNavigate(-1);
+            } else if (!inOptionsMenu) {
                 if (focusedItem - gridColumnCount <= 0) {
                     focusedItem = 0;
                 } else {
                     focusedItem -= gridColumnCount;
                 }
+
                 focusItem();
+            } else {
+                menuNavigate(-1);
             }
 
             lastMoveAt = now;
             showBar();
         } else if (data.position.y > deadZone) {
-            if (!inOptionsMenu) {
+            if (inFiltersMenu) {
+                filterNavigate(1);
+            } else if (!inOptionsMenu) {
                 if (
                     focusedItem + gridColumnCount >=
                     appGrid.childNodes.length - 1
@@ -1329,33 +1457,46 @@ window.addEventListener("gc.analog.hold", (ev) => {
                     focusedItem += gridColumnCount;
                 }
                 focusItem();
+            } else {
+                menuNavigate(1);
             }
 
             lastMoveAt = now;
             showBar();
         }
         if (data.position.x < -deadZone && !inOptionsMenu) {
-            if (focusedItem === 0 || document.activeElement === searchBar)
-                return;
-            focusedItem--;
-
-            focusItem();
-
-            lastMoveAt = now;
-            showBar();
+            if (inFiltersMenu) {
+                return; // no horizontal nav inside the filters list
+            } else if (inOptionsMenu) {
+                lastMoveAt = now;
+                menuGoBack(); // steps into parent level; no-op with a beep-worthy bump at the root
+                showBar();
+            } else {
+                if (focusedItem === 0 || document.activeElement === searchBar)
+                    return;
+                lastMoveAt = now;
+                focusedItem--;
+                focusItem();
+                showBar();
+            }
         } else if (data.position.x > deadZone && !inOptionsMenu) {
-            if (
-                focusedItem === appGrid.childNodes.length - 1 ||
-                document.activeElement === searchBar
-            )
-                return;
-
-            focusedItem++;
-
-            focusItem();
-
-            lastMoveAt = now;
-            showBar();
+            if (inFiltersMenu) {
+                return; // no horizontal nav inside the filters list
+            } else if (inOptionsMenu) {
+                lastMoveAt = now;
+                menuEnterSubmenu(); // no-op if focused item has no submenu
+                showBar();
+            } else {
+                if (
+                    focusedItem === appGrid.childNodes.length - 1 ||
+                    document.activeElement === searchBar
+                )
+                    return;
+                lastMoveAt = now;
+                focusedItem++;
+                focusItem();
+                showBar();
+            }
         }
         hideBarSoon();
     }
@@ -1402,23 +1543,25 @@ window.addEventListener(
         const appId = categoriesFile.selected.length === 0 ? orderFile[focusedItem] : filteredApps[focusedItem];
 
         if (button.name === "FACE_1") {
-            if (!inOptionsMenu) {
+            if (inFiltersMenu) {
+                filterToggleFocused();
+            } else if (!inOptionsMenu) {
                 if (inMultiSelect) {
                     const appDiv = appGrid.childNodes.item(focusedItem);
                     toggleAppSelection(appId, appDiv);
                 } else {
-                    ipcRenderer.send("launch", appId);
+                    launchAppInit(appId);
                 }
             } else {
                 menuSelectFocused();
             }
         } else if (button.name === "FACE_3") {
-            if (inOptionsMenu) return; // menu's already open, ignore
+            if (inOptionsMenu || inFiltersMenu) return; // something's already open, ignore
             const rect = appGrid.childNodes.item(focusedItem).getBoundingClientRect();
             // const appImgRect = appGrid.childNodes.item(focusedItem).querySelector("image").getBoundingClientRect();
             const menuPosition = {
                 pageY: saveFile[appId].type === "exe" ? rect.top + 220 : rect.top + 185,
-                pageX: rect.left - 25
+                pageX: rect.left
             };
 
             if (inMultiSelect) {
@@ -1431,7 +1574,9 @@ window.addEventListener(
                 openControllerMenu(menu);
             }
         } else if (button.name === "FACE_2") {
-            if (inOptionsMenu) {
+            if (inFiltersMenu) {
+                closeControllerFilters();
+            } else if (inOptionsMenu) {
                 if (!menuGoBack()) {
                     hideContextMenu();
                 }
@@ -1445,6 +1590,17 @@ window.addEventListener(
                 movetomenu.close();
                 movetomenu.classList.remove("showmove");
             }
+        } else if (button.name === "FACE_4") {
+            if (!inOptionsMenu && !inFiltersMenu) {
+                openControllerFilters();
+            }
+        } else if (button.name === "START") {
+            if (inOptionsMenu)
+                hideContextMenu();
+
+            multiSelectButton.click();
+
+            focusItem();
         }
     }
 )
@@ -1537,6 +1693,8 @@ settingsCancelBtn.onclick = () => {
     serverCheckBox.checked = settingsFile.enableServer;
     serverPortInput.value = settingsFile.serverPort;
     serverPassInput.value = settingsFile.serverPassword;
+    fullScreenCheckBox.checked = settingsFile.fullscreen;
+    stayWithGameCheckBox.checked = settingsFile.stayOnGame;
     setTheme(settingsFile.theme);
     for (let i = 0; i < themeSelect.options.length; i++) {
         const option = themeSelect.options[i];
@@ -1545,6 +1703,16 @@ settingsCancelBtn.onclick = () => {
             break;
         }
     }
+
+    switch (controllerLayout) {
+        case "xbox":
+            controllerLayoutSelect.selectedIndex = 0;
+            break;
+        case "ps":
+            controllerLayoutSelect.selectedIndex = 1;
+            break;
+    }
+
 };
 
 goToSteamGirdBtn.onclick = () => {
@@ -1596,6 +1764,16 @@ settingsSaveBtn.onclick = () => {
     settingsFile.theme = themeSelect.options[themeSelect.selectedIndex].value;
     settingsFile.externalTheme = Boolean(parseInt(themeSelect.options[themeSelect.selectedIndex].getAttribute("data-external")));
 
+    settingsFile.controllerLayout = controllerLayoutSelect.options[controllerLayoutSelect.selectedIndex].value;
+    controllerLayout = settingsFile.controllerLayout;
+    if (inMultiSelect)
+        setHints(multiSelectHints);
+    else
+        setHints(defaultHints);
+
+    settingsFile.fullscreen = fullScreenCheckBox.checked;
+    settingsFile.stayOnGame = stayWithGameCheckBox.checked;
+
     mainDiv.style.display = "grid";
     settingsDiv.style.display = "none";
     ipcRenderer.send("updateSave", settingsFile);
@@ -1639,8 +1817,22 @@ cancelBtnCategories.onclick = () => {
     categoriesManager.close();
 }
 
+let categoriesChanged = false;
+
 categoriesManager.addEventListener("close", () => {
     updateCategoriesFile();
+    inFiltersMenu = false;
+    filterItems.forEach((el) => el.classList.remove("controller-focus"));
+    filterItems = [];
+    if (categoriesChanged) {
+        previousItem = 0;
+        focusedItem = 0;
+    }
+
+    if (inMultiSelect)
+        setHints(multiSelectHints);
+    else
+        setHints(defaultHints);
 })
 
 addCategoryForm.onsubmit = (ev) => {
@@ -1657,6 +1849,7 @@ addCategoryForm.onsubmit = (ev) => {
 
 function makeCategorySelector() {
     categoriesDiv.innerHTML = "";
+    categoriesChanged = false;
 
     for (let i = 0; i < categoriesFile.categories.length; i++) {
         const category = categoriesFile.categories[i];
@@ -1681,6 +1874,7 @@ function makeCategorySelector() {
             } else {
                 categoriesFile.selected.splice(categoriesFile.selected.indexOf(category.toString()), 1);
             }
+            categoriesChanged = true;
             makeAppGrid(orderFile, inMultiSelect);
         }
 
@@ -1728,7 +1922,7 @@ function deleteCategory(categoryName) {
 // Stuff for the context menu
 startAppButton.onclick = () => {
     hideContextMenu();
-    ipcRenderer.send("launch", managedAppId);
+    launchAppInit(managedAppId);
 }
 
 editShortcutButton.onclick = () => {

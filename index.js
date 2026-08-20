@@ -91,7 +91,12 @@ if (!fs.existsSync(settingsPath)) {
             enableServer: false,
             serverPort: 7080,
             serverPassword: "1234",
-            dontWarnShell: false
+            dontWarnShell: false,
+            theme: "dark",
+            externalTheme: false,
+            fullscreen: false,
+            stayOnGame: false,
+            controllerLayout: "xbox"
         })
     );
 }
@@ -110,7 +115,7 @@ exports.shortcutsPath = shortcutsPath;
 let latestLaunchedGames = JSON.parse(fs.readFileSync(latestGamesPath, "utf-8"));
 
 /**
- * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean, theme: string, externalTheme: boolean}}
+ * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean, theme: string, externalTheme?: boolean, fullscreen?: boolean, stayOnGame?: boolean, controllerLayout: string}}
  */
 let settingsFile = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
 exports.settingsFile = settingsFile;
@@ -131,6 +136,11 @@ if (settingsFile.dontWarnShell === undefined) {
 
 if (settingsFile.theme === undefined) {
     settingsFile.theme = "dark";
+    fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
+}
+
+if (settingsFile.controllerLayout === undefined){
+    settingsFile.controllerLayout = "xbox";
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 }
 
@@ -219,6 +229,9 @@ function createWindow() {
 
     if (windowBounds.maximized) mainWindow.maximize();
 
+    if(settingsFile.fullscreen)
+        mainWindow.setFullScreen(true);
+
     mainWindow.on("close", (ev) => {
         saveWindowState();
     });
@@ -242,7 +255,7 @@ ipcMain.on("updateSaveMain", () => {
 let tray = null;
 
 function addToLatestAndLaunch(gameName, window = mainWindow) {
-    launchApp(saveFile[gameName], window);
+    launchApp(saveFile[gameName], settingsFile.stayOnGame ? null : window);
 
     if (saveFile[gameName].type === "dir") return;
 
@@ -769,6 +782,8 @@ ipcMain.on("updateSave", (ev, args) => {
                 }
             });
     }
+
+    mainWindow.setFullScreen(args.fullscreen);
 
     settingsFile = args;
 
