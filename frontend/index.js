@@ -888,6 +888,10 @@ function hideContextMenu() {
     clearMenuFocus();
     menuStack = [];
     activeMenuRoot = null;
+
+    if (pluginSidebar) {
+        pluginSidebar.classList.add('plugin-sidebar-hidden');
+    }
 }
 
 menuBackground.onclick = () => {
@@ -1973,4 +1977,57 @@ removeMultiSelectButton.onclick = () => {
     ipcRenderer.send("removeMultiple", {
         apps: selectedApps
     });
+}
+
+const pluginSidebar = document.getElementById('pluginSidebar');
+
+function renderPluginPanel(panelDef) {
+    if (!pluginSidebar) {
+        console.warn('No #pluginSidebar element found in the DOM — add one to render plugin panels.');
+        return;
+    }
+    // panelDef.html is a full element (e.g. <div data-panel-id="...">...</div>),
+    // so unwrap it into a real node rather than nesting it inside another div.
+    const temp = document.createElement('div');
+    temp.innerHTML = panelDef.html;
+    pluginSidebar.appendChild(temp.firstElementChild);
+}
+
+ipcRenderer.send("plugin:get-panels");
+
+// initial batch of already-registered panels
+ipcRenderer.on('plugin:panels', (_e, panels) => {
+    panels.forEach(renderPluginPanel);
+});
+
+// any panel registered after the initial batch
+ipcRenderer.on('plugin:panel-registered', (_e, panelDef) => {
+    renderPluginPanel(panelDef);
+});
+
+// panel content changing over time (e.g. now-playing updates)
+ipcRenderer.on('plugin:panel-update', (_e, { id, html }) => {
+    const el = document.querySelector(`[data-panel-id="${id}"]`);
+    if (el) el.outerHTML = html; // outerHTML, not innerHTML — html is the whole element
+});
+
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const panelId = btn.closest('[data-panel-id]')?.dataset.panelId;
+    ipcRenderer.send(`${panelId}:command`, { action: btn.dataset.action });
+});
+
+// toggles the plugin sidebar open/closed — id comes from the new
+// #togglePluginBar button added to index.html
+const togglePluginBarButton = document.getElementById('togglePluginBar');
+if (togglePluginBarButton && pluginSidebar) {
+    togglePluginBarButton.onclick = () => {
+        pluginSidebar.classList.toggle('plugin-sidebar-hidden');
+        if (!pluginSidebar.classList.contains('plugin-sidebar-hidden')) {
+            menuBackground.className = "background";
+        } else {
+            hideContextMenu();
+        }
+    };
 }

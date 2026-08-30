@@ -46,6 +46,7 @@ const settingsPath = path.join(savePath, "settings.json");
 const orderPath = path.join(savePath, "order.json");
 const windowBoundPath = path.join(savePath, "window.json");
 const categoriesPath = path.join(savePath, "categories.json");
+const pluginsPath = path.join(savePath, "plugins");
 
 const imagesPath = path.join(savePath, "images");
 exports.imagesPath = imagesPath;
@@ -67,6 +68,10 @@ if (!fs.existsSync(categoriesPath)) {
         selected: [],
         categories: []
     }))
+}
+
+if (!fs.existsSync(pluginsPath)) {
+    fs.mkdirSync(pluginsPath);
 }
 
 if (!fs.existsSync(windowBoundPath)) {
@@ -121,11 +126,11 @@ let settingsFile = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
 exports.settingsFile = settingsFile;
 
 if (!settingsFile.serverPort) {
-    
+
     settingsFile.enableServer = settingsFile.enableServer ?? false;
     settingsFile.serverPort = 7080;
     settingsFile.serverPassword = settingsFile.serverPassword ?? "1234";
-    
+
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 }
 
@@ -139,7 +144,7 @@ if (settingsFile.theme === undefined) {
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 }
 
-if (settingsFile.controllerLayout === undefined){
+if (settingsFile.controllerLayout === undefined) {
     settingsFile.controllerLayout = "xbox";
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 }
@@ -229,7 +234,7 @@ function createWindow() {
 
     if (windowBounds.maximized) mainWindow.maximize();
 
-    if(settingsFile.fullscreen)
+    if (settingsFile.fullscreen)
         mainWindow.setFullScreen(true);
 
     mainWindow.on("close", (ev) => {
@@ -247,6 +252,39 @@ ipcMain.on("getSavePath", (event, arg) => {
     event.sender.send("savePath", savePath);
 });
 
+const PluginManager = require('./PluginManager');
+const pluginManager = new PluginManager();
+
+pluginManager.loadAll(pluginsPath, { games: orderFile });
+
+// a plugin asking the host to launch something:
+pluginManager.bus.on('plugin:request-launch', ({ id }) => {
+    addToLatestAndLaunch(saveFile[id]); // your existing launch/UAC logic
+});
+
+// 1. Answer the renderer's initial request for already-registered panels
+ipcMain.on('plugin:get-panels', (event) => {
+    event.reply('plugin:panels', pluginManager.panels);
+});
+
+// 2. Forward panel lifecycle events from the plugin bus to the renderer
+pluginManager.bus.on('plugin:panel-registered', (panelDef) => {
+    mainWindow.webContents.send('plugin:panel-registered', panelDef);
+});
+
+pluginManager.bus.on('plugin:panel-update', ({ id, html }) => {
+    mainWindow.webContents.send('plugin:panel-update', { id, html });
+});
+
+// 3. Route each plugin's command channel (e.g. "spotify-sidebar:command")
+//    from renderer IPC into the plugin bus, so hostApi.on(...) in the
+//    plugin actually receives it
+for (const [pluginId] of pluginManager.plugins) {
+    ipcMain.on(`${pluginId}:command`, (event, payload) => {
+        pluginManager.bus.emit(`${pluginId}:command`, payload);
+    });
+}
+
 ipcMain.on("updateSaveMain", () => {
     saveFile = JSON.parse(fs.readFileSync(shortcutsPath, "utf-8"));
     orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
@@ -256,6 +294,9 @@ let tray = null;
 
 function addToLatestAndLaunch(gameName, window = mainWindow) {
     launchApp(saveFile[gameName], settingsFile.stayOnGame ? null : window);
+
+    // wherever you currently launch a game:
+    pluginManager.bus.emit('game:launch', { id: gameId });
 
     if (saveFile[gameName].type === "dir") return;
 

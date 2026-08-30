@@ -268,7 +268,7 @@ body {
     margin-right: 1px;
     margin-bottom: 5px;
     display: grid;
-    grid-template-columns: 1fr repeat(5, auto);
+    grid-template-columns: 1fr repeat(6, auto);
     gap: 10px;
 }
 
@@ -972,4 +972,38 @@ hr {
 html.hide-cursor,
 html.hide-cursor * {
     cursor: none !important;
+}
+
+#pluginSidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 100vh;
+    box-sizing: border-box;
+    padding: 16px;
+    overflow-y: auto;
+    background: var(--panel-bg-color, rgba(20, 20, 20, 0.92));
+    color: var(--body-text-color, #eee);
+    border-left: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+    z-index: 901;
+    transition: transform 0.2s ease;
+    transform: translateX(0);
+}
+
+#pluginSidebar.plugin-sidebar-hidden {
+    transform: translateX(100%);
+}
+
+#pluginSidebar:empty::before {
+    content: "No plugin panels registered yet.";
+    opacity: 0.5;
+    font-size: 0.9em;
+}
+
+.plugin-panel {
+    background: var(--body-bg-color, rgba(255, 255, 255, 0.05));
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
 }
