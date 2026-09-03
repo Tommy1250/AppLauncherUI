@@ -8,6 +8,7 @@
     <script src="./plugins/Controller.min.js"></script>
     <script src="index.js" defer></script>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" id="themeSheet" href="themes/dark.css">
     <link rel="stylesheet" href="fontawesome/css/all.min.css">
 
 </head>
@@ -20,7 +21,7 @@
                 <input type="text" id="search" placeholder="Search library...">
                 <button type="button" id="clearSearch">clear</button>
             </form>
-            <button id="disconnectBT" class="fa-solid fa-gamepad fa-lg iconbtn"></button> 
+            <button id="disconnectBT" class="fa-solid fa-gamepad fa-lg iconbtn"></button>
             <button id="add" class="fa-solid fa-plus fa-lg iconbtn"></button>
             <button id="filter" class="fa-solid fa-filter fa-lg iconbtn"></button>
             <button id="multiSelect" class="fa-solid fa-lg fa-list-check iconbtn"></button>
@@ -38,11 +39,50 @@
                     <span class="slider round"></span>
                 </label>
             </div>
+            <div>
+                <label for="themeSelector" class="setting-label">Select Theme</label>
+                <div class="select-wrapper">
+                    <select id="themeSelector" class="setting-select">
+                        <option value="Dark">Dark</option>
+                        <option value="Light">Light</option>
+                    </select>
+                </div>
+                <div class="controls">
+                    <button id="openThemesFolder" class="setting-button">Open Themes Folder</button>
+                    <button id="openThemesRepo" class="settings-button">Get More Themes</button>
+                </div>
+            </div>
+            <div>
+                <label for="controllerLayout" class="setting-label">Controller Layout</label>
+                <div class="select-wrapper">
+                    <select id="controllerLayout" class="setting-select">
+                        <option value="xbox">Xbox</option>
+                        <option value="ps">Playstation</option>
+                    </select>
+                </div>
+            </div>
+            <div class="switch-div">
+                <label for="fullScreen" class="setting-label">Fullscreen:</label>
+                <label class="switch">
+                    <input type="checkbox" id="fullScreen">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="switch-div">
+                <label for="stayWithGame" class="setting-label">Don't close the app on game launch:</label>
+                <label class="switch">
+                    <input type="checkbox" id="stayWithGame">
+                    <span class="slider round"></span>
+                </label>
+            </div>
             <hr>
             <h1 class="center">App Icons</h1>
             <div>
                 <label for="steamGridToken" class="setting-label">Steam grid Token:</label>
-                <input type="text" id="steamGridToken" class="setting-input">
+                <div class="util-action">
+                    <input type="password" id="steamGridToken" class="setting-input">
+                    <button type="button" class="fa-solid fa-eye-slash" id="showTokenBtn"></button>
+                </div>
                 <div class="controls">
                     <button id="goToSteamGirdBtn" class="setting-button">Sign up for a token</button>
                 </div>
@@ -58,15 +98,24 @@
             </div>
             <div>
                 <label for="serverPort" class="setting-label">Server port:</label>
-                <input type="text" id="serverPort" class="setting-input">
+                <div class="util-action">
+                    <input type="password" id="serverPort" class="setting-input">
+                    <button class="fa-solid fa-eye-slash" id="showServerPort"></button>
+                </div>
             </div>
             <div>
                 <label for="serverPass" class="setting-label">Server password:</label>
-                <input type="text" id="serverPass" class="setting-input">
+                <div class="util-action">
+                    <input type="password" id="serverPass" class="setting-input">
+                    <button class="fa-solid fa-eye-slash" id="showServerPassword"></button>
+                </div>
             </div>
             <div>
                 <label for="serverIp" class="setting-label">server address:</label>
-                <input type="text" id="serverIp" class="setting-input" disabled>
+                <div class="util-action">
+                    <input type="password" id="serverIp" class="setting-input" disabled>
+                    <button class="fa-solid fa-eye-slash" id="showServerIp"></button>
+                </div>
             </div>
             <hr>
             <h1 class="center">Game Library</h1>
@@ -103,7 +152,7 @@
             <button id="closeMessage" class="fa-solid fa-xmark fa-lg iconbtn"></button>
         </div>
         <hr>
-        <div id="message" style="color: white; line-height: 1.6;"></div>
+        <div id="message" style="color: var(--body-text-color); line-height: 1.6;"></div>
     </dialog>
     <dialog class="categories-dialog" id="categoriesManager">
         <div class="title-bar">

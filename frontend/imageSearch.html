@@ -7,6 +7,7 @@
     <title>Download app image</title>
     <link rel="stylesheet" href="style.css">
     <script src="imageSearch.js" defer></script>
+    <link rel="stylesheet" id="themeSheet" href="themes/dark.css">
     <link rel="stylesheet" href="fontawesome/css/all.min.css">
     <style>
         .search-box>button#clearSearch {
@@ -18,26 +19,73 @@
             width: 80%;
         }
 
+        .search-box > input:disabled {
+            background-color: var(--image-clear-search-disabled);
+            color: var(--image-search-disabled-text);
+        }
+
         #clearSearch:disabled {
-            background-color: rgba(239, 239, 239, 0.3);
-            color: white;
+            background-color: var(--image-clear-search-disabled);
+            color: var(--image-search-disabled-text);
         }
 
         #submitSearch:disabled {
-            background-color: rgba(239, 239, 239, 0.3);
-            color: white;
+            background-color: var(--image-clear-search-disabled);
+            color: var(--image-search-disabled-text);
         }
 
         #message {
-            color: rgb(228, 228, 228);
+            color: var(--body-text-color);
+        }
+
+        #message>button {
+            padding-left: 12px;
+            padding-right: 12px;
+            text-align: left;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            width: 98%;
+            font-size: 17px;
+            color: var(--ms-button-text);
+            border-radius: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        #message>button:hover {
+            color: var(--ms-button-hover-text);
+            background-color: var(--ms-button-hover-bg);
         }
 
         #closeMessage {
-            border: 0.1px white;
+            border: 0.1px var(--body-text-color);
         }
 
         #closeMessage:focus {
-            border: 0.1px white;
+            border: 0.1px var(--body-text-color);
+        }
+
+        .main {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            box-sizing: border-box;
+            height: 100%;
+        }
+
+        .app-grid {
+            margin-bottom: 0px;
+        }
+
+        .controls {
+            margin-top: 4px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .controls>button {
+            height: fit-content;
+            padding: 5px;
         }
     </style>
 </head>
@@ -60,6 +108,10 @@
             </form>
         </div>
         <div id="appgrid" class="app-grid scroll-alone"></div>
+        <div class="controls">
+            <p id="pageNumber">Page: 1 of 1</p>
+            <button id="loadMore" class="setting-button">Load More</button>
+        </div>
     </div>
 </body>
 

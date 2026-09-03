@@ -93,7 +93,13 @@ if (!fs.existsSync(settingsPath)) {
             serverPassword: "1234",
             importSteam: false,
             steamFolders: [],
-            dontWarnShell: false
+            dontWarnShell: false,
+            dontWarnShell: false,
+            theme: "dark",
+            externalTheme: false,
+            fullscreen: false,
+            stayOnGame: false,
+            controllerLayout: "xbox"
         })
     );
 }
@@ -112,7 +118,7 @@ exports.shortcutsPath = shortcutsPath;
 let latestLaunchedGames = JSON.parse(fs.readFileSync(latestGamesPath, "utf-8"));
 
 /**
- * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean, importSteam: boolean, steamFolders: string[]}}
+ * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string, dontWarnShell: boolean, importSteam: boolean, steamFolders: string[], theme: string, externalTheme?: boolean, fullscreen?: boolean, stayOnGame?: boolean, controllerLayout: string}}
  */
 let settingsFile = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
 exports.settingsFile = settingsFile;
@@ -126,6 +132,16 @@ if (!settingsFile.serverPort) {
 
 if (settingsFile.dontWarnShell === undefined) {
     settingsFile.dontWarnShell = false;
+    fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
+}
+
+if (settingsFile.theme === undefined) {
+    settingsFile.theme = "dark";
+    fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
+}
+
+if (settingsFile.controllerLayout === undefined){
+    settingsFile.controllerLayout = "xbox";
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));
 }
 
@@ -220,6 +236,9 @@ function createWindow() {
 
     if (windowBounds.maximized) mainWindow.maximize();
 
+    if(settingsFile.fullscreen)
+        mainWindow.setFullScreen(true);
+
     mainWindow.on("close", (ev) => {
         saveWindowState();
     });
@@ -243,7 +262,7 @@ ipcMain.on("updateSaveMain", () => {
 let tray = null;
 
 function addToLatestAndLaunch(gameName, window = mainWindow) {
-    launchApp(saveFile[gameName], window);
+    launchApp(saveFile[gameName], settingsFile.stayOnGame ? null : window);
 
     if (saveFile[gameName].type === "dir") return;
 
@@ -495,15 +514,15 @@ function removeShortcut(gameName) {
     mainWindow.webContents.send("updateSaveNoReload");
 }
 
-function removeMultipleApps(appArray) {
+function removeMultipleShortcuts(appArray) {
     for (let i = 0; i < appArray.length; i++) {
         const gameName = appArray[i];
         delete saveFile[gameName];
-        
+
         const itemLocation = orderFile.indexOf(gameName);
         orderFile.splice(itemLocation, 1);
-        
-        if(latestLaunchedGames.includes(gameName))
+
+        if (latestLaunchedGames.includes(gameName))
             removeFromLatest(gameName);
     }
 
@@ -517,7 +536,7 @@ function removeMultipleApps(appArray) {
 }
 
 ipcMain.on("disconnectController", (ev, args) => {
-    if(process.platform === "win32"){
+    if (process.platform === "win32") {
         const disconnectBT = require("controllermanager");
         disconnectBT(args);
     }
@@ -525,7 +544,7 @@ ipcMain.on("disconnectController", (ev, args) => {
 
 ipcMain.on("removeMultiple", (ev, args) => {
     const apps = args.apps;
-    removeMultipleApps(apps);
+    removeMultipleShortcuts(apps);
 })
 
 ipcMain.on("removeShortcut", (ev, args) => {
@@ -770,7 +789,9 @@ ipcMain.on("updateSave", (ev, args) => {
                 }
             });
     }
-    
+
+    mainWindow.setFullScreen(args.fullscreen);
+
     settingsFile = args;
 
     fs.writeFileSync(settingsPath, JSON.stringify(settingsFile));

@@ -2,7 +2,7 @@ const { ipcRenderer } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
-const { generateId } = require("./functions/appAddUtil")
+const { generateId } = require("./functions/appAddUtil");
 
 const appGrid = document.getElementById("appgrid");
 const searchForm = document.getElementById("searchForm");
@@ -13,9 +13,17 @@ const submitSearch = document.getElementById("submitSearch");
 const infoMessage = document.getElementById("infoMessage");
 const messageHolder = document.getElementById("message");
 const closeMessage = document.getElementById("closeMessage");
+const infoMessageTitle = document.querySelector("h3");
+
+const loadMoreButton = document.getElementById("loadMore");
+const pageNumberHolder = document.getElementById("pageNumber");
 
 let savePath = "";
 let tempPath = "";
+let page = 0;
+let imageLimit = 15;
+let currentGameId = 0;
+let bannersTotal = 0;
 
 /**
  * @type {{startWithPc: boolean, steamGridToken: string, enableServer: boolean, serverPort: number, serverPassword: string}}
@@ -23,6 +31,14 @@ let tempPath = "";
 let settingsFile = {};
 
 let returnSource = "";
+
+/**
+ * 
+ * @param {string} themeName 
+ */
+function setThemePath(themePath) {
+    document.getElementById('themeSheet').href = themePath;
+}
 
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
@@ -45,6 +61,17 @@ ipcRenderer.on("savePath", (ev, args) => {
         messageText.innerText = "Please put a SteamGridDB token in the app settings first.\n1. Press on the settings icon (the little gear on the top right).\n2. Click the \"Sign up for a token\" button in the \"App Icons\" section.\n3. login with steam on steam grid db.\n4. Copy the token and paste it in the \"Steam grid Token\" input field.";
         messageHolder.appendChild(messageText);
         infoMessage.showModal();
+    }
+
+    const externalThemesPath = path.join(savePath, "themes");
+    if (settingsFile.externalTheme) {
+        if (fs.existsSync(path.join(externalThemesPath, `${settingsFile.theme}.css`))) {
+            setThemePath(path.join(externalThemesPath, `${settingsFile.theme}.css`))
+        } else {
+            setThemePath("themes/dark.css");
+        }
+    } else {
+        setThemePath(`themes/${settingsFile.theme}.css`);
     }
 });
 
@@ -71,7 +98,33 @@ searchForm.addEventListener("submit", async (ev) => {
         return appGrid.innerHTML = "";
     }
 
-    const banners = await getBanners(searchResults.data[0].id, settingsFile.steamGridToken)
+    // currentGameId = searchResults.data[0].id;
+    page = 0;
+
+    messageHolder.innerHTML = "";
+    for (let i = 0; i < searchResults.data.length; i++) {
+        const searchResult = searchResults.data[i];
+        const date = new Date(searchResult.release_date * 1000).getFullYear();
+        const gameName = searchResult.name;
+        const gameId = searchResult.id;
+
+        const gameButton = document.createElement("button");
+        gameButton.innerText = `${gameName} (${searchResult.release_date ? date : "Not released"})`;
+        gameButton.onclick = () => {
+            currentGameId = gameId
+            commitSearch(gameId);
+            infoMessage.close();
+            infoMessageTitle.innerText = "info";
+        }
+        messageHolder.appendChild(gameButton);
+    }
+
+    infoMessageTitle.innerText = "Search Results";
+    infoMessage.showModal();
+})
+
+async function commitSearch(gameId) {
+    const banners = await getBanners(gameId, settingsFile.steamGridToken)
 
     if (!banners.success || banners.data.length === 0) {
         messageHolder.innerHTML = "";
@@ -83,12 +136,44 @@ searchForm.addEventListener("submit", async (ev) => {
         return appGrid.innerHTML = "";
     }
 
+    bannersTotal = banners.total;
+
     appGrid.innerHTML = "";
     for (let i = 0; i < banners.data.length; i++) {
         const gridBanner = banners.data[i];
         addItemToGrid(gridBanner.thumb, gridBanner.url)
     }
-})
+
+    pageNumberHolder.innerText = `Page: ${page + 1} of ${Math.ceil(banners.total / imageLimit)}`;
+
+    if ((page + 1) >= (banners.total / imageLimit)) {
+        loadMoreButton.setAttribute("disabled", true);
+    } else {
+        loadMoreButton.removeAttribute("disabled");
+    }
+}
+
+loadMoreButton.onclick = async () => {
+    if (currentGameId === 0) return;
+    if ((page + 1) >= (bannersTotal / imageLimit)) return;
+
+    page++;
+    console.log(page);
+
+    const banners = await getBanners(currentGameId, settingsFile.steamGridToken);
+
+    for (let i = 0; i < banners.data.length; i++) {
+        const gridBanner = banners.data[i];
+        addItemToGrid(gridBanner.thumb, gridBanner.url)
+    }
+
+    pageNumberHolder.innerText = `Page: ${page + 1} of ${Math.ceil(banners.total / imageLimit)}`;
+
+    if ((page + 1) >= (banners.total / imageLimit)) {
+        loadMoreButton.setAttribute("disabled", true);
+    }
+
+}
 
 ipcRenderer.on("returnSource", (ev, args) => {
     returnSource = args.source;
@@ -141,7 +226,7 @@ async function getBanners(gameId, token) {
 
     try {
         const result = await fetch(
-            `https://www.steamgriddb.com/api/v2/grids/game/${gameId}?types=static&dimensions=600x900&nsfw=false&limit=15`,
+            `https://www.steamgriddb.com/api/v2/grids/game/${gameId}?types=static&dimensions=600x900&nsfw=false&limit=${imageLimit}&page=${page}`,
             options
         );
         const body = await result.json();
@@ -167,8 +252,8 @@ function addItemToGrid(thumbnail, imageLink) {
     appImg.src = thumbnail;
     appImg.setAttribute("draggable", false);
 
-    appImg.onclick = () => {
-        downloadImage(imageLink);
+    appImg.onclick = async () => {
+        await downloadImage(imageLink);
     };
 
     appDiv.appendChild(appImg);
@@ -179,7 +264,7 @@ function addItemToGrid(thumbnail, imageLink) {
  * 
  * @param {string} imageLink 
  */
-function downloadImage(imageLink) {
+async function downloadImage(imageLink) {
     messageHolder.innerHTML = "";
     const messageText = document.createElement("h2");
     messageText.innerText = "Downloading...";
@@ -189,22 +274,26 @@ function downloadImage(imageLink) {
     const imageId = generateId(10);
 
     const file = fs.createWriteStream(path.join(tempPath, `${imageId}.png`));
-    https.get(
-        imageLink,
-        function (response) {
-            response.pipe(file);
+    const response = await fetch(imageLink);
 
-            // after download completed close filestream
-            file.on("finish", () => {
-                file.close();
-                ipcRenderer.send("updateImageInWindow", {
-                    imagePath: path.join(tempPath, `${imageId}.png`),
-                    source: returnSource
-                });
-                window.close();
-            });
-        }
-    );
+    if (!response.ok) {
+        messageHolder.innerHTML = "";
+        const messageText = document.createElement("h2");
+        messageText.innerText = "Error while downloading image.";
+        messageHolder.appendChild(messageText);
+        infoMessage.showModal();
+    }
+
+    for await (const chunk of response.body) {
+        file.write(chunk);
+    }
+
+    file.end();
+    ipcRenderer.send("updateImageInWindow", {
+        imagePath: path.join(tempPath, `${imageId}.png`),
+        source: returnSource
+    });
+    window.close();
 }
 
 clearSearch.onclick = () => {
@@ -212,5 +301,6 @@ clearSearch.onclick = () => {
 }
 
 closeMessage.onclick = () => {
+    infoMessageTitle.innerText = "info";
     infoMessage.close();
 }

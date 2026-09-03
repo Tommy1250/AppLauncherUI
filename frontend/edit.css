@@ -1,6 +1,25 @@
+:root {
+    --body-bg-color: rgb(18, 18, 18);
+    --body-text-color: whitesmoke;
+    --controls-button-bg: rgb(157, 157, 157);
+    --controls-button-text: rgb(29, 29, 29);
+    --controls-button-hover-bg: rgb(184, 184, 184);
+    --controls-button-hover-text: rgb(29, 29, 29);
+    --controls-button-active-bg: rgb(132, 132, 132);
+    --controls-button-active-text: rgb(215, 215, 215);
+
+    --add-util-action-input-border: rgb(216, 216, 216);
+    --add-util-action-input-bg: rgb(68, 68, 68);
+    --add-util-action-input-text: whitesmoke;
+    --add-util-action-button-text: rgb(207, 207, 207);
+    --add-util-action-button-inactive: #a20101;
+    --add-util-action-button-hover: rgb(240, 240, 240);
+    --add-util-action-button-inactive-hover: #e50000;
+}
+
 body {
-    background-color: rgb(18, 18, 18);
-    color: whitesmoke;
+    background-color: var(--body-bg-color);
+    color: var(--body-text-color);
     font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -23,10 +42,10 @@ body {
 }
 
 .appImage > button {
-    background-color: rgb(157, 157, 157);
+    background-color: var(--controls-button-bg);
     border: none;
     border-radius: 5px;
-    color: rgb(29, 29, 29);
+    color: var(--controls-button-text);
     padding-top: 4px;
     padding-bottom: 4px;
     transition: 0.1s;
@@ -35,13 +54,13 @@ body {
 }
 
 .appImage > button:hover {
-    background-color: rgb(184, 184, 184);
-    color: rgb(29, 29, 29);
+    background-color: var(--controls-button-hover-bg);
+    color: var(--controls-button-hover-text);
 }
 
 .appImage > button:active {
-    background-color: rgb(132, 132, 132);
-    color: rgb(215, 215, 215);
+    background-color: var(--controls-button-active-bg);
+    color: var(--controls-button-active-text);
 }
 
 .app-img {
@@ -65,10 +84,10 @@ body {
 
 .util-action > input,
 .appInfo > div > input {
-    border: 1px rgb(216, 216, 216) solid;
+    border: 1px var(--add-util-action-input-border) solid;
     border-radius: 3px;
-    background-color: rgb(68, 68, 68);
-    color: whitesmoke;
+    background-color: var(--add-util-action-input-bg);
+    color: var(--add-util-action-input-text);
     height: 30px;
     font-size: 15px;
     font-weight: 520;
@@ -93,9 +112,9 @@ body {
 .util-action > button {
     padding-left: 8px;
     padding-right: 8px;
-    background-color: rgb(68, 68, 68);
-    border: 1px rgb(216, 216, 216) solid;
-    color: rgb(207, 207, 207);
+    background-color: var(--add-util-action-input-bg);
+    border: 1px var(--add-util-action-input-border) solid;
+    color: var(--add-util-action-button-text);
     border-top-right-radius: 3px;
     border-bottom-right-radius: 3px;
     border-top-left-radius: 0px;
@@ -105,22 +124,22 @@ body {
 }
 
 .util-action > button.inactive {
-    color: #a20101;
+    color: var(--add-util-action-button-inactive);
 }
 
 .util-action > button:hover {
-    color: rgb(240, 240, 240);
+    color: var(--add-util-action-button-hover);
 }
 
 .util-action > button.inactive:hover {
-    color: #e50000;
+    color: var(--add-util-action-button-inactive-hover);
 }
 
 .appInfo > div > select {
-    border: 1px rgb(216, 216, 216) solid;
+    border: 1px var(--add-util-action-input-border) solid;
     border-radius: 3px;
-    background-color: rgb(68, 68, 68);
-    color: whitesmoke;
+    background-color: var(--add-util-action-input-bg);
+    color: var(--add-util-action-input-text);
     height: 30px;
     font-size: 15px;
     font-weight: 520;
@@ -139,10 +158,10 @@ body {
 }
 
 .controls > button {
-    background-color: rgb(157, 157, 157);
+    background-color: var(--controls-button-bg);
     border: none;
     border-radius: 5px;
-    color: rgb(29, 29, 29);
+    color: var(--controls-button-text);
     padding-top: 4px;
     padding-bottom: 4px;
     transition: 0.1s;
@@ -151,11 +170,11 @@ body {
 }
 
 .controls > button:hover {
-    background-color: rgb(184, 184, 184);
-    color: rgb(29, 29, 29);
+    background-color: var(--controls-button-hover-bg);
+    color: var(--controls-button-hover-text);
 }
 
 .controls > button:active {
-    background-color: rgb(132, 132, 132);
-    color: rgb(215, 215, 215);
+    background-color: var(--controls-button-active-bg);
+    color: var(--controls-button-active-text);
 }

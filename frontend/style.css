@@ -1,16 +1,120 @@
+:root {
+    --body-bg-color: rgb(18, 18, 18);
+    --body-text-color: whitesmoke;
+    --hr-color: #0000009e;
+
+    --appDiv-hover-bg: rgba(229, 226, 226, 0.27);
+    --appDiv-bottom-button-hover-bg: rgba(182, 182, 182, 0.633);
+    --appDiv-bottom-button-color: white;
+
+    --tooltip-bg: #ffffff;
+    --tooltip-text: #141414;
+    --tooltip-border: #000000;
+
+    --search-input-text: black;
+    --search-input-bg: white;
+    --search-button-bg: white;
+    --search-button-border: white;
+    --search-button-text: #374151;
+    --search-button-hover-text: rgb(156 163 175);
+    --search-button-focus-active: gray;
+
+    --iconbtn-color: white;
+    --iconbtn-hover: rgb(162, 162, 162);
+    --iconbtn-active: rgb(122, 122, 122);
+
+    --settings-input-bg: white;
+    --settings-input-text: black;
+    --settings-input-disabled-bg: white;
+    --settings-input-disabled-text: black;
+
+    --utilaction-button-bg: rgb(255, 255, 255);
+    --utilaction-button-text: rgb(0, 0, 0);
+    --utilaction-button-hover-text: rgb(92, 92, 92);
+
+    --controls-button-bg: rgb(157, 157, 157);
+    --controls-button-text: rgb(29, 29, 29);
+    --controls-button-hover-bg: rgb(184, 184, 184);
+    --controls-button-hover-text: rgb(29, 29, 29);
+    --controls-button-active-bg: rgb(132, 132, 132);
+    --controls-button-active-text: rgb(215, 215, 215);
+
+    --switch-slider-bg: #ccc;
+    --switch-slider-before-bg: white;
+    --switch-checked-bg: #2196f3;
+
+    --movemodal-bg: #181717;
+    --movemodal-boder: #404040d1;
+    --movemodal-text: #ececec;
+    --movemodal-backdrop: #22212166;
+    --movemodal-movebutton-bg: #ffffff;
+    --movemodal-movebutton-text: #111827;
+    --movemodal-movebutton-textdecoration: #d1d5db;
+    --movemodal-movebutton-hover-bg: rgb(237, 237, 237);
+
+    --movemodal-head-button-text: #f5f5f5;
+    --movemodal-head-button-hover-text: rgb(174, 174, 174);
+
+    --categories-dialog-bg: #181717;
+    --categories-dialog-box-shadow: rgba(232, 232, 232, 0.234);
+    --categories-dialog-backdrop: #00000050;
+
+    --custom-checkbox-label: whitesmoke;
+    --custom-checkbox-checkmark-bg: #eee;
+    --custom-checkbox-checkmark-border: #ccc;
+    --custom-ckeckbox-checked-checkmark-bg: #4caf50;
+    --custom-ckeckbox-checked-checkmark-border: #4caf50;
+    --custom-ckeckbox-ckeckmark-after-border: white;
+
+    --title-bar-h3-color: whitesmoke;
+
+    /* context menu also applies to submenues */
+    --context-menu-bg: rgb(35, 35, 35);
+    --context-menu-border: rgb(20, 20, 20);
+    --context-menu-box-shadow: rgba(0, 0, 0, 0.2);
+    --context-menu-li-hover-bg: rgb(40, 40, 40);
+    --context-menu-checkbox-label-text: whitesmoke;
+    --context-menu-checkbox-check-border: white;
+
+    /* This is only used on one button */
+    --active-item-color: #4caf50;
+    --active-item-hover-color: #347636;
+    --active-item-active-color: #225224;
+
+    /* Shouldn't be changed because it sits on the app images 
+    only change for hyper custon themes */
+    --app-checkbox-border-color: #555;
+    --app-checkbox-checked-bg: #4caf50;
+
+    /* Appears ontop on the app image and holds the apps categories as a list */
+    --app-category-overlay-bg: rgba(0, 0, 0, 0.7);
+    --app-category-overlay-text: #fff;
+
+    --controller-info-bg: #141414;
+    --controller-info-text: #ffffff;
+
+    --scrollbar-track: #292929;
+    --scrollbar-thumb: #888;
+    --scrollbar-thumb-hover: #555;
+
+    --image-clear-search-disabled: rgba(239, 239, 239, 0.3);
+    --image-search-disabled-text: white;
+
+    --controller-focus-color: #e1e3e1;
+    --controller-bar-bg: var(--context-menu-bg, rgb(35, 35, 35));
+    --controller-bar-border: var(--context-menu-border, rgb(20, 20, 20));
+    --controller-bar-text: var(--body-text-color, whitesmoke);
+    --controller-bar-shadow: var(--context-menu-box-shadow, rgba(0, 0, 0, 0.2));
+}
+
 * {
     box-sizing: border-box;
 }
 
-html.hide-cursor,
-html.hide-cursor * {
-    cursor: none !important;
-}
-
 html,
 body {
-    background-color: rgb(18, 18, 18);
-    color: whitesmoke;
+    background-color: var(--body-bg-color);
+    color: var(--body-text-color);
     font-family: Arial, Helvetica, sans-serif;
     height: 100%;
     overflow: hidden;
@@ -54,7 +158,7 @@ body {
 }
 
 .app-div:hover {
-    background-color: rgba(229, 226, 226, 0.27);
+    background-color: var(--appDiv-hover-bg);
     cursor: pointer;
 }
 
@@ -91,10 +195,10 @@ body {
 .tooltip {
     display: none;
     position: absolute;
-    background-color: #ffffff;
-    color: #141414;
+    background-color: var(--tooltip-bg);
+    color: var(--tooltip-text);
     padding: 5px;
-    border: 1px solid #000000;
+    border: 1px solid var(--tooltip-border);
     border-radius: 5px;
     z-index: 3;
 }
@@ -104,13 +208,13 @@ body {
     background: none;
     border: none;
     border-radius: 5px;
-    color: white;
+    color: var(--appDiv-bottom-button-color);
     font-size: 1.25em;
     transition: 0.1s;
 }
 
 .bottom-holder > button:hover {
-    background-color: rgba(182, 182, 182, 0.633);
+    background-color: var(--appDiv-bottom-button-hover-bg);
 }
 
 .search-box {
@@ -120,7 +224,8 @@ body {
 }
 
 .search-box > input {
-    color: black;
+    color: var(--search-input-text);
+    background-color: var(--search-input-bg);
     flex-grow: 0;
     border-top-left-radius: 9999px;
     border-bottom-left-radius: 9999px;
@@ -133,24 +238,24 @@ body {
 .search-box > button {
     padding-left: 8px;
     padding-right: 8px;
-    background-color: white;
-    border-color: white;
-    color: rgb(55 65 81);
+    background-color: var(--search-button-bg);
+    border-color: var(--search-button-border);
+    color: var(--search-button-text);
     border-top-right-radius: 9999px;
     border-bottom-right-radius: 9999px;
     border: none;
 }
 
 .search-box > button:hover {
-    color: rgb(156 163 175);
+    color: var(--search-button-hover-text);
 }
 
 .search-box > input:focus {
-    border: 1px gray;
+    border: 1px var(--search-button-focus-active);
 }
 
 .search-box > input:active {
-    border: 1px gray;
+    border: 1px var(--search-button-focus-active);
 }
 
 .full > input {
@@ -163,23 +268,23 @@ body {
     margin-right: 1px;
     margin-bottom: 5px;
     display: grid;
-    grid-template-columns: 1fr auto auto auto auto auto;
+    grid-template-columns: 1fr repeat(5, auto);
     gap: 10px;
 }
 
 .iconbtn {
     background: none;
     border: none;
-    color: white;
+    color: var(--iconbtn-color);
     cursor: pointer;
 }
 
 .iconbtn:hover {
-    color: rgb(162, 162, 162);
+    color: var(--iconbtn-hover);
 }
 
 .iconbtn:active {
-    color: rgb(122, 122, 122);
+    color: var(--iconbtn-active);
 }
 
 ::-webkit-scrollbar {
@@ -189,21 +294,21 @@ body {
 
 /* Track */
 ::-webkit-scrollbar-track {
-    background: #292929;
+    background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-track-piece {
-    background: #292929;
+    background: var(--scrollbar-track);
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-    background: #888;
+    background: var(--scrollbar-thumb);
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: var(--scrollbar-thumb-hover);
 }
 
 .settings {
@@ -224,6 +329,7 @@ body {
     padding: 20px;
 }
 
+.util-action > input,
 .setting-input {
     margin-top: 4px;
     margin-bottom: 4px;
@@ -233,11 +339,94 @@ body {
     font-weight: 600;
     border-radius: 5px;
     border: none;
+    background-color: var(--settings-input-bg);
+    color: var(--settings-input-text);
 }
 
 .setting-input:disabled {
-    background-color: white;
-    color: black;
+    background-color: var(--settings-input-disabled-bg);
+    color: var(--settings-input-disabled-text);
+}
+
+.select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.select-wrapper::after {
+    content: "\f078";
+    font-family: "Font Awesome 6 Free", FontAwesome;
+    font-weight: 900;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 12px;
+    color: #374151;
+}
+
+.setting-select {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    width: 100%;
+    height: 30px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 5px;
+    border: none;
+    background-color: var(--settings-input-bg);
+    color: var(--settings-input-text);
+    padding: 0 30px 0 10px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: box-shadow 0.15s ease;
+}
+
+.setting-select:focus {
+    border: none;
+    outline: none;
+}
+
+.setting-select option {
+    background-color: var(--settings-input-bg);
+    color: var(--settings-input-text);
+    font-weight: 600;
+}
+
+.util-action {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+}
+
+.util-action > input {
+    flex-grow: 0;
+    border-bottom-left-radius: 5px;
+    border-top-left-radius: 5px;
+    border-bottom-right-radius: 0px;
+    border-top-right-radius: 0px;
+    width: 100%;
+    border-right: none;
+}
+
+.util-action > button {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    background-color: var(--utilaction-button-bg);
+    border: none;
+    color: var(--utilaction-button-text);
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-left: none;
+    cursor: pointer;
+}
+
+.util-action > button:hover {
+    color: var(--utilaction-button-hover-text);
 }
 
 .controls {
@@ -247,10 +436,10 @@ body {
 }
 
 .controls > button {
-    background-color: rgb(157, 157, 157);
+    background-color: var(--controls-button-bg);
     border: none;
     border-radius: 5px;
-    color: rgb(29, 29, 29);
+    color: var(--controls-button-text);
     padding-top: 4px;
     padding-bottom: 4px;
     transition: 0.1s;
@@ -259,13 +448,13 @@ body {
 }
 
 .controls > button:hover {
-    background-color: rgb(184, 184, 184);
-    color: rgb(29, 29, 29);
+    background-color: var(--controls-button-hover-bg);
+    color: var(--controls-button-hover-text);
 }
 
 .controls > button:active {
-    background-color: rgb(132, 132, 132);
-    color: rgb(215, 215, 215);
+    background-color: var(--controls-button-active-bg);
+    color: var(--controls-button-active-text);
 }
 
 .switch-div {
@@ -300,7 +489,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: var(--switch-slider-bg);
     transition: 0.4s;
     border-radius: 34px;
 }
@@ -312,13 +501,13 @@ body {
     width: 26px;
     left: 4px;
     bottom: 4px;
-    background-color: white;
+    background-color: var(--switch-slider-before-bg);
     transition: 0.4s;
     border-radius: 50%;
 }
 
 input:checked + .slider {
-    background-color: #2196f3;
+    background-color: var(--switch-checked-bg);
 }
 
 input:checked + .slider:before {
@@ -326,9 +515,9 @@ input:checked + .slider:before {
 }
 
 .showmove {
-    background-color: #181717;
-    border: 1px solid #404040d1;
-    color: #ececec;
+    background-color: var(--movemodal-bg);
+    border: 1px solid var(--movemodal-boder);
+    color: var(--movemodal-text);
     border-radius: 5px;
     width: 40%;
     display: grid;
@@ -337,7 +526,7 @@ input:checked + .slider:before {
 }
 
 .showmove::backdrop {
-    background-color: #22212166;
+    background-color: var(--movemodal-backdrop);
 }
 
 .showmove > .head {
@@ -355,23 +544,37 @@ input:checked + .slider:before {
 }
 
 .showmove > #moveperm {
-    background-color: #ffffff;
+    background-color: var(--movemodal-movebutton-bg);
     border: 0;
     border-radius: 5px;
     box-sizing: border-box;
-    color: #111827;
-    font-family: "Inter var", ui-sans-serif, system-ui, -apple-system, system-ui,
-        "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
-        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    color: var(--movemodal-movebutton-text);
+    font-family:
+        "Inter var",
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        system-ui,
+        "Segoe UI",
+        Roboto,
+        "Helvetica Neue",
+        Arial,
+        "Noto Sans",
+        sans-serif,
+        "Apple Color Emoji",
+        "Segoe UI Emoji",
+        "Segoe UI Symbol",
         "Noto Color Emoji";
     font-size: 0.875rem;
     font-weight: 600;
     line-height: 1.25rem;
     /* padding: 0.75rem 1rem; */
     text-align: center;
-    text-decoration: none #d1d5db solid;
+    text-decoration: none var(--movemodal-movebutton-textdecoration) solid;
     text-decoration-thickness: auto;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.06);
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
@@ -379,7 +582,7 @@ input:checked + .slider:before {
 }
 
 .showmove > #moveperm:hover {
-    background-color: rgb(237, 237, 237);
+    background-color: var(--movemodal-movebutton-hover-bg);
 }
 
 .showmove > #moveperm:focus {
@@ -403,16 +606,15 @@ input:checked + .slider:before {
     background: none;
     border: none;
     cursor: pointer;
-    color: #f5f5f5;
+    color: var(--movemodal-head-button-text);
 }
 
 .head > button:hover {
-    color: rgb(174, 174, 174);
+    color: var(--movemodal-head-button-hover-text);
 }
 
 .head > button:focus {
     border-radius: 1px;
-    border-color: rgb(113, 113, 255);
 }
 
 .head > p {
@@ -424,13 +626,13 @@ input:checked + .slider:before {
 }
 
 hr {
-    border-color: #0000009e;
+    border-color: var(--hr-color);
     width: 85%;
 }
 
 .categories-dialog {
-    background-color: #181717;
-    box-shadow: 0 2px 4px rgba(232, 232, 232, 0.234);
+    background-color: var(--categories-dialog-bg);
+    box-shadow: 0 2px 4px var(--categories-dialog-box-shadow);
     border: none;
     border-radius: 10px;
     width: 50%;
@@ -439,7 +641,7 @@ hr {
 }
 
 .categories-dialog::backdrop {
-    background-color: #00000050;
+    background-color: var(--categories-dialog-backdrop);
 }
 
 .categories-list {
@@ -463,9 +665,8 @@ hr {
     font-size: 20px;
     user-select: none;
     margin-right: 10px;
-    /* margin-bottom: 5px; */
     margin-top: 5px;
-    color: whitesmoke;
+    color: var(--custom-checkbox-label);
 }
 
 .custom-checkbox input {
@@ -475,17 +676,19 @@ hr {
 .custom-checkbox .checkmark {
     height: 24px;
     width: 24px;
-    background-color: #eee;
-    border: 2px solid #ccc;
+    background-color: var(--custom-checkbox-checkmark-bg);
+    border: 2px solid var(--custom-checkbox-checkmark-border);
     border-radius: 4px;
     margin-right: 5px;
     position: relative;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition:
+        background-color 0.2s,
+        border-color 0.2s;
 }
 
 .custom-checkbox input:checked + .checkmark {
-    background-color: #4caf50;
-    border-color: #4caf50;
+    background-color: var(--custom-ckeckbox-checked-checkmark-bg);
+    border-color: var(--custom-ckeckbox-checked-checkmark-border);
 }
 
 .custom-checkbox .checkmark::after {
@@ -496,7 +699,7 @@ hr {
     top: 2px;
     width: 5px;
     height: 10px;
-    border: solid white;
+    border: solid var(--custom-ckeckbox-ckeckmark-after-border);
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
 }
@@ -515,7 +718,7 @@ hr {
 }
 
 .title-bar > h3 {
-    color: whitesmoke;
+    color: var(--title-bar-h3-color);
     font-size: 25px;
     margin-top: 0px;
     margin-bottom: 0px;
@@ -524,11 +727,11 @@ hr {
 .context-menu {
     position: absolute;
     display: none;
-    background-color: rgb(35, 35, 35);
-    border: 1px solid rgb(20, 20, 20);
+    background-color: var(--context-menu-bg);
+    border: 1px solid var(--context-menu-border);
     min-width: 200px;
     z-index: 1000;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 5px var(--context-menu-box-shadow);
     border-radius: 10px;
 }
 
@@ -547,7 +750,11 @@ hr {
 }
 
 .context-menu li:hover {
-    background-color: rgb(40, 40, 40);
+    background-color: var(--context-menu-li-hover-bg);
+}
+
+.context-menu li:focus {
+    background-color: var(--context-menu-li-hover-bg);
 }
 
 .context-menu .has-submenu::after {
@@ -563,12 +770,14 @@ hr {
     left: 100%;
     display: none;
     margin-left: -1px;
-    background-color: rgb(35, 35, 35);
-    border: 1px solid rgb(20, 20, 20);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    background-color: var(--context-menu-bg);
+    border: 1px solid var(--context-menu-border);
+    box-shadow: 0 2px 5px var(--context-menu-box-shadow);
     min-width: 180px;
     border-radius: 10px;
     z-index: 1001;
+    overflow-y: auto;
+    max-height: 50dvh;
 }
 
 .checkbox-item {
@@ -576,11 +785,9 @@ hr {
     align-items: center;
     width: 100%;
     cursor: pointer;
-    font-family: Arial, sans-serif;
-    font-size: 18px;
     user-select: none;
     margin-right: 10px;
-    color: whitesmoke;
+    color: var(--context-menu-checkbox-label-text);
 }
 
 .checkbox-item input {
@@ -593,7 +800,9 @@ hr {
     border-radius: 4px;
     margin-right: 5px;
     position: relative;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition:
+        background-color 0.2s,
+        border-color 0.2s;
 }
 
 .checkbox-item .checkmark::after {
@@ -604,7 +813,7 @@ hr {
     top: 0px;
     width: 5px;
     height: 10px;
-    border: solid white;
+    border: solid var(--context-menu-checkbox-check-border);
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
 }
@@ -625,15 +834,15 @@ hr {
 }
 
 .active-item {
-    color: #4caf50;
+    color: var(--active-item-color);
 }
 
 .active-item:hover {
-    color: #347636;
+    color: var(--active-item-hover-color);
 }
 
 .active-item:active {
-    color: #225224;
+    color: var(--active-item-active-color);
 }
 
 .app-checkbox {
@@ -644,7 +853,7 @@ hr {
     align-self: start;
     justify-self: start;
     border-radius: 10px;
-    border: 2px solid #555;
+    border: 2px solid var(--app-checkbox-border-color);
     vertical-align: middle;
     outline: none;
     width: 20px;
@@ -659,7 +868,7 @@ hr {
 }
 
 .app-checkbox:checked {
-    background-color: #4caf50;
+    background-color: var(--app-checkbox-checked-bg);
 }
 
 .app-checkbox:checked::before {
@@ -672,22 +881,24 @@ hr {
     list-style: none;
     padding: 4px;
     margin: 0;
-    background: rgba(0, 0, 0, 0.7);
-    color: #fff;
+    background: var(--app-category-overlay-bg);
+    color: var(--app-category-overlay-text);
     border-radius: 10px;
     font-size: 0.9em;
     z-index: 2;
-    pointer-events: none;
+    pointer-events: auto;
     height: fit-content;
     align-self: end;
     grid-area: stack;
+    max-height: 60%;
+    overflow: auto;
 }
 
 .controller {
     padding: 5px;
-    background-color: #141414;
+    background-color: var(--controller-info-bg);
     border-radius: 10px;
-    color: #ffffff;
+    color: var(--controller-info-text);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -697,4 +908,69 @@ hr {
     display: flex;
     flex-direction: column;
     justify-content: center;
+}
+
+/* Focus ring for whatever grid item currently has controller focus */
+.app-div.controller-focus {
+    outline: 3px solid var(--controller-focus-color);
+    outline-offset: 2px;
+    background-color: var(--appDiv-hover-bg);
+}
+
+.context-menu .controller-focus {
+    background-color: var(--context-menu-li-hover-bg);
+}
+
+.category-div.controller-focus {
+    outline: 3px solid var(--controller-focus-color);
+    outline-offset: 2px;
+}
+
+/* Bottom button-prompt bar */
+#controllerBar {
+    position: fixed;
+    left: 50%;
+    bottom: 14px;
+    transform: translate(-50%, 20px);
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 8px 18px;
+    background-color: var(--controller-bar-bg);
+    border: 1px solid var(--controller-bar-border);
+    border-radius: 9999px;
+    box-shadow: 0 2px 8px var(--controller-bar-shadow);
+    color: var(--controller-bar-text);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    z-index: 950;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+}
+
+#controllerBar.cn-visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+#controllerBar .cn-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+#controllerBar .cn-badge {
+    display: flex;
+    place-items: center;
+    width: 25px;
+    height: 25px;
+}
+
+html.hide-cursor,
+html.hide-cursor * {
+    cursor: none !important;
 }

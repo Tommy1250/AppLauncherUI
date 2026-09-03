@@ -1,7 +1,7 @@
 const { ipcRenderer, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
-const {readShortcut} = require("./functions/appAddUtil");
+const { readShortcut } = require("./functions/appAddUtil");
 
 const appImg = document.getElementById("appImg");
 const imageSearchButton = document.getElementById("imageSearch");
@@ -41,12 +41,35 @@ let newImagePath = "";
 let hasImage = false;
 let shellMode = false;
 
+/**
+ * 
+ * @param {string} themeName 
+ */
+function setThemePath(themePath) {
+    document.getElementById('themeSheet').href = themePath;
+}
+
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
     console.log(savePath);
     shortcutsFile = path.join(savePath, "shortcuts.json");
     imagesPath = path.join(savePath, "images");
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
+
+    const settingsFile = JSON.parse(
+        fs.readFileSync(path.join(savePath, "settings.json"), "utf-8")
+    );
+
+    const externalThemesPath = path.join(savePath, "themes");
+    if (settingsFile.externalTheme) {
+        if (fs.existsSync(path.join(externalThemesPath, `${settingsFile.theme}.css`))) {
+            setThemePath(path.join(externalThemesPath, `${settingsFile.theme}.css`))
+        } else {
+            setThemePath("themes/dark.css");
+        }
+    } else {
+        setThemePath(`themes/${settingsFile.theme}.css`);
+    }
 });
 
 ipcRenderer.on("appname", (ev, args) => {
@@ -151,7 +174,7 @@ selectFileButton.onclick = () => {
     else ipcRenderer.send("cooseDirectory");
 };
 
-ipcRenderer.on("execSelect", async(ev, fileLocation) => {
+ipcRenderer.on("execSelect", async (ev, fileLocation) => {
     if (fileLocation.endsWith(".lnk") || fileLocation.endsWith(".url")) {
         const shortcutData = await readShortcut(path.basename(fileLocation), fileLocation);
         appPathInput.value = shortcutData.location;

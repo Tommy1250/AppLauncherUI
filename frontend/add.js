@@ -52,6 +52,14 @@ let imageUpdated = false;
 let newImagePath = "";
 let shellMode = false;
 
+/**
+ * 
+ * @param {string} themeName 
+ */
+function setThemePath(themePath) {
+    document.getElementById('themeSheet').href = themePath;
+}
+
 ipcRenderer.on("savePath", (ev, args) => {
     savePath = args;
     console.log(savePath);
@@ -62,6 +70,21 @@ ipcRenderer.on("savePath", (ev, args) => {
     saveFile = JSON.parse(fs.readFileSync(shortcutsFile, "utf-8"));
     orderFile = JSON.parse(fs.readFileSync(orderPath, "utf-8"));
     categoriesFile = JSON.parse(fs.readFileSync(categoriesPath, "utf-8"));
+
+    const settingsFile = JSON.parse(
+        fs.readFileSync(path.join(savePath, "settings.json"), "utf-8")
+    );
+
+    const externalThemesPath = path.join(savePath, "themes");
+    if (settingsFile.externalTheme) {
+        if (fs.existsSync(path.join(externalThemesPath, `${settingsFile.theme}.css`))) {
+            setThemePath(path.join(externalThemesPath, `${settingsFile.theme}.css`))
+        } else {
+            setThemePath("themes/dark.css");
+        }
+    } else {
+        setThemePath(`themes/${settingsFile.theme}.css`);
+    }
 });
 
 if (shortcutsFile === "") {

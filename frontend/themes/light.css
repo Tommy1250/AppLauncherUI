@@ -1,0 +1,71 @@
+:root {
+    --body-bg-color: #f4f4f5;
+    --body-text-color: #1a1a1a;
+    --hr-color: #00000025;
+
+    --appDiv-hover-bg: rgba(0, 0, 0, 0.06);
+    --appDiv-bottom-button-hover-bg: rgba(0, 0, 0, 0.15);
+    --appDiv-bottom-button-color: black;
+
+    --iconbtn-color: #1a1a1a;
+    --iconbtn-hover: rgb(90, 90, 90);
+    --iconbtn-active: rgb(50, 50, 50);
+
+    --controls-button-bg: rgb(210, 210, 210);
+    --controls-button-hover-bg: rgb(190, 190, 190);
+
+    --movemodal-bg: #ffffff;
+    --movemodal-boder: #d1d1d1;
+    --movemodal-text: #1a1a1a;
+    --movemodal-backdrop: #00000033;
+
+    --movemodal-head-button-text: #1a1a1a;
+    --movemodal-head-button-hover-text: rgb(90, 90, 90);
+
+    --categories-dialog-bg: #ffffff;
+    --categories-dialog-box-shadow: rgba(0, 0, 0, 0.15);
+    --categories-dialog-backdrop: #00000033;
+
+    --custom-checkbox-label: #1a1a1a;
+    --custom-checkbox-checkmark-bg: #e2e2e2;
+    --custom-checkbox-checkmark-border: #bbb;
+
+    --title-bar-h3-color: #1a1a1a;
+
+    --context-menu-bg: #ffffff;
+    --context-menu-border: #d1d1d1;
+    --context-menu-box-shadow: rgba(0, 0, 0, 0.15);
+    --context-menu-li-hover-bg: rgb(235, 235, 235);
+    --context-menu-checkbox-label-text: #1a1a1a;
+    --context-menu-checkbox-check-border: #1a1a1a;
+
+    --controller-info-bg: #ffffff;
+    --controller-info-text: #1a1a1a;
+
+    --scrollbar-track: #e0e0e0;
+    --scrollbar-thumb: #b0b0b0;
+    --scrollbar-thumb-hover: #909090;
+
+    --ms-button-text: #4a4a4a;
+    --ms-button-hover-text: #111111;
+    --ms-button-hover-bg: rgba(0, 0, 0, 0.08);
+    --ms-hr-color: #d9d9d9;
+    --ms-p-border: #111111;
+    --ms-p-hover: rgb(230, 230, 230);
+
+    --add-util-action-input-border: rgb(180, 180, 180);
+    --add-util-action-input-bg: rgb(245, 245, 245);
+    --add-util-action-input-text: #1a1a1a;
+    --add-util-action-button-text: rgb(70, 70, 70);
+    --add-util-action-button-inactive: #c62828;
+    --add-util-action-button-hover: rgb(30, 30, 30);
+    --add-util-action-button-inactive-hover: #ff1a1a;
+
+    --image-clear-search-disabled: rgba(162, 162, 162, 0.3);
+    --image-search-diabled-text: white;
+}
+
+.categories-dialog,
+.controller {
+    border: 1px solid #e0e0e0;
+}

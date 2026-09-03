@@ -1,6 +1,6 @@
 {
   "name": "applauncherui",
-  "version": "1.8.8",
+  "version": "2.1.0",
   "description": "An app launcher designed to work with basically anything",
   "main": "index.js",
   "scripts": {
@@ -26,7 +26,7 @@
     "winreg": "^1.2.5"
   },
   "devDependencies": {
-    "electron": "^28.3.3",
-    "electron-packager": "^17.1.2"
+    "@electron/packager": "^20.0.3",
+    "electron": "^41.1.1"
   }
 }
